@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Oracle Terminal — Join the Waitlist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #020408;
+      --core:    #00e5ff;
+      --green:   #00ffa3;
+      --red:     #ff3b3b;
+      --text:    #d6eeff;
+      --muted:   #4a6a8a;
+      --display: 'Orbitron', monospace;
+      --mono:    'JetBrains Mono', monospace;
+    }
+    html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); overflow-x: hidden; }
+
+    /* BG */
+    .bgFixed { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #020408; }
+    .bgFixed::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(0,229,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .bgFixed::after {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.07) 3px, rgba(0,0,0,.07) 4px);
+    }
+    .bgOrb {
+      position: absolute; top: -10%; left: 50%; transform: translateX(-50%);
+      width: min(900px, 150vw); height: min(900px, 150vw);
+      background: radial-gradient(ellipse at 50% 30%, rgba(0,229,255,.15) 0%, rgba(0,229,255,.05) 35%, transparent 65%);
+      animation: orbBreath 7s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes orbBreath { 0%,100%{opacity:.75;transform:translateX(-50%) scale(1);} 50%{opacity:1;transform:translateX(-50%) scale(1.07);} }
+    .bgCorner { position: absolute; width: 280px; height: 280px; border-radius: 50%; pointer-events: none; }
+    .bgCorner.tl { top: -90px; left: -90px; background: radial-gradient(circle, rgba(0,255,163,.07) 0%, transparent 70%); }
+    .bgCorner.br { bottom: -90px; right: -90px; background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%); }
+    #bgCanvas { position: absolute; inset: 0; }
+
+    /* TERMINAL PREVIEW */
+    .termPreview {
+      position: fixed; inset: 0; z-index: 1;
+      display: grid; grid-template-columns: 230px 1fr 210px; grid-template-rows: 40px 1fr 28px;
+      filter: blur(3px) brightness(.52) saturate(1.4);
+      pointer-events: none; user-select: none; overflow: hidden;
+    }
+    .ftBar { grid-column:1/-1; background:rgba(2,8,18,.98); border-bottom:1px solid rgba(0,229,255,.15); display:flex; align-items:center; gap:10px; padding:0 16px; font-family:var(--display); font-size:8px; letter-spacing:2px; color:var(--muted); }
+    .ftBar .logo { color:var(--core); font-weight:900; font-size:10px; letter-spacing:3px; margin-right:6px; }
+    .ftPill { padding:2px 8px; border-radius:999px; border:1px solid; font-size:7px; }
+    .ftPill.g { color:var(--green); border-color:rgba(0,255,163,.25); background:rgba(0,255,163,.07); }
+    .ftPill.c { color:var(--core); border-color:rgba(0,229,255,.2); background:rgba(0,229,255,.05); }
+    .ftLeft { background:rgba(2,8,18,.92); border-right:1px solid rgba(0,229,255,.1); padding:10px 8px; display:flex; flex-direction:column; gap:7px; overflow:hidden; }
+    .ftCard { background:rgba(0,229,255,.04); border:1px solid rgba(0,229,255,.1); border-radius:8px; padding:8px 10px; }
+    .ftCard.on { border-color:rgba(0,229,255,.3); background:rgba(0,229,255,.07); }
+    .ftSym { font-family:var(--display); font-size:13px; font-weight:900; color:var(--core); }
+    .ftConf { font-family:var(--display); font-size:7px; color:var(--muted); margin-top:3px; }
+    .ftBr2 { height:2px; background:rgba(255,255,255,.06); border-radius:999px; margin-top:5px; overflow:hidden; }
+    .ftFl { height:100%; border-radius:999px; background:var(--green); }
+    .ftCenter { background:rgba(4,12,24,.88); display:flex; flex-direction:column; overflow:hidden; }
+    .ftCTop { background:rgba(2,8,18,.98); border-bottom:1px solid rgba(0,229,255,.1); padding:6px 14px; font-family:var(--display); font-size:7px; letter-spacing:1.5px; color:var(--muted); }
+    .ftSigBody { padding:14px; display:flex; flex-direction:column; gap:12px; }
+    .ftAsset { font-family:var(--display); font-size:30px; font-weight:900; color:var(--core); }
+    .ftTRow { display:grid; grid-template-columns:1fr 1px 1fr 1px 1fr; border:1px solid rgba(0,229,255,.08); border-radius:10px; overflow:hidden; }
+    .ftTCol { padding:10px 12px; display:flex; flex-direction:column; gap:4px; }
+    .ftTDiv { background:rgba(0,229,255,.07); }
+    .ftTL { font-family:var(--display); font-size:7px; letter-spacing:2px; color:var(--muted); }
+    .ftTV { font-family:var(--display); font-size:14px; font-weight:900; color:var(--core); }
+    .ftTV.g { color:var(--green); } .ftTV.r { color:var(--red); }
+    .ftTxtBox { border:1px solid rgba(0,229,255,.07); border-radius:8px; padding:10px 12px; background:rgba(0,229,255,.02); font-family:var(--mono); font-size:10px; line-height:1.7; color:rgba(214,238,255,.65); }
+    .ftRight { background:rgba(2,8,18,.92); border-left:1px solid rgba(0,229,255,.1); padding:10px 8px; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+    .ftRL { font-family:var(--display); font-size:7px; letter-spacing:2px; color:var(--muted); border-bottom:1px solid rgba(0,229,255,.08); padding-bottom:6px; }
+    .ftRBox { border:1px solid rgba(0,229,255,.1); border-radius:8px; padding:8px 10px; background:rgba(0,229,255,.02); display:flex; flex-direction:column; gap:5px; }
+    .ftRBox h4 { font-family:var(--display); font-size:7px; letter-spacing:1.5px; color:var(--muted); }
+    .ftKV { display:flex; justify-content:space-between; font-size:8px; }
+    .ftKV .k { color:var(--muted); font-size:7px; } .ftKV .v { color:var(--text); font-weight:700; font-size:9px; }
+    .ftStatus { grid-column:1/-1; background:rgba(2,8,18,.98); border-top:1px solid rgba(0,229,255,.1); display:flex; align-items:center; gap:20px; padding:0 14px; font-family:var(--display); font-size:7px; letter-spacing:1px; color:var(--muted); }
+    .ftStatus b { color:var(--core); }
+    .termOverlay { position:fixed; inset:0; z-index:2; background:rgba(1,4,12,.52); }
+
+    /* PAGE */
+    .page { position:relative; z-index:10; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px 16px 48px; }
+
+    /* CARD */
+    .card {
+      width:100%; max-width:460px;
+      background:rgba(3,9,22,.97);
+      border:1px solid rgba(0,229,255,.22);
+      border-radius:22px; padding:42px 38px 38px;
+      display:flex; flex-direction:column; gap:26px;
+      box-shadow: 0 0 0 1px rgba(0,229,255,.05), 0 0 50px rgba(0,229,255,.14), 0 0 100px rgba(0,229,255,.05), 0 40px 80px rgba(0,0,0,.75);
+      animation:cardIn .65s cubic-bezier(.16,1,.3,1) both;
+      position:relative; overflow:hidden;
+    }
+    .card::before { content:''; position:absolute; top:0; left:18%; right:18%; height:1px; background:linear-gradient(90deg,transparent,rgba(0,229,255,.65),transparent); }
+    .card::after { content:''; position:absolute; top:0; left:0; right:0; height:200px; background:radial-gradient(ellipse at 50% -10%, rgba(0,229,255,.09) 0%, transparent 65%); pointer-events:none; }
+    @keyframes cardIn { from{opacity:0;transform:translateY(26px) scale(.96);} to{opacity:1;transform:translateY(0) scale(1);} }
+
+    /* Header */
+    .header { display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; position:relative; z-index:1; }
+    .lockBox { width:58px; height:58px; background:rgba(0,229,255,.09); border:1px solid rgba(0,229,255,.28); border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:25px; box-shadow:0 0 24px rgba(0,229,255,.18); animation:lockGlow 3s ease infinite; }
+    @keyframes lockGlow { 0%,100%{box-shadow:0 0 20px rgba(0,229,255,.12);} 50%{box-shadow:0 0 38px rgba(0,229,255,.3);} }
+    .logoTxt { font-family:var(--display); font-size:21px; font-weight:900; letter-spacing:5px; color:#00e5ff; text-shadow:0 0 30px rgba(0,229,255,.55), 0 0 60px rgba(0,229,255,.2); }
+    .tagline { font-family:var(--mono); font-size:13px; line-height:1.7; color:rgba(214,238,255,.58); }
+    .tagline em { font-style:normal; color:var(--core); }
+
+    /* Stats */
+    .stats { display:grid; grid-template-columns:1fr 1fr 1fr; background:rgba(0,229,255,.03); border:1px solid rgba(0,229,255,.1); border-radius:13px; overflow:hidden; position:relative; z-index:1; }
+    .sItem { padding:14px 6px; display:flex; flex-direction:column; align-items:center; gap:5px; border-right:1px solid rgba(0,229,255,.07); }
+    .sItem:last-child { border-right:none; }
+    .sVal { font-family:var(--display); font-size:17px; font-weight:900; color:var(--green); text-shadow:0 0 14px rgba(0,255,163,.35); }
+    .sLbl { font-family:var(--display); font-size:6.5px; letter-spacing:1.2px; color:var(--muted); text-align:center; line-height:1.5; }
+
+    /* Form */
+    .form { display:flex; flex-direction:column; gap:14px; position:relative; z-index:1; }
+    .fWrap { display:flex; flex-direction:column; gap:7px; }
+    .fLbl { font-family:var(--display); font-size:8px; letter-spacing:2px; color:rgba(0,229,255,.6); }
+    .fInput { background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.18); border-radius:11px; padding:14px 16px; font-family:var(--mono); font-size:14px; color:var(--text); outline:none; width:100%; -webkit-appearance:none; transition:border-color .2s, box-shadow .2s, background .2s; }
+    .fInput::placeholder { color:rgba(74,106,138,.5); }
+    .fInput:focus { border-color:rgba(0,229,255,.45); background:rgba(0,229,255,.07); box-shadow:0 0 0 3px rgba(0,229,255,.08); }
+    .fErr { font-family:var(--display); font-size:9px; letter-spacing:1px; color:var(--red); text-align:center; display:none; padding:2px 0; }
+    .fBtn { background:linear-gradient(135deg, rgba(0,229,255,.2) 0%, rgba(0,229,255,.1) 100%); border:1px solid rgba(0,229,255,.42); border-radius:11px; padding:15px 20px; font-family:var(--display); font-size:11px; font-weight:900; letter-spacing:2.5px; color:#00e5ff; cursor:pointer; width:100%; margin-top:2px; -webkit-appearance:none; text-shadow:0 0 14px rgba(0,229,255,.5); box-shadow:0 0 22px rgba(0,229,255,.12); transition:all .2s; }
+    .fBtn:hover:not(:disabled) { background:linear-gradient(135deg, rgba(0,229,255,.3) 0%, rgba(0,229,255,.18) 100%); box-shadow:0 0 38px rgba(0,229,255,.24); transform:translateY(-1px); }
+    .fBtn:active:not(:disabled) { transform:translateY(0); }
+    .fBtn:disabled { opacity:.4; cursor:not-allowed; }
+
+    /* Counter */
+    .counter { display:flex; align-items:center; justify-content:center; gap:9px; font-family:var(--display); font-size:9px; letter-spacing:1px; color:var(--muted); position:relative; z-index:1; }
+    .cDot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); flex-shrink:0; animation:blink 2s ease infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
+    .cNum { color:var(--green); font-size:14px; font-weight:900; text-shadow:0 0 12px rgba(0,255,163,.4); }
+
+    /* Success */
+    .success { display:none; flex-direction:column; align-items:center; gap:18px; text-align:center; padding:8px 0; position:relative; z-index:1; }
+
+    /* Waitlist Full */
+    .full { display:none; flex-direction:column; align-items:center; gap:18px; text-align:center; padding:8px 0; position:relative; z-index:1; }
+    .fullIcon { width:58px; height:58px; background:rgba(255,59,59,.09); border:1px solid rgba(255,59,59,.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:25px; box-shadow:0 0 24px rgba(255,59,59,.15); }
+    .fullTitle { font-family:var(--display); font-size:15px; font-weight:900; letter-spacing:3px; color:var(--red); text-shadow:0 0 20px rgba(255,59,59,.4); }
+    .fullMsg { font-family:var(--mono); font-size:13px; line-height:1.75; color:rgba(214,238,255,.6); max-width:320px; }
+    .fullForm { display:flex; flex-direction:column; gap:10px; width:100%; margin-top:4px; }
+    .fullBtn { background:linear-gradient(135deg, rgba(255,59,59,.15) 0%, rgba(255,59,59,.08) 100%); border:1px solid rgba(255,59,59,.35); border-radius:11px; padding:14px 20px; font-family:var(--display); font-size:10px; font-weight:900; letter-spacing:2px; color:var(--red); cursor:pointer; width:100%; -webkit-appearance:none; text-shadow:0 0 14px rgba(255,59,59,.4); box-shadow:0 0 18px rgba(255,59,59,.1); transition:all .2s; }
+    .fullBtn:hover:not(:disabled) { background:linear-gradient(135deg, rgba(255,59,59,.25) 0%, rgba(255,59,59,.15) 100%); box-shadow:0 0 30px rgba(255,59,59,.2); transform:translateY(-1px); }
+    .fullBtn:disabled { opacity:.4; cursor:not-allowed; }
+    .sIcon { width:66px; height:66px; background:rgba(0,255,163,.09); border:1px solid rgba(0,255,163,.35); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; box-shadow:0 0 30px rgba(0,255,163,.18); animation:popIn .5s cubic-bezier(.16,1,.3,1) both; }
+    @keyframes popIn { from{transform:scale(0) rotate(-15deg);opacity:0;} to{transform:scale(1) rotate(0);opacity:1;} }
+    .sTitle { font-family:var(--display); font-size:17px; font-weight:900; letter-spacing:3px; color:var(--green); text-shadow:0 0 20px rgba(0,255,163,.45); }
+    .sMsg { font-family:var(--mono); font-size:13px; line-height:1.75; color:rgba(214,238,255,.6); max-width:300px; }
+    .sPos { font-family:var(--display); font-size:11px; font-weight:900; letter-spacing:1.5px; color:var(--core); background:rgba(0,229,255,.08); border:1px solid rgba(0,229,255,.25); border-radius:999px; padding:7px 22px; text-shadow:0 0 12px rgba(0,229,255,.4); }
+
+    /* Mobile */
+    @media (max-width:520px) {
+      .card { padding:30px 20px 26px; gap:20px; border-radius:18px; }
+      .logoTxt { font-size:17px; letter-spacing:3px; }
+      .sVal { font-size:15px; }
+      .fInput { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bgFixed">
+  <div class="bgOrb"></div>
+  <div class="bgCorner tl"></div>
+  <div class="bgCorner br"></div>
+  <canvas id="bgCanvas"></canvas>
+</div>
+
+<div class="termPreview" id="termPreview">
+  <div class="ftBar">
+    <span class="logo">// ORACLE TERMINAL</span>
+    <span class="ftPill g">&#9679; ENGAGED</span>
+    <span class="ftPill c">02-20-2026</span>
+    <span class="ftPill c">22:24 ET</span>
+    <span class="ftPill c">3 SIGNALS ACTIVE</span>
+  </div>
+  <div class="ftLeft">
+    <div class="ftCard on">
+      <div class="ftSym">TLT</div>
+      <div class="ftConf">CONF 93.8% &#9650; &nbsp;&#183;&nbsp; 6-12 MONTH</div>
+      <div class="ftBr2"><div class="ftFl" style="width:94%"></div></div>
+      <div style="font-family:var(--display);font-size:7px;color:var(--muted);margin-top:4px;">&#9201; 1d / 30d min &#128274; HOLD</div>
+    </div>
+    <div class="ftCard">
+      <div class="ftSym">MRNA</div>
+      <div class="ftConf">CONF 88.1% &#9650; &nbsp;&#183;&nbsp; 3 MONTHS</div>
+      <div class="ftBr2"><div class="ftFl" style="width:88%;background:var(--core)"></div></div>
+      <div style="font-family:var(--display);font-size:7px;color:var(--muted);margin-top:4px;">&#9201; 1d / 30d min &#128274; HOLD</div>
+    </div>
+    <div class="ftCard">
+      <div class="ftSym">BJ</div>
+      <div class="ftConf">CONF 87.2% &#9650; &nbsp;&#183;&nbsp; 3-6 MONTHS</div>
+      <div class="ftBr2"><div class="ftFl" style="width:87%;background:var(--core)"></div></div>
+      <div style="font-family:var(--display);font-size:7px;color:var(--muted);margin-top:4px;">&#9201; 29d / 45d min &#8987; SOON</div>
+    </div>
+  </div>
+  <div class="ftCenter">
+    <div class="ftCTop">&#9679;&#9679;&#9679; &nbsp; SIGNAL BRIEF &#8212; LIVE VIEW &nbsp;&nbsp; STREAM: TLT::BULLISH_BREAKOUT_ALERT</div>
+    <div class="ftSigBody">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="ftAsset">TLT</div>
+          <div style="font-family:var(--display);font-size:9px;color:var(--muted);margin-top:4px;">BULLISH BREAKOUT ALERT</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+          <div style="font-family:var(--display);font-size:9px;font-weight:900;color:var(--green);border:1px solid rgba(0,255,163,.3);background:rgba(0,255,163,.07);padding:4px 12px;border-radius:999px;">&#9670; BULL SIGNAL</div>
+          <div style="font-family:var(--display);font-size:8px;color:var(--core);border:1px solid rgba(0,229,255,.2);background:rgba(0,229,255,.06);padding:3px 10px;border-radius:999px;">CONF 93.8% &#9650;</div>
+        </div>
+      </div>
+      <div class="ftTRow">
+        <div class="ftTCol"><div class="ftTL">ENTRY PRICE</div><div class="ftTV">$89.50</div><div class="ftTV g" style="font-size:11px;">+0.13%</div></div>
+        <div class="ftTDiv"></div>
+        <div class="ftTCol" style="align-items:center;"><div class="ftTL">TARGETS</div><div class="ftTV g" style="font-size:11px;">T1 $94.00</div><div class="ftTV g" style="font-size:11px;">T2 $99.82</div><div class="ftTV g" style="font-size:11px;">T3 $107.00</div></div>
+        <div class="ftTDiv"></div>
+        <div class="ftTCol" style="align-items:flex-end;"><div class="ftTL">INVALIDATION</div><div class="ftTV r" style="font-size:12px;">&lt; $85.90</div></div>
+      </div>
+      <div class="ftTxtBox">Oracle directive: ACCUMULATION INTO STRUCTURE. Volatility: STABLE EXPANSION. Time horizon: 6-12 MONTH SWING. Confidence index: 93.8%</div>
+      <div class="ftTxtBox">1. Enter near $89.50. Hard stop at &lt;$85.90 &#8212; no exceptions.<br/>2. Trail stop to breakeven on confirmation above $92.50.<br/>3. Scale 33% at T1 $94.00. Hold remainder to T2 $99.82.</div>
+    </div>
+  </div>
+  <div class="ftRight">
+    <div class="ftRL">CONFIDENCE INDEX</div>
+    <div style="display:flex;justify-content:center;padding:6px 0 2px;">
+      <svg width="110" viewBox="0 0 110 65">
+        <path d="M 10 60 A 45 45 0 0 1 100 60" fill="none" stroke="rgba(0,229,255,.08)" stroke-width="8" stroke-linecap="round"/>
+        <path d="M 10 60 A 45 45 0 0 1 100 60" fill="none" stroke="#00e5ff" stroke-width="8" stroke-linecap="round" stroke-dasharray="141.4" stroke-dashoffset="16" filter="drop-shadow(0 0 8px rgba(0,229,255,.9))"/>
+        <text x="55" y="57" text-anchor="middle" font-family="Orbitron,monospace" font-size="16" font-weight="900" fill="#00e5ff">93.8</text>
+      </svg>
+    </div>
+    <div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--green);text-align:center;margin-top:-2px;">IN PROFIT &#9650;</div>
+    <div class="ftRBox">
+      <h4>EXECUTION SNAPSHOT</h4>
+      <div class="ftKV"><span class="k">ASSET</span><span class="v">TLT</span></div>
+      <div class="ftKV"><span class="k">ENTRY</span><span class="v" style="color:var(--core)">$89.50</span></div>
+      <div class="ftKV"><span class="k">LIVE</span><span class="v" style="color:var(--green)">&#9650; $89.62</span></div>
+      <div class="ftKV"><span class="k">P&amp;L</span><span class="v" style="color:var(--green)">+0.13%</span></div>
+    </div>
+    <div class="ftRBox">
+      <h4>RISK / REWARD AT ENTRY</h4>
+      <div style="text-align:center;font-family:var(--display);font-size:24px;font-weight:900;color:var(--green);padding:3px 0;">2.51</div>
+      <div style="text-align:center;font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--green);">FAVORABLE</div>
+      <div style="display:flex;height:5px;border-radius:999px;overflow:hidden;gap:1px;margin-top:5px;">
+        <div style="flex:28;background:rgba(255,59,59,.5);border-radius:999px;"></div>
+        <div style="flex:72;background:rgba(0,255,163,.45);border-radius:999px;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="ftStatus">
+    <span>&#9679; ORACLE ONLINE</span>
+    <span>UPTIME: <b>00:04:32</b></span>
+    <span>SIGNALS: <b>3 ACTIVE</b></span>
+    <span>ENGINE: <b>SKYNET v3.2</b></span>
+  </div>
+</div>
+<div class="termOverlay" id="termOverlay"></div>
+
+<div class="page">
+  <div class="card">
+    <div class="header">
+      <div class="lockBox">&#128274;</div>
+      <div class="logoTxt">ORACLE TERMINAL</div>
+      <div class="tagline">Institutional-grade trading signals.<br/><em>Confidence-scored. Action-ready.</em> Built for the edge.</div>
+    </div>
+    <div class="stats">
+      <div class="sItem"><div class="sVal">91.2%</div><div class="sLbl">AVG SIGNAL CONF</div></div>
+      <div class="sItem"><div class="sVal">67.4%</div><div class="sLbl">BEST WIN RESULT</div></div>
+      <div class="sItem"><div class="sVal">2.8:1</div><div class="sLbl">AVG RISK REWARD</div></div>
+    </div>
+    <div class="form" id="formWrap">
+      <div class="fWrap">
+        <div class="fLbl">FULL NAME</div>
+        <input class="fInput" id="wlName" type="text" placeholder="Your name" autocomplete="name"/>
+      </div>
+      <div class="fWrap">
+        <div class="fLbl">EMAIL ADDRESS</div>
+        <input class="fInput" id="wlEmail" type="email" placeholder="your@email.com" autocomplete="email"/>
+      </div>
+      <div class="fErr" id="fErr"></div>
+      <button class="fBtn" id="fBtn" onclick="doSubmit()">REQUEST EARLY ACCESS</button>
+    </div>
+    <div class="success" id="successWrap">
+      <div class="sIcon">&#10003;</div>
+      <div class="sTitle">YOU'RE ON THE LIST</div>
+      <div class="sMsg">We'll notify you the moment Oracle Terminal opens. Founding members get priority access and locked-in pricing.</div>
+      <div class="sPos" id="sPos">POSITION #&#8212; ON WAITLIST</div>
+    </div>
+    <div class="full" id="fullWrap">
+      <div class="fullIcon">&#128274;</div>
+      <div class="fullTitle">WAITLIST FULL</div>
+      <div class="fullMsg">300 founding spots have been claimed. Join the overflow list for priority access when spots open.</div>
+      <div class="fullForm">
+        <div class="fWrap">
+          <div class="fLbl">FULL NAME</div>
+          <input class="fInput" id="ovName" type="text" placeholder="Your name" autocomplete="name"/>
+        </div>
+        <div class="fWrap">
+          <div class="fLbl">EMAIL ADDRESS</div>
+          <input class="fInput" id="ovEmail" type="email" placeholder="your@email.com" autocomplete="email"/>
+        </div>
+        <div class="fErr" id="ovErr"></div>
+        <button class="fullBtn" id="ovBtn" onclick="doOverflow()">JOIN OVERFLOW LIST</button>
+      </div>
+    </div>
+    <div class="success" id="ovSuccessWrap" style="display:none;">
+      <div class="sIcon">&#10003;</div>
+      <div class="sTitle">OVERFLOW CONFIRMED</div>
+      <div class="sMsg">You're on the overflow list. You'll be first in line when a founding spot opens up.</div>
+    </div>
+    <div class="counter">
+      <div class="cDot"></div>
+      <span><span class="cNum" id="cNum">&#8212;</span><span style="color:var(--muted);font-size:11px;font-weight:400;">/300</span>&nbsp; traders already waiting</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById('bgCanvas'),cx=cv.getContext('2d');
+let W,H,pts=[];
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+function mkPts(){pts=Array.from({length:75},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.2,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.38+.06}));}
+function tick(){
+  cx.clearRect(0,0,W,H);
+  pts.forEach((p,i)=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    for(let j=i+1;j<pts.length;j++){
+      const dx=pts[j].x-p.x,dy=pts[j].y-p.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(pts[j].x,pts[j].y);cx.strokeStyle=`rgba(0,229,255,${.055*(1-d/110)})`;cx.lineWidth=.5;cx.stroke();}
+    }
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle=`rgba(0,229,255,${p.a})`;cx.fill();
+  });
+  requestAnimationFrame(tick);
+}
+window.addEventListener('resize',()=>{rsz();mkPts();});
+rsz();mkPts();tick();
+
+function layout(){
+  const m=innerWidth<900;
+  ['termPreview','termOverlay'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=m?'none':'';});
+}
+layout();window.addEventListener('resize',layout);
+
+const SB='https://pojiqfeemksvocnaellu.supabase.co/rest/v1';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvamlxZmVlbWtzdm9jbmFlbGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjg2NTgsImV4cCI6MjA4Njg0NDY1OH0.oOrfkygK_MM-zZyemF0D2HtL8YRuzrryRQ2dmSRwAXI';
+const SH={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=representation'};
+
+const CAP=300;
+const BASE=113;
+
+async function getCount(){
+  try{
+    const r=await fetch(`${SB}/rpc/waitlist_count`,{method:'POST',headers:{...SH,'Prefer':''}});
+    const count=await r.json();
+    const display=BASE+(typeof count==='number'?count:0);
+    document.getElementById('cNum').textContent=display.toLocaleString();
+    if(display>=CAP) showFull();
+  }catch(e){document.getElementById('cNum').textContent=BASE.toString();}
+}
+
+function showFull(){
+  document.getElementById('formWrap').style.display='none';
+  document.getElementById('fullWrap').style.display='flex';
+  document.getElementById('cNum').textContent=CAP.toString();
+}
+
+getCount();
+
+async function doSubmit(){
+  const name=document.getElementById('wlName').value.trim();
+  const email=document.getElementById('wlEmail').value.trim();
+  const err=document.getElementById('fErr');
+  const btn=document.getElementById('fBtn');
+  err.style.display='none';
+  if(!name)return showErr('Please enter your name.');
+  if(!email||!email.includes('@'))return showErr('Please enter a valid email.');
+  btn.disabled=true;btn.textContent='SUBMITTING...';
+  try{
+    const r=await fetch(`${SB}/waitlist`,{method:'POST',headers:SH,body:JSON.stringify({name,email})});
+    if(r.status===409){showErr('This email is already on the waitlist.');btn.disabled=false;btn.textContent='REQUEST EARLY ACCESS';return;}
+    if(!r.ok){const errBody=await r.text();showErr('Error '+r.status+': '+errBody);btn.disabled=false;btn.textContent='REQUEST EARLY ACCESS';return;}
+    let pos=null;
+    try{const r2=await fetch(`${SB}/rpc/waitlist_count`,{method:'POST',headers:{...SH,'Prefer':''}});const count=await r2.json();if(typeof count==='number')pos=BASE+count;}catch(e){}
+    document.getElementById('formWrap').style.display='none';
+    const sw=document.getElementById('successWrap');sw.style.display='flex';
+    if(pos)document.getElementById('sPos').textContent=`POSITION #${pos}/300 ON WAITLIST`;
+    await getCount();
+  }catch(e){
+    showErr('Something went wrong. Please try again.');
+    btn.disabled=false;btn.textContent='REQUEST EARLY ACCESS';
+  }
+}
+function showErr(m){const e=document.getElementById('fErr');e.textContent=m;e.style.display='block';}
+
+async function doOverflow(){
+  const name=document.getElementById('ovName').value.trim();
+  const email=document.getElementById('ovEmail').value.trim();
+  const err=document.getElementById('ovErr');
+  const btn=document.getElementById('ovBtn');
+  err.style.display='none';
+  if(!name){err.textContent='Please enter your name.';err.style.display='block';return;}
+  if(!email||!email.includes('@')){err.textContent='Please enter a valid email.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='SUBMITTING...';
+  try{
+    const r=await fetch(`${SB}/waitlist`,{method:'POST',headers:SH,body:JSON.stringify({name,email})});
+    if(r.status===409){err.textContent='This email is already on the list.';err.style.display='block';btn.disabled=false;btn.textContent='JOIN OVERFLOW LIST';return;}
+    if(!r.ok)throw new Error();
+    document.getElementById('fullWrap').style.display='none';
+    document.getElementById('ovSuccessWrap').style.display='flex';
+  }catch(e){
+    err.textContent='Something went wrong. Please try again.';err.style.display='block';
+    btn.disabled=false;btn.textContent='JOIN OVERFLOW LIST';
+  }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doSubmit();});
+</script>
+</body>
+</html>

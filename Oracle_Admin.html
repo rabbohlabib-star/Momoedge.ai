@@ -1,0 +1,2275 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MomoEdge — Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #020408;
+      --panel: #060c14;
+      --border: rgba(0,224,255,.13);
+      --border2: rgba(0,224,255,.07);
+      --text: #d6eeff;
+      --muted: #4a6a8a;
+      --core: #00e5ff;
+      --purple: #8b5cf6;
+      --glow-core: rgba(0,229,255,.6);
+      --red: #ff3b3b;
+      --green: #00ffa3;
+      --amber: #ffb300;
+      --mono: 'JetBrains Mono', monospace;
+      --display: 'Orbitron', monospace;
+      --r: 14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
+    body.auth-ready { visibility: visible; }
+
+    /* LOGIN */
+    .loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(0,180,255,.08), transparent 60%);
+    }
+    .loginBox {
+      background: linear-gradient(160deg, rgba(6,18,32,.98), rgba(4,10,20,.99));
+      border: 1px solid rgba(0,229,255,.2);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: min(400px, 92vw);
+      box-shadow: 0 0 80px rgba(0,0,0,.9), 0 0 40px rgba(0,229,255,.08);
+      text-align: center;
+    }
+    .loginTitle {
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--core);
+      text-shadow: 0 0 20px var(--glow-core);
+      margin-bottom: 8px;
+    }
+    .loginSub {
+      font-family: var(--display);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .loginInput {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 14px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      outline: none;
+      margin-bottom: 16px;
+      letter-spacing: 3px;
+      text-align: center;
+    }
+    .loginInput:focus { border-color: rgba(0,229,255,.3); background: rgba(0,229,255,.05); }
+    .loginBtn {
+      width: 100%;
+      font-family: var(--display);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,229,255,.3);
+      background: linear-gradient(135deg, rgba(0,229,255,.15), rgba(139,92,246,.1));
+      color: var(--core);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .loginBtn:hover { box-shadow: 0 0 24px rgba(0,229,255,.15); }
+    .loginError { color: var(--red); font-size: 11px; margin-top: 12px; font-family: var(--display); letter-spacing: 1px; }
+
+    /* ADMIN LAYOUT */
+    .adminScreen { display: none; }
+    .adminScreen.active { display: block; }
+
+    .adminHeader {
+      background: linear-gradient(160deg, rgba(6,18,32,.98), rgba(4,10,20,.99));
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .adminBrand {
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--core);
+      text-shadow: 0 0 16px rgba(0,229,255,.4);
+    }
+    .adminBadge {
+      font-family: var(--display);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(139,92,246,.3);
+      background: rgba(139,92,246,.1);
+      color: var(--purple);
+    }
+    .logoutBtn {
+      font-family: var(--display);
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,59,59,.2);
+      background: rgba(255,59,59,.06);
+      color: var(--red);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .logoutBtn:hover { background: rgba(255,59,59,.12); }
+
+    .adminWrap {
+      width: min(1280px, calc(100% - 40px));
+      margin: 32px auto 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* SECTION */
+    .aSection { display: flex; flex-direction: column; gap: 16px; }
+    .aSectionHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .aSectionTitle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--display);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--core);
+    }
+    .aSectionTitle::before {
+      content: '';
+      width: 4px;
+      height: 22px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--core), var(--purple));
+      box-shadow: 0 0 10px rgba(0,229,255,.5);
+    }
+
+    /* CARDS GRID */
+    .cardsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+    .signalCard {
+      background: linear-gradient(160deg, rgba(6,18,32,.97), rgba(4,10,20,.98));
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .signalCard::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+    }
+    .signalCard.bull::before { background: var(--green); }
+    .signalCard.bear::before { background: var(--red); }
+    .signalCard:hover { border-color: rgba(0,229,255,.2); }
+
+    .scTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+    .scAsset {
+      font-family: var(--display);
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .scLevel {
+      font-family: var(--display);
+      font-size: 9px;
+      color: var(--amber);
+      letter-spacing: .5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,179,0,.2);
+      background: rgba(255,179,0,.07);
+      white-space: nowrap;
+    }
+    .scMeta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      margin-bottom: 14px;
+    }
+    .scMetaItem {
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .scMetaItem b { color: var(--text); font-weight: 600; display: block; font-size: 11px; }
+    .scConf {
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--core);
+      text-shadow: 0 0 10px var(--glow-core);
+    }
+    .scActions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border2);
+    }
+    .scBtn {
+      font-family: var(--display);
+      font-size: 9px;
+      letter-spacing: .8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .scEdit {
+      border: 1px solid rgba(0,229,255,.2);
+      background: rgba(0,229,255,.06);
+      color: var(--core);
+    }
+    .scEdit:hover { background: rgba(0,229,255,.12); }
+    .scDeact {
+      border: 1px solid rgba(255,179,0,.2);
+      background: rgba(255,179,0,.06);
+      color: var(--amber);
+    }
+    .scDeact:hover { background: rgba(255,179,0,.12); }
+    .scDelete {
+      border: 1px solid rgba(255,59,59,.2);
+      background: rgba(255,59,59,.06);
+      color: var(--red);
+    }
+    .scDelete:hover { background: rgba(255,59,59,.12); }
+    .scInactive { opacity: .45; }
+
+    /* ADD/EDIT FORM */
+    .formPanel {
+      background: linear-gradient(160deg, rgba(6,18,32,.97), rgba(4,10,20,.98));
+      border: 1px solid rgba(0,229,255,.15);
+      border-radius: var(--r);
+      padding: 24px;
+    }
+    .formTitle {
+      font-family: var(--display);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--core);
+      margin-bottom: 20px;
+    }
+    .formGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .formGroup {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .formGroup.wide { grid-column: 1 / -1; }
+    .fLabel {
+      font-family: var(--display);
+      font-size: 8px;
+      letter-spacing: 1.8px;
+      color: var(--muted);
+    }
+    .fInput, .fSelect {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      transition: all .2s;
+      width: 100%;
+    }
+    .fInput:focus, .fSelect:focus { border-color: rgba(0,229,255,.3); background: rgba(0,229,255,.05); }
+    .fSelect option { background: #060c14; }
+    .formActions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .fSave {
+      font-family: var(--display);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+      padding: 12px 28px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,229,255,.3);
+      background: linear-gradient(135deg, rgba(0,229,255,.15), rgba(139,92,246,.1));
+      color: var(--core);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .fSave:hover { box-shadow: 0 0 20px rgba(0,229,255,.12); }
+    .fCancel {
+      font-family: var(--display);
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .fCancel:hover { color: var(--text); }
+
+    /* TABLE */
+    .aTable {
+      background: linear-gradient(160deg, rgba(6,18,32,.97), rgba(4,10,20,.98));
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .aTableWrap { overflow-x: auto; }
+    .aTableEl {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+    }
+    .aTableEl thead tr {
+      background: rgba(0,229,255,.04);
+      border-bottom: 1px solid var(--border);
+    }
+    .aTableEl thead th {
+      padding: 12px 16px;
+      font-family: var(--display);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-align: left;
+      white-space: nowrap;
+    }
+    .aTableEl tbody tr { border-bottom: 1px solid rgba(255,255,255,.03); }
+    .aTableEl tbody tr:last-child { border-bottom: none; }
+    .aTableEl tbody tr:hover { background: rgba(0,229,255,.02); }
+    .aTableEl td { padding: 11px 16px; font-size: 11px; white-space: nowrap; }
+    .aEmpty { padding: 40px; text-align: center; color: var(--muted); font-family: var(--display); font-size: 10px; letter-spacing: 1.5px; }
+
+    /* STATUS BADGES */
+    .sBadge { padding: 3px 9px; border-radius: 999px; font-family: var(--display); font-size: 9px; font-weight: 700; }
+    .sActive { background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.2); color: var(--core); }
+    .sOff { background: rgba(255,179,0,.08); border: 1px solid rgba(255,179,0,.2); color: var(--amber); }
+    .sT2 { background: rgba(0,255,163,.12); border: 1px solid rgba(0,255,163,.3); color: #00ffb8; }
+    .sT1 { background: rgba(0,255,163,.08); border: 1px solid rgba(0,255,163,.2); color: var(--green); }
+    .sInv { background: rgba(255,179,0,.08); border: 1px solid rgba(255,179,0,.2); color: var(--amber); }
+    .dBull { color: var(--green); font-weight: 900; font-family: var(--display); font-size: 10px; }
+    .dBear { color: var(--red); font-weight: 900; font-family: var(--display); font-size: 10px; }
+
+    .addBtn {
+      font-family: var(--display);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,229,255,.25);
+      background: rgba(0,229,255,.08);
+      color: var(--core);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .addBtn:hover { background: rgba(0,229,255,.15); box-shadow: 0 0 16px rgba(0,229,255,.1); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(6,18,32,.98);
+      border: 1px solid rgba(0,229,255,.3);
+      border-radius: 999px;
+      padding: 12px 26px;
+      font-family: var(--display);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--core);
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,.7);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .statChips { display: flex; gap: 10px; flex-wrap: wrap; }
+    .statChip {
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: rgba(0,229,255,.06);
+      border: 1px solid var(--border);
+      font-family: var(--display);
+      font-size: 9px;
+      color: var(--muted);
+    }
+    .statChip b { color: var(--core); font-size: 14px; display: block; margin-top: 3px; }
+    .statChip b.g { color: var(--green); }
+    .statChip b.r { color: var(--red); }
+
+  .invAlert {
+    background: rgba(255,68,102,.08);
+    border: 1px solid rgba(255,68,102,.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: var(--display);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #ff4466;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .invAlert b { font-size: 11px; }
+  .invAlertBanner { margin-bottom: 16px; }
+  .scInvalidated {
+    border-color: rgba(255,68,102,.5) !important;
+    box-shadow: 0 0 12px rgba(255,68,102,.15) !important;
+  }
+  .scInvalidatedBadge {
+    display: inline-block;
+    background: rgba(255,68,102,.15);
+    border: 1px solid rgba(255,68,102,.4);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 8px;
+    color: #ff4466;
+    letter-spacing: 1px;
+    margin-left: 6px;
+  }
+  </style>
+
+</head>
+<body>
+
+<!-- ── AUTH GATE DISABLED — protected by secret URL ── -->
+<script>
+  const _SB_AUTH_URL = 'https://pojiqfeemksvocnaellu.supabase.co';
+  const _SB_AUTH_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvamlxZmVlbWtzdm9jbmFlbGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjg2NTgsImV4cCI6MjA4Njg0NDY1OH0.oOrfkygK_MM-zZyemF0D2HtL8YRuzrryRQ2dmSRwAXI';
+  const _sbAuth = window.supabase.createClient(_SB_AUTH_URL, _SB_AUTH_KEY);
+
+  window.addEventListener('DOMContentLoaded', function() {
+    document.body.classList.add('auth-ready');
+    var ls = document.getElementById('loginScreen');
+    var as = document.getElementById('adminScreen');
+    if (ls) ls.style.display = 'flex';
+    if (as) as.style.display = 'none';
+  });
+
+  async function oracleLogout() {
+    await _sbAuth.auth.signOut();
+    window.location.replace('./login.html?msg=signed_out');
+  }
+</script>
+
+<!-- LOGIN SCREEN (legacy — hidden by auth gate) -->
+
+<div class="loginScreen" id="loginScreen">
+  <div class="loginBox">
+    <div class="loginTitle">MOMOEDGE</div>
+    <div class="loginSub">ADMIN CONTROL PANEL — RESTRICTED ACCESS</div>
+    <input class="loginInput" type="password" id="passInput" placeholder="Enter access code" autocomplete="off"/>
+    <button class="loginBtn" id="loginBtn">AUTHENTICATE →</button>
+    <div class="loginError" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+
+<div class="adminScreen" id="adminScreen">
+  <div class="adminHeader">
+    <div class="adminBrand">MOMOEDGE // ADMIN PANEL</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="adminBadge">◆ AUTHENTICATED</span>
+      <a href="oracle-terminal-complete.html" target="_blank" style="color:var(--core);font-family:var(--display);font-size:9px;text-decoration:none;letter-spacing:1px;border:1px solid var(--border);padding:6px 14px;border-radius:999px;">↗ VIEW TERMINAL</a>
+      <button class="logoutBtn" id="logoutBtn">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="adminWrap">
+
+```
+<!-- STATS ROW -->
+<div class="statChips" id="adminStats"></div>
+
+<!-- SIGNALS SECTION -->
+<div class="aSection">
+  <div class="aSectionHeader">
+    <div class="aSectionTitle">LIVE ORACLE SIGNALS</div>
+    <button class="addBtn" id="addSignalBtn">+ ADD NEW SIGNAL</button>
+  </div>
+
+  <!-- ADD/EDIT FORM (hidden by default) -->
+  <div class="formPanel" id="signalForm" style="display:none">
+    <div class="formTitle" id="formTitle">NEW SIGNAL</div>
+    <input type="hidden" id="editId"/>
+    <div class="formGrid">
+      <div class="formGroup">
+        <div class="fLabel">ASSET *</div>
+        <input class="fInput" id="fAsset" placeholder="e.g. XAUUSD, NVDA"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">COMPANY / PAIR NAME</div>
+        <input class="fInput" id="fCompanyName" placeholder="e.g. Mux Gold Corp, US Dollar / Swiss Franc"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">LEVEL / SIGNAL NAME *</div>
+        <input class="fInput" id="fLevel" placeholder="e.g. BULLISH MOMENTUM"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DIRECTION *</div>
+        <select class="fSelect" id="fDir">
+          <option value="BULL">BULL</option>
+          <option value="BEAR">BEAR</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">CONFIDENCE % *</div>
+        <input class="fInput" id="fConf" type="number" step="0.01" min="0" max="100" placeholder="e.g. 87.24"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">BIAS / SIGNAL TYPE</div>
+        <input class="fInput" id="fBias" placeholder="e.g. PHOENIX_BREAKOUT"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">TIME HORIZON</div>
+        <input class="fInput" id="fHorizon" placeholder="e.g. 3–6 MONTHS"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">ENTRY TRIGGER</div>
+        <input class="fInput" id="fTriggerVal" placeholder="e.g. > 5045 SUSTAINED"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">TARGETS</div>
+        <input class="fInput" id="fTargets" placeholder="e.g. T1=5180, T2=5325"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">INVALIDATION</div>
+        <input class="fInput" id="fInval" placeholder="e.g. < 4890 (4H CLOSE)"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">VOLATILITY STATE</div>
+        <input class="fInput" id="fVol" placeholder="e.g. CONSOLIDATION → EXPANSION"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">ORACLE DIRECTIVE</div>
+        <input class="fInput" id="fDir2" placeholder="e.g. CONTINUED STRENGTH EXPECTED"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">ENTRY PRICE AT SIGNAL</div>
+        <input class="fInput" id="fEntryPrice" type="number" step="0.01" placeholder="e.g. 43.21"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">MIN HOLD DURATION</div>
+        <input class="fInput" id="fMinDuration" placeholder="e.g. 30 DAYS, 3 MONTHS"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">SIGNAL DATE &amp; TIME</div>
+        <input class="fInput" id="fSignalDate" type="datetime-local"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">SORT ORDER</div>
+        <input class="fInput" id="fSort" type="number" placeholder="1, 2, 3…"/>
+      </div>
+      <div class="formGroup wide">
+        <div class="fLabel">STREAM LABEL</div>
+        <input class="fInput" id="fStream" placeholder="e.g. XAUUSD::BULLISH_MOMENTUM::0210"/>
+      </div>
+      <div class="formGroup wide">
+        <div class="fLabel" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>SIGNAL THESIS <span style="opacity:.5;font-size:8px;margin-left:6px;">— analyst narrative shown to subscribers</span></span>
+          <span id="thesisCharCount" style="font-size:9px;color:var(--muted);font-family:var(--display);">0 chars</span>
+        </div>
+        <textarea class="fInput" id="fThesis" placeholder="e.g. TLT is consolidating above major long-term support at 85.90. The bond market is showing signs of regime change as rate cut expectations build. Oracle identifies a high-probability breakout setup..." style="min-height:100px;resize:vertical;line-height:1.6;" oninput="document.getElementById('thesisCharCount').textContent=this.value.length+' chars';"></textarea>
+        <div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:4px;letter-spacing:.5px;">💡 Tip: 150–400 chars works best. Write as if you're briefing a trader — WHY this setup, WHAT to watch for, WHAT confirms it.</div>
+      </div>
+      <div class="formGroup wide">
+        <div class="fLabel" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>ACTION PLAN <span style="opacity:.5;font-size:8px;margin-left:6px;">— custom steps override auto-generated plan (optional)</span></span>
+          <span id="actionPlanCharCount" style="font-size:9px;color:var(--muted);font-family:var(--display);">0 chars</span>
+        </div>
+        <textarea class="fInput" id="fActionPlan" placeholder="Leave blank to use auto-generated plan based on live zone. Or write custom numbered steps e.g.:&#10;1. Enter on break above $92.50 with confirmation candle&#10;2. Set hard stop at $85.90 immediately on entry&#10;3. First target $94 — scale out 33% there, trail stop to entry" style="min-height:110px;resize:vertical;line-height:1.7;" oninput="document.getElementById('actionPlanCharCount').textContent=this.value.length+' chars';"></textarea>
+        <div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:4px;letter-spacing:.5px;">💡 Write numbered steps. Leave blank and the terminal auto-generates steps from live price zone. Your custom text always overrides it.</div>
+      </div>
+    </div>
+    <div class="formActions">
+      <button class="fSave" id="saveSignalBtn">SAVE SIGNAL</button>
+      <button class="fCancel" id="cancelSignalBtn">CANCEL</button>
+    </div>
+  </div>
+
+  <div id="invalAlertBanner" class="invAlertBanner"></div>
+  <div class="cardsGrid" id="signalsGrid"></div>
+</div>
+
+<!-- PERFORMANCE SECTION -->
+<div class="aSection">
+  <div class="aSectionHeader">
+    <div class="aSectionTitle">PERFORMANCE HISTORY</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="addBtn" id="backfillSpyBtn" style="background:rgba(0,255,163,.06);border-color:rgba(0,255,163,.25);color:#00ffa3;font-size:8px;">⟳ BACKFILL SPY ALPHA</button>
+      <button class="addBtn" id="addPerfBtn">+ ADD TRADE</button>
+    </div>
+  </div>
+
+  <!-- ADD PERF FORM -->
+  <div class="formPanel" id="perfForm" style="display:none">
+    <div class="formTitle">ADD CLOSED TRADE</div>
+    <div class="formGrid">
+      <div class="formGroup">
+        <div class="fLabel">ASSET *</div>
+        <input class="fInput" id="pfAsset" placeholder="e.g. NVDA"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">SIGNAL TYPE</div>
+        <input class="fInput" id="pfType" placeholder="e.g. PHOENIX BREAKOUT"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DIRECTION</div>
+        <select class="fSelect" id="pfDir">
+          <option value="BULL">BULL</option>
+          <option value="BEAR">BEAR</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DATE ISSUED (MM-DD-YYYY)</div>
+        <input class="fInput" id="pfDate" placeholder="e.g. 01-08-2025"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">SIGNAL KEY</div>
+        <input class="fInput" id="pfSignal" placeholder="e.g. PHOENIX_BREAKOUT"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">STATUS</div>
+        <select class="fSelect" id="pfStatus">
+          <option value="T2_HIT">T2 HIT</option>
+          <option value="T1_HIT">T1 HIT</option>
+          <option value="INVALIDATED">INVALIDATED</option>
+          <option value="ACTIVE">ACTIVE</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">RESULT %</div>
+        <input class="fInput" id="pfResult" type="number" step="0.1" placeholder="e.g. 31.2"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DAYS TO TARGET</div>
+        <input class="fInput" id="pfDays" type="number" placeholder="e.g. 22"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">CONFIDENCE %</div>
+        <input class="fInput" id="pfConf" type="number" step="0.01" placeholder="e.g. 87.40"/>
+      </div>
+    </div>
+    <div class="formActions">
+      <button class="fSave" id="savePerfBtn">SAVE TRADE</button>
+      <button class="fCancel" id="cancelPerfBtn">CANCEL</button>
+    </div>
+  </div>
+
+  <div class="aTable">
+    <div class="aTableWrap">
+      <table class="aTableEl">
+        <thead><tr>
+          <th>ASSET</th><th>TYPE</th><th>DIR</th><th>DATE</th>
+          <th>STATUS</th><th>RESULT</th><th>DAYS</th><th>CONF</th><th>NOTES</th><th></th>
+        </tr></thead>
+        <tbody id="perfTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ORACLE PERSONALITY & BROADCAST -->
+<div class="aSection">
+  <div class="aSectionHeader">
+    <div class="aSectionTitle">ORACLE PERSONALITY & STANCE</div>
+  </div>
+  <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">
+      SET ORACLE STANCE — syncs to terminal instantly
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="stanceSetBtn" data-stance="bull" style="flex:1;min-width:100px;padding:14px 10px;border-radius:12px;border:1px solid rgba(0,255,163,.3);background:rgba(0,255,163,.08);color:#00ffa3;font-family:var(--display);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;">
+        🟢 BULLISH
+      </button>
+      <button class="stanceSetBtn" data-stance="neutral" style="flex:1;min-width:100px;padding:14px 10px;border-radius:12px;border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.08);color:#ffb300;font-family:var(--display);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;">
+        🟡 NEUTRAL
+      </button>
+      <button class="stanceSetBtn" data-stance="bear" style="flex:1;min-width:100px;padding:14px 10px;border-radius:12px;border:1px solid rgba(255,59,59,.3);background:rgba(255,59,59,.08);color:#ff3b3b;font-family:var(--display);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;">
+        🔴 BEARISH
+      </button>
+    </div>
+    <div id="stanceStatus" style="font-family:var(--display);font-size:10px;letter-spacing:1px;color:var(--muted);text-align:center;min-height:20px;"></div>
+  </div>
+</div>
+
+<!-- ORACLE BROADCAST -->
+<div class="aSection">
+  <div class="aSectionHeader">
+    <div class="aSectionTitle">📡 ORACLE BROADCAST</div>
+  </div>
+  <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+    <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">
+      COMPOSE A MESSAGE — displayed as a live banner across all subscriber terminals
+    </div>
+    <div class="formGrid" style="gap:12px;">
+      <div class="formGroup wide">
+        <div class="fLabel" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>BROADCAST MESSAGE</span>
+          <span id="broadcastCharCount" style="font-size:9px;color:var(--muted);font-family:var(--display);">0 chars</span>
+        </div>
+        <textarea class="fInput" id="broadcastMsg" placeholder="e.g. Markets are extended heading into FOMC. Oracle is cautious on new entries. Watch TLT invalidation level closely. Holding existing positions and monitoring for regime shift." style="min-height:80px;resize:vertical;line-height:1.5;" oninput="document.getElementById('broadcastCharCount').textContent=this.value.length+' chars';"></textarea>
+        <div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:4px;letter-spacing:.5px;">💡 Keep it under 280 chars. Write as if you're briefing subscribers — what you see, what you're watching, what it means for open positions.</div>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">TONE / ALERT TYPE</div>
+        <select class="fInput" id="broadcastTone" style="cursor:pointer;">
+          <option value="neutral">🔵 NEUTRAL</option>
+          <option value="bullish">🟢 BULLISH</option>
+          <option value="bearish">🔴 BEARISH</option>
+          <option value="caution">🟡 CAUTION</option>
+          <option value="alert">🔴 URGENT ALERT</option>
+        </select>
+      </div>
+      <div class="formGroup" style="display:flex;align-items:flex-end;gap:8px;">
+        <button class="fSave" id="publishBroadcastBtn" style="flex:1;">📡 PUBLISH BROADCAST</button>
+        <button class="fCancel" id="clearBroadcastBtn" style="flex:1;">CLEAR BROADCAST</button>
+      </div>
+    </div>
+    <div id="broadcastStatus" style="font-family:var(--display);font-size:10px;letter-spacing:1px;color:var(--muted);min-height:18px;"></div>
+    <div id="currentBroadcastPreview" style="display:none;border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:12px;background:rgba(0,229,255,.03);">
+      <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;">CURRENTLY LIVE ON TERMINAL:</div>
+      <div id="currentBroadcastText" style="font-family:var(--display);font-size:10px;color:var(--core);line-height:1.6;"></div>
+      <div id="currentBroadcastMeta" style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:6px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MACRO REGIME DASHBOARD -->
+<div class="aSection">
+  <div class="aSectionHeader">
+    <div class="aSectionTitle">🌐 MACRO REGIME DASHBOARD</div>
+  </div>
+  <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">
+      SET MACRO INDICATORS — displayed as a live regime panel on the terminal
+    </div>
+    <div id="macroEditorGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    <button class="fSave" id="saveMacroBtn" style="max-width:220px;">💾 SAVE MACRO REGIME</button>
+    <div id="macroStatus" style="font-family:var(--display);font-size:10px;letter-spacing:1px;color:var(--muted);min-height:18px;"></div>
+  </div>
+</div>
+  <div class="aTable">
+    <div class="aTableWrap">
+      <table class="aTableEl">
+        <thead><tr>
+          <th>TIME</th><th>TICKER</th><th>TYPE</th><th>STRIKE</th>
+          <th>EXPIRY</th><th>PREMIUM</th><th>CONTRACTS</th><th>SENTIMENT</th><th>NOTES</th><th></th>
+        </tr></thead>
+        <tbody id="flowTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- CLOSE SIGNAL MODAL — must be before <script> so IDs exist when JS runs -->
+
+<!-- PERF BACKFILL EDIT MODAL -->
+<div id="perfEditOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#060c14;border:1px solid rgba(255,179,0,.25);border-radius:16px;padding:28px;width:90%;max-width:520px;box-shadow:0 0 60px rgba(0,0,0,.9);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div>
+        <div style="font-family:var(--display);font-size:13px;font-weight:900;letter-spacing:2px;color:#ffb300;">BACKFILL TRADE DATA</div>
+        <div id="perfEditLabel" style="font-family:var(--display);font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px;"></div>
+      </div>
+      <button onclick="closePerfEdit()" style="background:none;border:1px solid rgba(74,106,138,.3);color:var(--muted);font-family:var(--display);font-size:9px;padding:6px 12px;border-radius:6px;cursor:pointer;letter-spacing:1px;">✕ CLOSE</button>
+    </div>
+    <input type="hidden" id="perfEditId"/>
+    <div class="formGrid" style="gap:14px;">
+      <div class="formGroup">
+        <div class="fLabel">ASSET</div>
+        <input class="fInput" id="peAsset" placeholder="BTC, SPY, NVDA…"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">TYPE</div>
+        <input class="fInput" id="peType" placeholder="SWING, SCALP…"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DIRECTION</div>
+        <select class="fSelect" id="peDir">
+          <option value="BULL">BULL</option>
+          <option value="BEAR">BEAR</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DATE OPENED (MM-DD-YYYY)</div>
+        <input class="fInput" id="peDate" placeholder="01-15-2025"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">STATUS</div>
+        <select class="fSelect" id="peStatus">
+          <option value="T2_HIT">T2 HIT — Full Target</option>
+          <option value="T1_HIT">T1 HIT — Partial Target</option>
+          <option value="CLOSE_BEFORE_T1">CLOSE BEFORE T1</option>
+          <option value="INVALIDATED">INVALIDATED</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">RESULT %</div>
+        <input class="fInput" id="peResult" type="number" step="0.01" placeholder="+12.5 or -4.2"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">ENTRY PRICE</div>
+        <input class="fInput" id="peEntryPrice" type="number" step="0.01" placeholder="Price when signal issued"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">EXIT PRICE</div>
+        <input class="fInput" id="peExitPrice" type="number" step="0.01" placeholder="Price when closed"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">EXIT DATE (MM-DD-YYYY)</div>
+        <input class="fInput" id="peExitDate" placeholder="01-22-2025"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">EXIT REASON</div>
+        <select class="fSelect" id="peExitReason">
+          <option value="">— Select —</option>
+          <option value="Target hit">Target hit</option>
+          <option value="Invalidation hit">Invalidation hit</option>
+          <option value="Time-based exit">Time-based exit</option>
+          <option value="Manual override">Manual override</option>
+          <option value="Macro regime shift">Macro regime shift</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DAYS HELD</div>
+        <input class="fInput" id="peDays" type="number" placeholder="e.g. 14"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">CONFIDENCE %</div>
+        <input class="fInput" id="peConf" type="number" step="0.01" placeholder="e.g. 78.5"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">SPY RETURN % (benchmark)</div>
+        <input class="fInput" id="peSpyReturn" type="number" step="0.01" placeholder="SPY % over same period"/>
+      </div>
+      <div class="formGroup" style="grid-column:1/-1;">
+        <div class="fLabel">NOTES</div>
+        <input class="fInput" id="peNotes" placeholder="Context, thesis, why it worked/didn't…"/>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button class="fSave" id="savePerfEditBtn" style="flex:1;">SAVE CHANGES</button>
+      <button class="fCancel" onclick="closePerfEdit()" style="flex:1;">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div id="closeSignalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#060c14;border:1px solid rgba(0,229,255,.2);border-radius:16px;padding:28px;width:90%;max-width:460px;box-shadow:0 0 60px rgba(0,0,0,.9);max-height:90vh;overflow-y:auto;">
+    <div style="font-family:var(--display);font-size:13px;font-weight:900;letter-spacing:2px;color:var(--core);margin-bottom:6px;">CLOSE SIGNAL</div>
+    <div id="closeModalAsset" style="font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;"></div>
+    <input type="hidden" id="closeSignalId"/>
+
+    <!-- Auto-calculated price section -->
+    <div id="closePricePreview" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;padding:12px;background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.12);border-radius:10px;">
+      <div style="text-align:center;">
+        <div style="font-family:var(--display);font-size:7px;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">ENTRY PRICE</div>
+        <div id="closeEntryDisplay" style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--core);">—</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:var(--display);font-size:7px;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">LIVE PRICE</div>
+        <div id="closeLiveDisplay" style="font-family:var(--display);font-size:16px;font-weight:900;color:#fff;">—</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:var(--display);font-size:7px;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">P&amp;L</div>
+        <div id="closePnlDisplay" style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--muted);">—</div>
+      </div>
+    </div>
+
+    <div class="formGrid" style="gap:14px;">
+      <div class="formGroup">
+        <div class="fLabel">EXIT REASON *</div>
+        <select class="fSelect" id="closeExitReason">
+          <option value="Target hit">Target hit</option>
+          <option value="Invalidation hit">Invalidation hit</option>
+          <option value="Time-based exit">Time-based exit</option>
+          <option value="Manual override">Manual override</option>
+          <option value="Macro regime shift">Macro regime shift</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">OUTCOME STATUS *</div>
+        <select class="fSelect" id="closeStatus">
+          <option value="T2_HIT">T2 HIT — Full Target</option>
+          <option value="T1_HIT">T1 HIT — Partial Target</option>
+          <option value="CLOSE_BEFORE_T1">CLOSE BEFORE T1 — Early Exit</option>
+          <option value="INVALIDATED">INVALIDATED — Stopped Out</option>
+        </select>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">RESULT % (auto-calculated, override if needed)</div>
+        <input class="fInput" id="closeResult" type="number" step="0.01" placeholder="Auto-calculated from live price"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">EXIT PRICE (auto-filled from live price)</div>
+        <input class="fInput" id="closeExitPrice" type="number" step="0.01" placeholder="Auto-filled"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">DAYS HELD</div>
+        <input class="fInput" id="closeDays" type="number" placeholder="Auto-calculated"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">CLOSE NOTES (optional)</div>
+        <input class="fInput" id="closeNotes" placeholder="e.g. Target 2 hit on earnings pop"/>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="fSave" id="confirmCloseBtn" style="flex:1;">CONFIRM CLOSE</button>
+      <button class="fCancel" id="cancelCloseBtn" style="flex:1;">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── SUPABASE REST API ── */
+  const SB_URL = 'https://pojiqfeemksvocnaellu.supabase.co/rest/v1';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvamlxZmVlbWtzdm9jbmFlbGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjg2NTgsImV4cCI6MjA4Njg0NDY1OH0.oOrfkygK_MM-zZyemF0D2HtL8YRuzrryRQ2dmSRwAXI';
+  const SB_H = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal'
+  };
+
+  /* ── LIVE PRICE FETCHING ── */
+  const FINNHUB_KEY = 'd6acer1r01qqjvbpuak0d6acer1r01qqjvbpuakg';
+  const TWELVE_KEY  = 'aa03342ff1114df2b94958091b600d9a';
+  const PRICE_CACHE = {};
+
+  const SYMBOL_MAP = {
+    'TLT':'TLT','BJ':'BJ','MRNA':'MRNA','NVDA':'NVDA','META':'META','TSLA':'TSLA','AMD':'AMD',
+    'SPY':'SPY','QQQ':'QQQ','AAPL':'AAPL','SMCI':'SMCI','RGTI':'RGTI','QBTS':'QBTS','IONQ':'IONQ',
+    'AMZN':'AMZN','MSFT':'MSFT','GOOG':'GOOG','GOOGL':'GOOGL','GDX':'GDX','GLD':'GLD','SLV':'SLV',
+    'IWM':'IWM','AEHR':'AEHR','HYMC':'HYMC','XLE':'XLE','USO':'USO','UNG':'UNG','DIA':'DIA',
+    'VIX':'VIXY','VIXY':'VIXY',
+    'ES':'SPY','NQ':'QQQ','GC':'GLD','CL':'USO','SI':'SLV','YM':'DIA','ZB':'TLT','NG':'UNG',
+    'BTC':'BINANCE:BTCUSDT','BTCUSD':'BINANCE:BTCUSDT','ETH':'BINANCE:ETHUSDT','ETHUSD':'BINANCE:ETHUSDT',
+    'SOL':'BINANCE:SOLUSDT',
+    'XAUUSD':'OANDA:XAU_USD','EURUSD':'OANDA:EUR_USD','GBPUSD':'OANDA:GBP_USD','USDJPY':'OANDA:USD_JPY',
+    'USDCHF':'OANDA:USD_CHF','CHFJPY':'OANDA:CHF_JPY','EURCHF':'OANDA:EUR_CHF','GBPCHF':'OANDA:GBP_CHF'
+  };
+
+  const TWELVE_MAP = {
+    'XAUUSD':'XAU/USD','EURUSD':'EUR/USD','GBPUSD':'GBP/USD','USDJPY':'USD/JPY',
+    'USDCHF':'USD/CHF','CHFJPY':'CHF/JPY','EURCHF':'EUR/CHF','GBPCHF':'GBP/CHF',
+    'AUDUSD':'AUD/USD','NZDUSD':'NZD/USD','USDCAD':'USD/CAD','EURJPY':'EUR/JPY',
+    'BTC':'BTC/USD','BTCUSD':'BTC/USD','ETH':'ETH/USD','ETHUSD':'ETH/USD','SOL':'SOL/USD'
+  };
+
+  async function fetchLivePrice(symbol) {
+    const upper = symbol.split(' ')[0].toUpperCase();
+    if (PRICE_CACHE[upper] && PRICE_CACHE[upper].time && (Date.now() - PRICE_CACHE[upper].time) < 10000) return PRICE_CACHE[upper].price;
+    // Try Finnhub
+    const mapped = SYMBOL_MAP[upper] || upper;
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(mapped)}&token=${FINNHUB_KEY}`);
+      if (r.ok) {
+        const d = await r.json();
+        if (d && typeof d.c === 'number' && d.c > 0) {
+          PRICE_CACHE[upper] = { price: d.c, time: Date.now() };
+          return d.c;
+        }
+      }
+    } catch(e) {}
+    // Fallback to Twelve Data
+    const td = TWELVE_MAP[upper];
+    if (td) {
+      try {
+        const r = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(td)}&apikey=${TWELVE_KEY}`);
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.close && parseFloat(d.close) > 0) {
+            const price = parseFloat(d.close);
+            PRICE_CACHE[upper] = { price, time: Date.now() };
+            return price;
+          }
+        }
+      } catch(e) {}
+    }
+    return null;
+  }
+
+  async function fetchSpyReturn(entryDate, exitDate) {
+    // Parse dates MM-DD-YYYY
+    const parseD = (d) => {
+      if (!d) return null;
+      const p = d.split('-');
+      if (p.length === 3) return new Date(+p[2], +p[0]-1, +p[1]);
+      return new Date(d);
+    };
+    const entry = parseD(entryDate);
+    const exit = parseD(exitDate);
+    if (!entry || !exit) return null;
+
+    // Use Finnhub candle API for SPY
+    const from = Math.floor(entry.getTime() / 1000);
+    const to = Math.floor(exit.getTime() / 1000);
+
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (d.s !== 'ok' || !d.c || d.c.length < 2) return null;
+      const spyEntry = d.c[0];
+      const spyExit = d.c[d.c.length - 1];
+      return parseFloat(((spyExit - spyEntry) / spyEntry * 100).toFixed(2));
+    } catch(e) { return null; }
+  }
+
+  async function sbGet(table, params='') {
+    const r = await fetch(`${SB_URL}/${table}?${params}`, { headers: SB_H });
+    return r.ok ? r.json() : [];
+  }
+  async function sbPost(table, row) {
+    const r = await fetch(`${SB_URL}/${table}`, { method:'POST', headers:SB_H, body:JSON.stringify(row) });
+    if (!r.ok) {
+      const errText = await r.text();
+      console.error(`[Admin] POST ${table} failed:`, errText);
+      // If signals table is missing new columns, retry with core fields only
+      if (table === 'signals' && errText.includes('column')) {
+        console.warn('[Admin] Retrying with core fields only...');
+        const { entry_price, signal_date, min_duration, ...coreRow } = row;
+        const r2 = await fetch(`${SB_URL}/${table}`, { method:'POST', headers:SB_H, body:JSON.stringify(coreRow) });
+        if (r2.ok) {
+          toast('⚠️ Signal saved (run SQL migrations to enable entry price & date fields)', true);
+          return true;
+        }
+        toast('DB error: ' + errText, false);
+        return false;
+      }
+      toast('DB error: ' + errText, false);
+      return false;
+    }
+    return true;
+  }
+  async function sbPatch(table, id, patch) {
+    const r = await fetch(`${SB_URL}/${table}?id=eq.${id}`, { method:'PATCH', headers:SB_H, body:JSON.stringify(patch) });
+    if (!r.ok) {
+      const errText = await r.text();
+      console.error(`[Admin] PATCH ${table} failed:`, errText);
+      if (table === 'signals' && errText.includes('column')) {
+        const { entry_price, signal_date, min_duration, ...corePatch } = patch;
+        const r2 = await fetch(`${SB_URL}/${table}?id=eq.${id}`, { method:'PATCH', headers:SB_H, body:JSON.stringify(corePatch) });
+        if (r2.ok) return true;
+      }
+      toast('DB error: ' + errText, false);
+      return false;
+    }
+    return true;
+  }
+  async function sbDel(table, id) {
+    const r = await fetch(`${SB_URL}/${table}?id=eq.${id}`, { method:'DELETE', headers:SB_H });
+    return r.ok;
+  }
+  async function sbUpsert(table, row) {
+    const h = { ...SB_H, 'Prefer': 'resolution=merge-duplicates,return=minimal' };
+    const r = await fetch(`${SB_URL}/${table}`, { method:'POST', headers:h, body:JSON.stringify(row) });
+    if (!r.ok) toast('DB error: ' + await r.text(), false);
+    return r.ok;
+  }
+
+  /* ── AUTH (simple passcode) ── */
+  const PASSCODE = "landm26";
+  let authed = false;
+
+  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("passInput").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+
+  function login() {
+    const val = document.getElementById("passInput").value.trim();
+    const btn = document.getElementById("loginBtn");
+    const errEl = document.getElementById("loginError");
+    if (!val) { errEl.textContent = "ENTER ACCESS CODE"; return; }
+    btn.disabled = true;
+    btn.textContent = "VERIFYING...";
+    errEl.textContent = "";
+    setTimeout(() => {
+      if (val === PASSCODE) {
+        authed = true;
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminScreen").style.display = "block";
+        loadAll();
+      } else {
+        errEl.textContent = "ACCESS DENIED — INVALID CODE";
+        document.getElementById("passInput").value = "";
+        btn.disabled = false;
+        btn.textContent = "AUTHENTICATE →";
+      }
+    }, 400); // small delay feels intentional, prevents spam
+  }
+
+
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    authed = false;
+    document.getElementById("adminScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("passInput").value = "";
+    document.getElementById("loginError").textContent = "";
+    document.getElementById("loginBtn").disabled = false;
+    document.getElementById("loginBtn").textContent = "AUTHENTICATE →";
+  });
+
+  /* ── TOAST ── */
+  let tTimer = null;
+  function toast(msg, good = true) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.borderColor = good ? "rgba(0,229,255,.3)" : "rgba(255,59,59,.3)";
+    t.style.color = good ? "var(--core)" : "var(--red)";
+    t.classList.add("show");
+    if (tTimer) clearTimeout(tTimer);
+    tTimer = setTimeout(() => t.classList.remove("show"), 3200);
+  }
+
+  /* ── DATA ── */
+  let SIGNALS = [], PERF = [], FLOW = [];
+
+  async function loadAll() {
+    const [s, p, f] = await Promise.all([
+      sbGet('signals', 'order=sort_order.asc'),
+      sbGet('performance', 'order=date.desc'),
+      sbGet('options_flow', 'order=created_at.desc')
+    ]);
+    SIGNALS = s || [];
+    PERF = p || [];
+    FLOW = f || [];
+    renderAll();
+    // Run aftermath checker in background (non-blocking)
+    checkAftermath();
+  }
+
+  /* ── AFTERMATH AUTO-CHECKER ──
+     Scans closed trades. If 1w/1m/3m has passed since exit_date
+     and the aftermath field is still null, fetches current price and saves it.
+  */
+  async function backfillSpyReturns() {
+    const btn = document.getElementById('backfillSpyBtn');
+    const missing = PERF.filter(r => r.result !== null && (r.spy_return === null || r.spy_return === undefined) && r.date && r.exit_date);
+    if (!missing.length) { toast('✓ All trades already have SPY alpha data'); return; }
+
+    btn.disabled = true;
+    btn.textContent = `BACKFILLING 0/${missing.length}...`;
+    let updated = 0, failed = 0;
+
+    for (let i = 0; i < missing.length; i++) {
+      const row = missing[i];
+      btn.textContent = `BACKFILLING ${i+1}/${missing.length}...`;
+
+      // Rate limit protection — Finnhub allows ~1 req/sec on free tier
+      if (i > 0) await new Promise(r => setTimeout(r, 1200));
+
+      const spyRet = await fetchSpyReturn(row.date, row.exit_date);
+      if (spyRet === null) { failed++; continue; }
+
+      const res = await fetch(`${SB_URL}/performance?id=eq.${row.id}`, {
+        method: 'PATCH',
+        headers: { ...SB_H, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ spy_return: spyRet })
+      });
+
+      if (res.ok) { updated++; }
+      else { failed++; }
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⟳ BACKFILL SPY ALPHA';
+
+    if (updated) {
+      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} failed)` : ''}`);
+      await loadAll(); // refresh data
+    } else {
+      toast(`⚠️ Backfill failed — check Finnhub rate limits`, true);
+    }
+  }
+
+  async function checkAftermath() {
+    const closed = PERF.filter(r => r.exit_date && r.status !== 'ACTIVE');
+    if (!closed.length) return;
+
+    const now = Date.now();
+    const parseDate = (d) => {
+      if (!d) return null;
+      const p = d.split('-');
+      if (p.length === 3) return new Date(+p[2], +p[0]-1, +p[1]);
+      return new Date(d);
+    };
+
+    let updated = 0;
+    for (const row of closed) {
+      const exitMs = parseDate(row.exit_date);
+      if (!exitMs) continue;
+      const daysSinceExit = (now - exitMs.getTime()) / 86400000;
+
+      const needs1d = daysSinceExit >= 1 && row.aftermath_1d == null;
+      const needs3d = daysSinceExit >= 3 && row.aftermath_3d == null;
+      const needs1w = daysSinceExit >= 7 && row.aftermath_1w == null;
+      const needs1m = daysSinceExit >= 30 && row.aftermath_1m == null;
+      const needs3m = daysSinceExit >= 90 && row.aftermath_3m == null;
+
+      if (!needs1d && !needs3d && !needs1w && !needs1m && !needs3m) continue;
+
+      const price = await fetchLivePrice(row.asset);
+      if (!price) continue;
+
+      const patch = {};
+      if (needs1d) patch.aftermath_1d = price;
+      if (needs3d) patch.aftermath_3d = price;
+      if (needs1w) patch.aftermath_1w = price;
+      if (needs1m) patch.aftermath_1m = price;
+      if (needs3m) patch.aftermath_3m = price;
+
+      await sbPatch('performance', row.id, patch);
+      updated++;
+      console.log(`[Aftermath] Updated ${row.asset}: `, patch);
+    }
+    if (updated) {
+      toast(`✓ Aftermath prices updated for ${updated} trade${updated > 1 ? 's' : ''}`);
+    }
+  }
+
+  function renderAll() {
+    renderStats();
+    renderSignals();
+    renderPerf();
+    renderFlow();
+    checkInvalidations();
+  }
+
+  /* ── STATS ── */
+  function renderStats() {
+    const active = SIGNALS.filter(s => s.is_active).length;
+    const closed = PERF.filter(r => r.result !== null);
+    const wins = closed.filter(r => r.result > 0);
+    const wr = closed.length ? (wins.length / closed.length * 100).toFixed(1) : "—";
+    const totalAlpha = closed.reduce((s,r) => s + (r.result || 0), 0).toFixed(1);
+    document.getElementById("adminStats").innerHTML = `
+      <div class="statChip">ACTIVE SIGNALS<b>${active}</b></div>
+      <div class="statChip">TOTAL TRADES<b>${PERF.length}</b></div>
+      <div class="statChip">WIN RATE<b class="g">${wr}%</b></div>
+      <div class="statChip">TOTAL ALPHA<b class="${parseFloat(totalAlpha) >= 0 ? 'g' : 'r'}">${parseFloat(totalAlpha) >= 0 ? '+' : ''}${totalAlpha}%</b></div>
+      <div class="statChip">FLOW ENTRIES<b>${FLOW.length}</b></div>
+    `;
+  }
+
+  /* ── SIGNALS ── */
+  function renderSignals() {
+    const grid = document.getElementById("signalsGrid");
+    if (!SIGNALS.length) {
+      grid.innerHTML = `<div class="aEmpty" style="grid-column:1/-1">NO SIGNALS YET — CLICK "+ ADD NEW SIGNAL" TO CREATE YOUR FIRST ORACLE ALERT</div>`;
+      return;
+    }
+    grid.innerHTML = SIGNALS.filter(s => s.is_active).map(s => `
+      <div class="signalCard ${s.direction === 'BULL' ? 'bull' : 'bear'} ${!s.is_active ? 'scInactive' : ''}">
+        <div class="scTop">
+          <div>
+            <div class="scAsset">${s.asset}</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--display);letter-spacing:.5px">${s.stream_label || ''}</div>
+          </div>
+          <div class="scLevel">${s.level}</div>
+        </div>
+        <div class="scMeta">
+          <div class="scMetaItem">CONFIDENCE<b class="scConf">${parseFloat(s.confidence).toFixed(2)}%</b></div>
+          <div class="scMetaItem">DIRECTION<b class="${s.direction === 'BULL' ? 'dBull' : 'dBear'}">${s.direction}</b></div>
+          <div class="scMetaItem">HORIZON<b>${s.horizon || '—'}</b></div>
+          <div class="scMetaItem">TRIGGER<b>${s.trigger || '—'}</b></div>
+          <div class="scMetaItem">TARGETS<b>${s.targets || '—'}</b></div>
+          <div class="scMetaItem">STATUS<b><span class="sBadge ${s.is_active ? 'sActive' : 'sOff'}">${s.is_active ? '● ACTIVE' : '○ INACTIVE'}</span></b></div>
+        </div>
+        <div class="scActions">
+          <button class="scBtn scEdit" data-id="${s.id}">EDIT</button>
+          <button class="scBtn scDeact" data-id="${s.id}">${s.is_active ? 'CLOSE SIGNAL' : 'REACTIVATE'}</button>
+          <button class="scBtn scDelete" data-id="${s.id}">DELETE</button>
+        </div>
+      </div>
+    `).join("");
+
+    grid.querySelectorAll(".scEdit").forEach(btn => {
+      btn.addEventListener("click", () => openEditSignal(btn.dataset.id));
+    });
+    grid.querySelectorAll(".scDeact").forEach(btn => {
+      btn.addEventListener("click", () => toggleSignalActive(btn.dataset.id));
+    });
+    grid.querySelectorAll(".scDelete").forEach(btn => {
+      btn.addEventListener("click", () => deleteSignal(btn.dataset.id));
+    });
+  }
+
+  /* ── INVALIDATION DETECTION ── */
+  async function checkInvalidations() {
+    const active = SIGNALS.filter(s => s.is_active && s.invalidation);
+    if (!active.length) return;
+
+    const breached = [];
+    for (const s of active) {
+      const price = await fetchLivePrice(s.asset);
+      if (!price) continue;
+      const invm = s.invalidation.replace(/,/g, '').match(/([\d.]+)/);
+      if (!invm) continue;
+      const invLevel = parseFloat(invm[1]);
+      const isBull = s.direction === 'BULL';
+      const isBreached = isBull ? price <= invLevel : price >= invLevel;
+      if (isBreached) {
+        breached.push({ s, price, invLevel });
+      }
+    }
+
+    const banner = document.getElementById('invalAlertBanner');
+    if (!banner) return;
+
+    if (!breached.length) {
+      banner.innerHTML = '';
+      return;
+    }
+
+    banner.innerHTML = breached.map(({ s, price, invLevel }) => `
+      <div class="invAlert">
+        <div>
+          ⚠️ <b>${s.asset}</b> — INVALIDATION BREACHED
+          <span style="margin-left:8px;opacity:.7;">Live: $${price.toFixed(2)} · Level: $${invLevel.toFixed(2)}</span>
+        </div>
+        <button class="scBtn scDeact" data-id="${s.id}" style="font-size:8px;padding:4px 10px;white-space:nowrap;">CLOSE SIGNAL</button>
+      </div>
+    `).join('');
+
+    // Re-wire close buttons in banner
+    banner.querySelectorAll('.scDeact').forEach(btn => {
+      btn.addEventListener('click', () => toggleSignalActive(btn.dataset.id));
+    });
+
+    // Flag the signal cards visually
+    breached.forEach(({ s }) => {
+      const card = document.querySelector(`.signalCard .scEdit[data-id="${s.id}"]`)?.closest('.signalCard');
+      if (card) card.classList.add('scInvalidated');
+    });
+  }
+
+  /* ── SIGNAL FORM ── */
+  document.getElementById("addSignalBtn").addEventListener("click", () => {
+    clearSignalForm();
+    document.getElementById("formTitle").textContent = "NEW SIGNAL";
+    document.getElementById("signalForm").style.display = "block";
+    document.getElementById("signalForm").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.getElementById("cancelSignalBtn").addEventListener("click", () => {
+    document.getElementById("signalForm").style.display = "none";
+    clearSignalForm();
+  });
+
+  // ── AUTO-POPULATE: price + company name when asset symbol is entered ──
+  async function fetchCompanyName(symbol) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      return d.name || null;
+    } catch(e) { return null; }
+  }
+
+  const fAssetEl = document.getElementById('fAsset');
+  const fPriceEl = document.getElementById('fEntryPrice');
+  const fCompanyEl = document.getElementById('fCompanyName');
+
+  let _assetLookupTimer = null;
+
+  fAssetEl.addEventListener('input', () => {
+    clearTimeout(_assetLookupTimer);
+    const sym = fAssetEl.value.trim().toUpperCase();
+    if (!sym) return;
+    // Debounce — wait 800ms after typing stops
+    _assetLookupTimer = setTimeout(() => autoPopulateAsset(sym), 800);
+  });
+
+  fAssetEl.addEventListener('blur', async () => {
+    clearTimeout(_assetLookupTimer);
+    const sym = fAssetEl.value.trim().toUpperCase();
+    if (sym) autoPopulateAsset(sym);
+  });
+
+  async function autoPopulateAsset(symbol) {
+    // Normalise symbol
+    fAssetEl.value = symbol;
+
+    // Price
+    if (!fPriceEl.value) {
+      fPriceEl.placeholder = 'Fetching...';
+      const price = await fetchLivePrice(symbol);
+      if (price) {
+        fPriceEl.value = price.toFixed(2);
+        fPriceEl.style.borderColor = 'rgba(0,255,163,.4)';
+        setTimeout(() => fPriceEl.style.borderColor = '', 1500);
+      }
+      fPriceEl.placeholder = 'e.g. 43.21';
+    }
+
+    // Company name
+    if (!fCompanyEl.value) {
+      fCompanyEl.placeholder = 'Fetching...';
+      const name = await fetchCompanyName(symbol);
+      if (name) {
+        fCompanyEl.value = name;
+        fCompanyEl.style.borderColor = 'rgba(0,255,163,.4)';
+        setTimeout(() => fCompanyEl.style.borderColor = '', 1500);
+      } else {
+        fCompanyEl.placeholder = 'e.g. NVIDIA Corporation';
+      }
+    }
+  }
+
+
+  function clearSignalForm() {
+    ["fAsset","fCompanyName","fLevel","fBias","fHorizon","fTriggerVal","fTargets","fInval","fVol","fDir2","fStream","fSort","fConf","fEntryPrice","fMinDuration","fThesis","fActionPlan","editId"]
+      .forEach(id => document.getElementById(id).value = "");
+    document.getElementById("fDir").value = "BULL";
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    document.getElementById("fSignalDate").value = local;
+  }
+
+  function openEditSignal(id) {
+    const s = SIGNALS.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById("formTitle").textContent = "EDIT SIGNAL";
+    document.getElementById("editId").value = s.id;
+    document.getElementById("fAsset").value = s.asset || "";
+    document.getElementById("fCompanyName").value = s.company_name || "";
+    document.getElementById("fLevel").value = s.level || "";
+    document.getElementById("fDir").value = s.direction || "BULL";
+    document.getElementById("fConf").value = s.confidence || "";
+    document.getElementById("fBias").value = s.bias || "";
+    document.getElementById("fHorizon").value = s.horizon || "";
+    document.getElementById("fTriggerVal").value = s.trigger || "";
+    document.getElementById("fTargets").value = s.targets || "";
+    document.getElementById("fInval").value = s.invalidation || "";
+    document.getElementById("fVol").value = s.volatility || "";
+    document.getElementById("fDir2").value = s.directive || "";
+    document.getElementById("fStream").value = s.stream_label || "";
+    document.getElementById("fSort").value = s.sort_order || "";
+    document.getElementById("fEntryPrice").value = s.entry_price || "";
+    document.getElementById("fMinDuration").value = s.min_duration || "";
+    document.getElementById("fThesis").value = s.thesis || "";
+    document.getElementById("fActionPlan").value = s.action_plan || "";
+    if (s.signal_date) {
+      const d = new Date(s.signal_date);
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById("fSignalDate").value = local;
+    }
+    document.getElementById("signalForm").style.display = "block";
+    document.getElementById("signalForm").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.getElementById("saveSignalBtn").addEventListener("click", async () => {
+    const asset = document.getElementById("fAsset").value.trim();
+    const level = document.getElementById("fLevel").value.trim();
+    const conf = parseFloat(document.getElementById("fConf").value);
+    if (!asset || !level || isNaN(conf)) { toast("Fill in Asset, Level, and Confidence", false); return; }
+
+    const signalDateVal = document.getElementById("fSignalDate").value;
+    const editId = document.getElementById("editId").value;
+
+    const payload = {
+      asset,
+      level,
+      direction: document.getElementById("fDir").value,
+      confidence: conf,
+      bias: document.getElementById("fBias").value.trim(),
+      horizon: document.getElementById("fHorizon").value.trim(),
+      trigger: document.getElementById("fTriggerVal").value.trim(),
+      targets: document.getElementById("fTargets").value.trim(),
+      invalidation: document.getElementById("fInval").value.trim(),
+      volatility: document.getElementById("fVol").value.trim(),
+      directive: document.getElementById("fDir2").value.trim(),
+      stream_label: document.getElementById("fStream").value.trim(),
+      sort_order: parseInt(document.getElementById("fSort").value) || 99,
+      entry_price: parseFloat(document.getElementById("fEntryPrice").value) || null,
+      min_duration: document.getElementById("fMinDuration").value.trim() || null,
+      thesis: document.getElementById("fThesis").value.trim() || null,
+      action_plan: document.getElementById("fActionPlan").value.trim() || null,
+      is_active: true
+    };
+
+    // Only set signal_date on NEW signals — never overwrite on edit
+    if (!editId) {
+      payload.signal_date = signalDateVal ? new Date(signalDateVal).toISOString() : new Date().toISOString();
+    }
+    let ok;
+    if (editId) {
+      ok = await sbPatch('signals', editId, payload);
+    } else {
+      ok = await sbPost('signals', payload);
+
+      // ── Auto-create ACTIVE performance row for new signals (guard against duplicates) ──
+      if (ok) {
+        const alreadyExists = PERF.find(p => p.asset === asset && p.status === 'ACTIVE');
+        if (alreadyExists) {
+          console.log('ACTIVE perf row already exists for', asset, '— skipping auto-create');
+        } else {
+          const signalDateForPerf = payload.signal_date || new Date().toISOString();
+          const d = new Date(signalDateForPerf);
+          const perfDate = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`;
+          const activePerfPayload = {
+            asset:       asset,
+            type:        level,
+            direction:   payload.direction,
+            date:        perfDate,
+            signal:      payload.bias || level,
+            status:      'ACTIVE',
+            result:      null,
+            days:        null,
+            conf:        conf,
+            entry_price: payload.entry_price || null
+          };
+          await sbPost('performance', activePerfPayload);
+        }
+      }
+    }
+    if (!ok) return; // sbPost/sbPatch already showed error toast
+    toast(editId ? "Signal updated ✓" : "Signal added ✓");
+    document.getElementById("signalForm").style.display = "none";
+    clearSignalForm();
+    await loadAll(); // reload from Supabase to get real IDs and state
+  });
+
+  /* ── CLOSE SIGNAL MODAL ── */
+  async function openCloseModal(id) {
+    const s = SIGNALS.find(x => x.id === id);
+    if (!s) return;
+
+    document.getElementById("closeSignalId").value = id;
+    document.getElementById("closeModalAsset").textContent = `${s.asset} — ${s.level} (${s.direction})`;
+    document.getElementById("closeStatus").value = "T2_HIT";
+    document.getElementById("closeExitReason").value = "Target hit";
+    document.getElementById("closeResult").value = "";
+    document.getElementById("closeExitPrice").value = "";
+    document.getElementById("closeNotes").value = "";
+    document.getElementById("closeEntryDisplay").textContent = "—";
+    document.getElementById("closeLiveDisplay").textContent = "—";
+    document.getElementById("closePnlDisplay").textContent = "—";
+    document.getElementById("closePnlDisplay").style.color = "var(--muted)";
+
+    // Auto-calculate days held
+    if (s.signal_date) {
+      const issued = new Date(s.signal_date);
+      const days = Math.round((Date.now() - issued.getTime()) / 86400000);
+      document.getElementById("closeDays").value = days;
+    } else {
+      document.getElementById("closeDays").value = "";
+    }
+
+    // Show entry price
+    const entry = s.entry_price ? parseFloat(s.entry_price) : null;
+    if (entry) {
+      document.getElementById("closeEntryDisplay").textContent = "$" + entry.toFixed(2);
+    }
+
+    const overlay = document.getElementById("closeSignalOverlay");
+    overlay.style.display = "flex";
+
+    // Fetch live price and auto-calculate
+    const livePrice = await fetchLivePrice(s.asset);
+    if (livePrice) {
+      document.getElementById("closeLiveDisplay").textContent = "$" + livePrice.toFixed(2);
+      document.getElementById("closeExitPrice").value = livePrice.toFixed(2);
+
+      if (entry) {
+        const isBull = (s.direction || "").toUpperCase() === "BULL";
+        const rawPct = ((livePrice - entry) / entry) * 100;
+        const pnl = isBull ? rawPct : -rawPct;
+        document.getElementById("closeResult").value = pnl.toFixed(2);
+        document.getElementById("closePnlDisplay").textContent = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
+        document.getElementById("closePnlDisplay").style.color = pnl >= 0 ? "var(--green)" : "var(--red)";
+      }
+    }
+  }
+
+  document.getElementById("cancelCloseBtn").addEventListener("click", () => {
+    document.getElementById("closeSignalOverlay").style.display = "none";
+  });
+
+  document.getElementById("confirmCloseBtn").addEventListener("click", async () => {
+    const id = document.getElementById("closeSignalId").value;
+    const s = SIGNALS.find(x => x.id === id);
+    if (!s) return;
+
+    const result = parseFloat(document.getElementById("closeResult").value);
+    if (isNaN(result)) { toast("Enter a result % to close the signal", false); return; }
+
+    const status = document.getElementById("closeStatus").value;
+    const resultSign = result >= 0 ? '+' : '';
+    const confirmed = confirm(`Close ${s.asset}?\n\nOutcome: ${status}\nResult: ${resultSign}${result.toFixed(2)}%\n\nThis cannot be undone.`);
+    if (!confirmed) return;
+
+    const exitReason = document.getElementById("closeExitReason").value;
+    const exitPrice = parseFloat(document.getElementById("closeExitPrice").value) || null;
+    const days = parseInt(document.getElementById("closeDays").value) || null;
+    const notes = document.getElementById("closeNotes").value.trim();
+
+    // Format dates
+    const issuedDate = s.signal_date
+      ? (() => { const d = new Date(s.signal_date); return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`; })()
+      : new Date().toLocaleDateString("en-US", { month:"2-digit", day:"2-digit", year:"numeric" }).replace(/\//g,"-");
+
+    const now = new Date();
+    const exitDate = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${now.getFullYear()}`;
+
+    // 1. Write to performance table
+    const perfPayload = {
+      asset: s.asset,
+      type: s.level,
+      direction: s.direction,
+      date: issuedDate,
+      signal: s.bias || s.level,
+      status,
+      result,
+      days,
+      conf: s.confidence,
+      entry_price: s.entry_price || null,
+      exit_price: exitPrice,
+      exit_date: exitDate,
+      exit_reason: exitReason,
+      notes: notes || null
+    };
+
+    // Fetch SPY return over trade span
+    try {
+      const issuedForSpy = issuedDate;
+      const spyRet = await fetchSpyReturn(issuedForSpy, exitDate);
+      if (spyRet !== null) perfPayload.spy_return = spyRet;
+    } catch(e) {}
+
+    // Find existing ACTIVE perf row for this asset to patch (avoid duplicates)
+    const existingActive = PERF.find(p => p.asset === s.asset && p.status === 'ACTIVE');
+    let perfOk;
+    if (existingActive) {
+      // PATCH the existing ACTIVE row into a closed record
+      perfOk = await sbPatch('performance', existingActive.id, perfPayload);
+    } else {
+      // No ACTIVE row found — insert fresh closed record
+      perfOk = await sbPost('performance', perfPayload);
+    }
+
+    // 2. Deactivate the signal
+    const sigOk = await sbPatch('signals', id, { is_active: false });
+
+    if (perfOk || sigOk) {
+      document.getElementById("closeSignalOverlay").style.display = "none";
+      toast(`✓ ${s.asset} closed — ${exitReason} · ${result >= 0 ? '+' : ''}${result.toFixed(2)}%`);
+      await loadAll();
+    } else {
+      toast("Error saving — check Supabase connection", false);
+    }
+  });
+
+  async function toggleSignalActive(id) {
+    const s = SIGNALS.find(x => x.id === id);
+    if (!s) return;
+    if (s.is_active) {
+      // Active → show close modal to capture result
+      openCloseModal(id);
+    } else {
+      // Inactive → just reactivate directly
+      const ok = await sbPatch('signals', id, { is_active: true });
+      if (ok) { toast("Signal reactivated"); await loadAll(); }
+    }
+  }
+
+  async function deleteSignal(id) {
+    if (!confirm("Delete this signal permanently?")) return;
+    const ok = await sbDel('signals', id);
+    if (ok) { toast("Signal deleted"); await loadAll(); }
+  }
+
+  /* ── PERFORMANCE TABLE ── */
+  let perfSort = 'date_desc';
+
+  function updateSortBtns() {
+    const map = { date_desc:'sortDateDesc', date_asc:'sortDateAsc', result_desc:'sortResDesc', result_asc:'sortResAsc' };
+    ['sortDateDesc','sortDateAsc','sortResDesc','sortResAsc'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const active = map[perfSort] === id;
+      el.style.background = active ? 'rgba(0,229,255,.12)' : 'transparent';
+      el.style.color = active ? '#00e5ff' : 'var(--muted)';
+      el.style.borderColor = active ? 'rgba(0,229,255,.3)' : 'rgba(0,229,255,.1)';
+    });
+  } // default: newest first
+
+  function renderPerf() {
+    const tbody = document.getElementById("perfTableBody");
+    if (!PERF.length) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="aEmpty">NO TRADES YET</div></td></tr>`;
+      return;
+    }
+    let rows = PERF.filter(r => r.status !== 'ACTIVE');
+
+    // Sort
+    const parseDate = d => {
+      if (!d) return 0;
+      const p = d.split('-');
+      return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
+    };
+    if (perfSort === 'date_desc') rows.sort((a,b) => parseDate(b.date) - parseDate(a.date));
+    if (perfSort === 'date_asc')  rows.sort((a,b) => parseDate(a.date) - parseDate(b.date));
+    if (perfSort === 'result_desc') rows.sort((a,b) => (b.result ?? -Infinity) - (a.result ?? -Infinity));
+    if (perfSort === 'result_asc')  rows.sort((a,b) => (a.result ?? Infinity) - (b.result ?? Infinity));
+
+    tbody.innerHTML = rows.map(r => {
+      const res = r.result === null ? '—' : `${r.result >= 0 ? '+' : ''}${parseFloat(r.result).toFixed(1)}%`;
+      const resColor = r.result === null ? '' : r.result >= 0 ? 'color:var(--green)' : 'color:var(--red)';
+      const statusClass = r.status === 'T2_HIT' ? 'sT2' : r.status === 'T1_HIT' ? 'sT1' : r.status === 'ACTIVE' ? 'sActive' : 'sInv';
+      return `<tr>
+        <td style="font-family:var(--display);font-weight:900">${r.asset}</td>
+        <td style="color:var(--muted)">${r.type || '—'}</td>
+        <td class="${r.direction === 'BULL' ? 'dBull' : 'dBear'}">${r.direction}</td>
+        <td style="color:var(--muted)">${r.date}</td>
+        <td><span class="sBadge ${statusClass}">${r.status}</span></td>
+        <td style="font-family:var(--display);font-weight:900;${resColor}">${res}</td>
+        <td style="color:var(--muted)">${r.days ? r.days + 'd' : '—'}</td>
+        <td style="color:var(--blue);font-family:var(--display)">${r.conf ? parseFloat(r.conf).toFixed(2) + '%' : '—'}</td>
+        <td>
+          <input class="perfNoteInput" data-pid="${r.id}" value="${(r.notes || '').replace(/"/g,'&quot;')}"
+            placeholder="Add note..."
+            style="font-family:var(--display);font-size:9px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);color:var(--core);padding:4px 8px;border-radius:5px;width:140px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='rgba(0,229,255,.4)'"
+            onblur="this.style.borderColor='rgba(0,229,255,.1)'"
+          />
+        </td>
+        <td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+          <button class="scBtn perfEdit" data-pid="${r.id}"
+            style="font-size:9px;padding:4px 10px;background:rgba(255,179,0,.07);border-color:rgba(255,179,0,.3);color:#ffb300;">
+            EDIT
+          </button>
+          <button class="scBtn perfReactivate" data-pid="${r.id}" data-asset="${r.asset}" data-dir="${r.direction}"
+            style="font-size:9px;padding:4px 10px;background:rgba(0,229,255,.08);border-color:rgba(0,229,255,.3);color:#00e5ff;">
+            REACTIVATE
+          </button>
+          <button class="scBtn scDelete" data-pid="${r.id}" style="font-size:9px;padding:4px 10px">DELETE</button>
+        </td>
+      </tr>`;
+    }).join("");
+    // Edit buttons — open backfill modal
+    tbody.querySelectorAll(".perfEdit[data-pid]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const pid = btn.dataset.pid;
+        const row = PERF.find(r => r.id === pid);
+        if (!row) return;
+        openPerfEdit(row);
+      });
+    });
+
+    // Delete buttons
+    tbody.querySelectorAll(".scDelete[data-pid]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Delete this trade record?")) return;
+        await sbDel('performance', btn.dataset.pid);
+        toast("Trade deleted"); await loadAll();
+      });
+    });
+
+    // Reactivate buttons — two-step confirmation
+    tbody.querySelectorAll(".perfReactivate[data-pid]").forEach(btn => {
+      let _reactivatePending = false;
+      let _reactivateTimer = null;
+
+      btn.addEventListener("click", async () => {
+        if (!_reactivatePending) {
+          // Step 1: arm it
+          _reactivatePending = true;
+          btn.textContent = "CONFIRM?";
+          btn.style.background = "rgba(255,179,0,.15)";
+          btn.style.borderColor = "rgba(255,179,0,.5)";
+          btn.style.color = "#ffb300";
+          _reactivateTimer = setTimeout(() => {
+            _reactivatePending = false;
+            btn.textContent = "REACTIVATE";
+            btn.style.background = "rgba(0,229,255,.08)";
+            btn.style.borderColor = "rgba(0,229,255,.3)";
+            btn.style.color = "#00e5ff";
+          }, 3000);
+        } else {
+          // Step 2: confirmed — reset the perf row to ACTIVE and reopen matching signal
+          clearTimeout(_reactivateTimer);
+          _reactivatePending = false;
+          const pid = btn.dataset.pid;
+          const asset = btn.dataset.asset;
+          const dir = btn.dataset.dir;
+
+          // Patch perf row back to ACTIVE
+          const perfOk = await sbPatch('performance', pid, {
+            status: 'ACTIVE',
+            result: null,
+            exit_price: null,
+            exit_date: null,
+            exit_reason: null,
+            spy_return: null
+          });
+
+          // Reactivate matching signal in signals table (by asset + direction)
+          const matchingSignal = SIGNALS.find(s => s.asset === asset && s.direction === dir && !s.is_active);
+          if (matchingSignal) {
+            await sbPatch('signals', matchingSignal.id, { is_active: true });
+          }
+
+          if (perfOk) {
+            toast('✓ ' + asset + ' ' + dir + ' reactivated');
+            await loadAll();
+          } else {
+            toast("Reactivate failed", false);
+          }
+        }
+      });
+    });
+
+    // Notes — auto-save on blur or Enter
+    tbody.querySelectorAll(".perfNoteInput").forEach(input => {
+      const save = async () => {
+        const pid = input.dataset.pid;
+        const note = input.value.trim();
+        const row = PERF.find(p => p.id === pid);
+        if (!row || note === (row.notes || '')) return; // no change
+        input.style.borderColor = 'rgba(255,179,0,.5)';
+        const ok = await sbPatch('performance', pid, { notes: note || null });
+        if (ok) {
+          row.notes = note || null;
+          input.style.borderColor = 'rgba(0,255,163,.5)';
+          setTimeout(() => { input.style.borderColor = 'rgba(0,229,255,.1)'; }, 1000);
+        } else {
+          input.style.borderColor = 'rgba(255,59,59,.5)';
+        }
+      };
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
+    });
+  }
+
+  /* ── ADD PERF FORM ── */
+  document.getElementById('backfillSpyBtn').addEventListener('click', backfillSpyReturns);
+
+  document.getElementById("addPerfBtn").addEventListener("click", () => {
+    document.getElementById("perfForm").style.display = document.getElementById("perfForm").style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("cancelPerfBtn").addEventListener("click", () => {
+    document.getElementById("perfForm").style.display = "none";
+  });
+  document.getElementById("savePerfBtn").addEventListener("click", async () => {
+    const asset = document.getElementById("pfAsset").value.trim();
+    if (!asset) { toast("Enter an asset", false); return; }
+    const payload = {
+      id: `p${Date.now()}`,
+      asset,
+      type: document.getElementById("pfType").value.trim(),
+      direction: document.getElementById("pfDir").value,
+      date: document.getElementById("pfDate").value.trim() || new Date().toLocaleDateString("en-US", {month:"2-digit",day:"2-digit",year:"numeric"}).replace(/\//g,"-"),
+      signal: document.getElementById("pfSignal").value.trim(),
+      status: document.getElementById("pfStatus").value,
+      result: parseFloat(document.getElementById("pfResult").value) || null,
+      days: parseInt(document.getElementById("pfDays").value) || null,
+      conf: parseFloat(document.getElementById("pfConf").value) || null
+    };
+    const ok = await sbPost('performance', payload);
+    PERF.push(payload); // always update local cache
+    toast("Trade added ✓");
+    document.getElementById("perfForm").style.display = "none";
+    await loadAll();
+  });
+
+  /* ── FLOW TABLE ── */
+  function renderFlow() {
+    const tbody = document.getElementById("flowTableBody");
+    if (!FLOW.length) {
+      tbody.innerHTML = `<tr><td colspan="10"><div class="aEmpty">NO FLOW ENTRIES YET</div></td></tr>`;
+      return;
+    }
+    const sentColor = s => s === "BULLISH" ? "color:var(--green)" : s === "BEARISH" ? "color:var(--red)" : "color:var(--amber)";
+    tbody.innerHTML = FLOW.map(r => `<tr>
+      <td style="color:var(--muted);font-size:10px">${r.time}</td>
+      <td style="font-family:var(--display);font-weight:900">${r.ticker}</td>
+      <td><span class="sBadge ${r.type === 'CALL' ? 'sT1' : 'sT2'}" style="${r.type === 'PUT' ? 'color:var(--red)' : ''}">${r.type}</span></td>
+      <td style="color:var(--muted)">${r.strike || '—'}</td>
+      <td style="color:var(--muted)">${r.expiry || '—'}</td>
+      <td style="font-family:var(--display);font-weight:900;color:var(--amber)">${r.prem || '—'}</td>
+      <td style="color:var(--muted)">${r.contracts ? Number(r.contracts).toLocaleString() : '—'}</td>
+      <td style="font-family:var(--display);font-size:10px;font-weight:900;${sentColor(r.sent)}">${r.sent}</td>
+      <td style="color:var(--muted);font-size:10px;max-width:180px;white-space:normal">${r.notes || '—'}</td>
+      <td><button class="scBtn scDelete" data-fid="${r.id}" style="font-size:9px;padding:4px 10px">DELETE</button></td>
+    </tr>`).join("");
+    tbody.querySelectorAll("[data-fid]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await sbDel('options_flow', btn.dataset.fid);
+        toast("Flow entry deleted"); await loadAll();
+      });
+    });
+  }
+
+  // Poll for updates every 30 seconds
+  setInterval(loadAll, 30000);
+
+  /* ── ORACLE STANCE CONTROLS ── */
+  (function initStanceControls() {
+    const LABELS = { bull: "BULLISH", neutral: "NEUTRAL", bear: "BEARISH" };
+    const statusEl = document.getElementById("stanceStatus");
+    const SB_SETTINGS_URL = `${SB_URL}/app_settings`;
+
+    function updateActiveBtn(stance) {
+      document.querySelectorAll(".stanceSetBtn").forEach(b => {
+        const isActive = b.dataset.stance === stance;
+        b.style.opacity = isActive ? "1" : "0.45";
+        b.style.transform = isActive ? "scale(1.03)" : "scale(1)";
+      });
+    }
+
+    async function loadCurrentStance() {
+      try {
+        const r = await fetch(`${SB_SETTINGS_URL}?key=eq.oracle_stance`, { headers: SB_H });
+        const data = await r.json();
+        const stance = data?.[0]?.value || "neutral";
+        updateActiveBtn(stance);
+        if (statusEl) statusEl.textContent = `CURRENT STANCE: ${LABELS[stance] || stance}`;
+      } catch(e) {
+        // fallback to localStorage
+        const stance = localStorage.getItem("oracle_stance") || "neutral";
+        updateActiveBtn(stance);
+      }
+    }
+
+    async function saveStance(stance) {
+      // Write to Supabase (upsert)
+      try {
+        await fetch(SB_SETTINGS_URL, {
+          method: 'POST',
+          headers: { ...SB_H, 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({ key: 'oracle_stance', value: stance })
+        });
+      } catch(e) { console.warn('Supabase stance write failed', e); }
+      // Also write to localStorage as fallback
+      try { localStorage.setItem("oracle_stance", stance); } catch(e) {}
+    }
+
+    loadCurrentStance();
+
+    document.querySelectorAll(".stanceSetBtn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const stance = btn.dataset.stance;
+        updateActiveBtn(stance);
+        if (statusEl) {
+          statusEl.style.color = stance === "bull" ? "#00ffa3" : stance === "bear" ? "#ff3b3b" : "#ffb300";
+          statusEl.textContent = `SAVING...`;
+        }
+        await saveStance(stance);
+        if (statusEl) statusEl.textContent = `✓ STANCE SET TO ${LABELS[stance]} — terminal updates within 5 seconds`;
+      });
+    });
+  })();
+
+  /* ── ORACLE BROADCAST ── */
+  (function initBroadcast() {
+    const SB_SETTINGS_URL = `${SB_URL}/app_settings`;
+
+    async function loadBroadcast() {
+      try {
+        const r = await fetch(`${SB_SETTINGS_URL}?key=eq.oracle_broadcast`, { headers: SB_H });
+        const data = await r.json();
+        if (data?.[0]?.value) {
+          const b = JSON.parse(data[0].value);
+          const preview = document.getElementById("currentBroadcastPreview");
+          const textEl  = document.getElementById("currentBroadcastText");
+          const metaEl  = document.getElementById("currentBroadcastMeta");
+          if (preview && textEl && metaEl && b.message) {
+            preview.style.display = "block";
+            textEl.textContent = `"${b.message}"`;
+            const ts = b.timestamp ? new Date(b.timestamp).toLocaleString("en-US", { month:"short", day:"numeric", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
+            const toneLabel = { neutral:"🔵 NEUTRAL", bullish:"🟢 BULLISH", bearish:"🔴 BEARISH", caution:"🟡 CAUTION", alert:"🔴 URGENT ALERT" };
+            metaEl.textContent = `${toneLabel[b.tone] || b.tone}  ·  Published ${ts}`;
+            // Pre-fill form
+            document.getElementById("broadcastMsg").value = b.message || "";
+            document.getElementById("broadcastTone").value = b.tone || "neutral";
+          }
+        }
+      } catch(e) { console.warn("Broadcast load failed", e); }
+    }
+
+    document.getElementById("publishBroadcastBtn").addEventListener("click", async () => {
+      const msg = document.getElementById("broadcastMsg").value.trim();
+      if (!msg) { toast("Write a message before publishing", false); return; }
+      const tone = document.getElementById("broadcastTone").value;
+      const payload = { key: "oracle_broadcast", value: JSON.stringify({ message: msg, tone, timestamp: new Date().toISOString() }) };
+      try {
+        const r = await fetch(SB_SETTINGS_URL, {
+          method: "POST",
+          headers: { ...SB_H, "Prefer": "resolution=merge-duplicates" },
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) {
+          toast("📡 Broadcast published — live on terminal now");
+          document.getElementById("broadcastStatus").textContent = "✓ LIVE ON TERMINAL";
+          document.getElementById("broadcastStatus").style.color = "var(--green)";
+          loadBroadcast();
+        } else { toast("Publish failed", false); }
+      } catch(e) { toast("Publish error: " + e.message, false); }
+    });
+
+    document.getElementById("clearBroadcastBtn").addEventListener("click", async () => {
+      if (!confirm("Clear the broadcast from the terminal?")) return;
+      try {
+        await fetch(SB_SETTINGS_URL, {
+          method: "POST",
+          headers: { ...SB_H, "Prefer": "resolution=merge-duplicates" },
+          body: JSON.stringify({ key: "oracle_broadcast", value: "" })
+        });
+        document.getElementById("broadcastMsg").value = "";
+        document.getElementById("currentBroadcastPreview").style.display = "none";
+        document.getElementById("broadcastStatus").textContent = "Broadcast cleared";
+        document.getElementById("broadcastStatus").style.color = "var(--muted)";
+        toast("Broadcast cleared from terminal");
+      } catch(e) { toast("Clear failed", false); }
+    });
+
+    loadBroadcast();
+  })();
+
+
+  /* ── MACRO REGIME DASHBOARD ── */
+  (function initMacro() {
+    const SB_SETTINGS_URL = `${SB_URL}/app_settings`;
+
+    const DEFAULT_INDICATORS = [
+      { id: "equities", label: "EQUITIES",     status: "yellow", thesis: "", benchmark: "SPY",  benchmark_ticker: "SPY",              benchmark_price: null, last_changed: null },
+      { id: "dollar",   label: "DOLLAR INDEX", status: "yellow", thesis: "", benchmark: "DXY",  benchmark_ticker: "UUP",              benchmark_price: null, last_changed: null },
+      { id: "bonds",    label: "BONDS",        status: "yellow", thesis: "", benchmark: "TLT",  benchmark_ticker: "TLT",              benchmark_price: null, last_changed: null },
+      { id: "risk",     label: "RISK APPETITE",status: "yellow", thesis: "", benchmark: null,   benchmark_ticker: null,               benchmark_price: null, last_changed: null },
+      { id: "crypto",   label: "CRYPTO",       status: "yellow", thesis: "", benchmark: "BTC",  benchmark_ticker: "BINANCE:BTCUSDT",  benchmark_price: null, last_changed: null },
+    ];
+
+    let MACRO = JSON.parse(JSON.stringify(DEFAULT_INDICATORS));
+
+    const statusLabels = { green: "🟢 BULLISH", yellow: "🟡 NEUTRAL", red: "🔴 BEARISH" };
+
+    function renderMacroEditor() {
+      const grid = document.getElementById("macroEditorGrid");
+      grid.innerHTML = MACRO.map((ind, i) => {
+        const lastShift = ind.last_changed
+          ? new Date(ind.last_changed).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+          : '—';
+        return `
+        <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-family:var(--display);font-size:10px;font-weight:900;letter-spacing:2px;color:var(--core);">${ind.label}</div>
+            ${ind.benchmark ? `<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">BENCHMARK: ${ind.benchmark}</div>` : '<div style="font-family:var(--display);font-size:8px;color:var(--muted);">QUALITATIVE</div>'}
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${['green','yellow','red'].map(s => `<button data-macro-stance-idx="${i}" data-stance="${s}" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid ${s==='green'?'rgba(0,255,163,.3)':s==='yellow'?'rgba(255,179,0,.3)':'rgba(255,59,59,.3)'};background:${ind.status===s?(s==='green'?'rgba(0,255,163,.2)':s==='yellow'?'rgba(255,179,0,.2)':'rgba(255,59,59,.2)'):'transparent'};color:${s==='green'?'#00ffa3':s==='yellow'?'#ffb300':'#ff3b3b'};font-family:var(--display);font-size:8px;font-weight:900;letter-spacing:1px;cursor:pointer;">${s==='green'?'BULLISH':s==='yellow'?'NEUTRAL':'BEARISH'}</button>`).join('')}
+          </div>
+          <textarea data-macro-idx="${i}" data-macro-field="thesis"
+            placeholder="2-3 sentence thesis. Institutional tone, no hype. E.g: Dollar weakening after multi-year trendline break and cooling rate expectations."
+            style="font-family:var(--mono, monospace);font-size:11px;background:#0a1628;border:1px solid rgba(0,229,255,.1);color:var(--core);padding:8px 10px;border-radius:6px;width:100%;box-sizing:border-box;resize:vertical;min-height:72px;line-height:1.6;">${ind.thesis || ''}</textarea>
+          <div style="font-family:var(--display);font-size:8px;color:rgba(74,106,138,.6);letter-spacing:.5px;">LAST SHIFT: ${lastShift}${ind.benchmark_price ? ` · ${ind.benchmark} entry: $${parseFloat(ind.benchmark_price).toFixed(2)}` : ''}</div>
+        </div>`;
+      }).join("");
+
+      // Stance toggle buttons
+      grid.querySelectorAll("[data-macro-stance-idx]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const i = parseInt(btn.dataset.macroStanceIdx);
+          const newStance = btn.dataset.stance;
+          const prevStance = MACRO[i].status;
+          if (newStance === prevStance) return;
+
+          MACRO[i].status = newStance;
+          MACRO[i].last_changed = new Date().toISOString();
+
+          // Auto-fetch benchmark price at moment of stance change
+          const ticker = MACRO[i].benchmark_ticker;
+          if (ticker) {
+            try {
+              const price = await fetchLivePrice(ticker);
+              if (price) MACRO[i].benchmark_price = price;
+            } catch(e) {}
+          }
+          renderMacroEditor();
+        });
+      });
+
+      // Thesis fields
+      grid.querySelectorAll("[data-macro-idx]").forEach(el => {
+        el.addEventListener("input", () => {
+          const i = parseInt(el.dataset.macroIdx);
+          MACRO[i][el.dataset.macroField] = el.value;
+        });
+      });
+    }
+
+
+    async function loadMacro() {
+      try {
+        const r = await fetch(`${SB_SETTINGS_URL}?key=eq.macro_regime`, { headers: SB_H });
+        const data = await r.json();
+        if (data?.[0]?.value) {
+          const saved = JSON.parse(data[0].value);
+          if (Array.isArray(saved) && saved.length) {
+            // Merge saved values into defaults, and preserve any extra saved indicators
+            MACRO = DEFAULT_INDICATORS.map(def => {
+              const s = saved.find(x => x.id === def.id);
+              return s ? { ...def, ...s } : def;
+            });
+            // Do NOT append old indicators not in defaults — keeps the 5 clean categories only
+          }
+        }
+      } catch(e) { console.warn("Macro load failed", e); }
+      renderMacroEditor();
+    }
+
+    /* ── PERF BACKFILL EDIT ── */
+    function openPerfEdit(row) {
+      document.getElementById('perfEditId').value    = row.id;
+      document.getElementById('perfEditLabel').textContent = (row.asset || '') + ' · ' + (row.direction || '') + ' · ' + (row.date || '');
+      document.getElementById('peAsset').value       = row.asset || '';
+      document.getElementById('peType').value        = row.type || '';
+      document.getElementById('peDir').value         = row.direction || 'BULL';
+      document.getElementById('peDate').value        = row.date || '';
+      document.getElementById('peStatus').value      = row.status || 'T2_HIT';
+      document.getElementById('peResult').value      = row.result !== null && row.result !== undefined ? row.result : '';
+      document.getElementById('peEntryPrice').value  = row.entry_price !== null && row.entry_price !== undefined ? row.entry_price : '';
+      document.getElementById('peExitPrice').value   = row.exit_price !== null && row.exit_price !== undefined ? row.exit_price : '';
+      document.getElementById('peExitDate').value    = row.exit_date || '';
+      document.getElementById('peExitReason').value  = row.exit_reason || '';
+      document.getElementById('peDays').value        = row.days !== null && row.days !== undefined ? row.days : '';
+      document.getElementById('peConf').value        = row.conf !== null && row.conf !== undefined ? row.conf : '';
+      document.getElementById('peSpyReturn').value   = row.spy_return !== null && row.spy_return !== undefined ? row.spy_return : '';
+      document.getElementById('peNotes').value       = row.notes || '';
+      const el = document.getElementById('perfEditOverlay');
+      el.style.display = 'flex';
+    }
+    function closePerfEdit() {
+      document.getElementById('perfEditOverlay').style.display = 'none';
+    }
+    document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
+      const id = document.getElementById('perfEditId').value;
+      if (!id) return;
+      const patch = {
+        asset:       document.getElementById('peAsset').value.trim().toUpperCase() || undefined,
+        type:        document.getElementById('peType').value.trim() || undefined,
+        direction:   document.getElementById('peDir').value,
+        date:        document.getElementById('peDate').value.trim() || undefined,
+        status:      document.getElementById('peStatus').value,
+        result:      document.getElementById('peResult').value !== '' ? parseFloat(document.getElementById('peResult').value) : null,
+        entry_price: document.getElementById('peEntryPrice').value !== '' ? parseFloat(document.getElementById('peEntryPrice').value) : null,
+        exit_price:  document.getElementById('peExitPrice').value !== '' ? parseFloat(document.getElementById('peExitPrice').value) : null,
+        exit_date:   document.getElementById('peExitDate').value.trim() || null,
+        exit_reason: document.getElementById('peExitReason').value || null,
+        days:        document.getElementById('peDays').value !== '' ? parseInt(document.getElementById('peDays').value) : null,
+        conf:        document.getElementById('peConf').value !== '' ? parseFloat(document.getElementById('peConf').value) : null,
+        spy_return:  document.getElementById('peSpyReturn').value !== '' ? parseFloat(document.getElementById('peSpyReturn').value) : null,
+        notes:       document.getElementById('peNotes').value.trim() || null,
+      };
+      // Strip undefined keys
+      Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
+      const ok = await sbPatch('performance', id, patch);
+      if (ok) {
+        toast('Trade updated ✓');
+        closePerfEdit();
+        await loadAll();
+      } else {
+        toast('Save failed', false);
+      }
+    });
+    // Close on backdrop click
+    document.getElementById('perfEditOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('perfEditOverlay')) closePerfEdit();
+    });
+
+        document.getElementById("saveMacroBtn").addEventListener("click", async () => {
+      // Enforce only the 5 canonical categories — strip any old/stale entries
+      const validIds = new Set(DEFAULT_INDICATORS.map(d => d.id));
+      MACRO = MACRO.filter(ind => validIds.has(ind.id));
+      // Stamp last_changed on indicators whose status changed vs what was last saved
+      MACRO.forEach((ind, i) => {
+        if (!ind.last_changed) ind.last_changed = new Date().toISOString();
+      });
+      try {
+        const r = await fetch(SB_SETTINGS_URL, {
+          method: "POST",
+          headers: { ...SB_H, "Prefer": "resolution=merge-duplicates" },
+          body: JSON.stringify({ key: "macro_regime", value: JSON.stringify(MACRO) })
+        });
+        if (r.ok) {
+          toast("🌐 Macro regime saved — live on terminal");
+          const macroStatusEl = document.getElementById("macroStatus");
+          if (macroStatusEl) { macroStatusEl.textContent = "✓ SAVED & LIVE"; macroStatusEl.style.color = "var(--green)"; }
+        } else { toast("Save failed", false); }
+      } catch(e) { toast("Save error: " + e.message, false); }
+    });
+
+    loadMacro();
+  })();
+</script>
+
+</body>
+</html>
