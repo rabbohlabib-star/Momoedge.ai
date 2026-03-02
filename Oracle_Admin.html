@@ -1,3 +1,4 @@
+
 <!doctype html>
 
 <html lang="en">
@@ -1273,16 +1274,21 @@
       if (!exitMs) continue;
       const daysSinceExit = (now - exitMs.getTime()) / 86400000;
 
-      const needs1d = daysSinceExit >= 1 && row.aftermath_1d == null;
-      const needs3d = daysSinceExit >= 3 && row.aftermath_3d == null;
-      const needs1w = daysSinceExit >= 7 && row.aftermath_1w == null;
+      const needs1d = daysSinceExit >= 1  && row.aftermath_1d == null;
+      const needs3d = daysSinceExit >= 3  && row.aftermath_3d == null;
+      const needs1w = daysSinceExit >= 7  && row.aftermath_1w == null;
       const needs1m = daysSinceExit >= 30 && row.aftermath_1m == null;
       const needs3m = daysSinceExit >= 90 && row.aftermath_3m == null;
+      const needsExitPrice  = !row.exit_price  && row.result !== null;
+      const needsEntryPrice = !row.entry_price && row.result !== null;
 
-      if (!needs1d && !needs3d && !needs1w && !needs1m && !needs3m) continue;
+      if (!needs1d && !needs3d && !needs1w && !needs1m && !needs3m && !needsExitPrice && !needsEntryPrice) continue;
 
       const price = await fetchLivePrice(row.asset);
-      if (!price) continue;
+      if (!price) {
+        console.warn('[Aftermath] Could not fetch price for', row.asset);
+        continue;
+      }
 
       const patch = {};
       if (needs1d) patch.aftermath_1d = price;
@@ -1291,12 +1297,36 @@
       if (needs1m) patch.aftermath_1m = price;
       if (needs3m) patch.aftermath_3m = price;
 
+      // Backfill missing exit_price using result% and current price as approximation
+      // If result is known, derive: exit = entry * (1 + result/100) for BULL, (1 - result/100) for BEAR
+      if (needsExitPrice) {
+        if (row.entry_price && row.result !== null) {
+          const isBull = row.direction === 'BULL';
+          patch.exit_price = isBull
+            ? parseFloat((row.entry_price * (1 + row.result / 100)).toFixed(4))
+            : parseFloat((row.entry_price * (1 - row.result / 100)).toFixed(4));
+        } else {
+          // No entry price — use current price as best guess for display
+          patch.exit_price = price;
+        }
+      }
+      // Backfill missing entry_price with current live price (rough — better than null)
+      if (needsEntryPrice && !needsExitPrice) {
+        if (row.exit_price && row.result !== null) {
+          const isBull = row.direction === 'BULL';
+          patch.entry_price = isBull
+            ? parseFloat((row.exit_price / (1 + row.result / 100)).toFixed(4))
+            : parseFloat((row.exit_price / (1 - row.result / 100)).toFixed(4));
+        }
+      }
+
       await sbPatch('performance', row.id, patch);
       updated++;
-      console.log(`[Aftermath] Updated ${row.asset}: `, patch);
+      console.log(`[Aftermath] Updated ${row.asset}:`, patch);
     }
     if (updated) {
-      toast(`✓ Aftermath prices updated for ${updated} trade${updated > 1 ? 's' : ''}`);
+      toast(`✓ Aftermath updated for ${updated} trade${updated > 1 ? 's' : ''}`);
+      await loadAll();
     }
   }
 
@@ -1560,6 +1590,14 @@
       action_plan: document.getElementById("fActionPlan").value.trim() || null,
       is_active: true
     };
+
+    // Auto-fetch live price as entry_price if not manually set
+    if (!payload.entry_price) {
+      try {
+        const liveEntry = await fetchLivePrice(asset);
+        if (liveEntry) payload.entry_price = liveEntry;
+      } catch(e) {}
+    }
 
     // Only set signal_date on NEW signals — never overwrite on edit
     if (!editId) {
