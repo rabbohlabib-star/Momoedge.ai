@@ -5736,17 +5736,38 @@
               const p = d.split('-');
               return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
             };
+            const exitDate = parseD(r.exit_date);
+            const todayStr = (() => { const n = new Date(); return `${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}-${n.getFullYear()}`; })();
+            const exitIsToday = r.exit_date === todayStr;
+
             const from = Math.floor(parseD(r.date).getTime() / 1000);
-            const to   = Math.floor(parseD(r.exit_date).getTime() / 1000) + 86400; // include exit day's candle
+            const to   = Math.floor(exitDate.getTime() / 1000) + 86400;
             const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
             const data = await resp.json();
+
             if (data.s === 'ok' && data.c && data.c.length >= 2) {
+              // Normal case — use candle close prices
               const spyRet = parseFloat(((data.c[data.c.length-1] - data.c[0]) / data.c[0] * 100).toFixed(2));
-              // Cache it back so the row table also shows it
               r.spy_return = spyRet;
               renderAlpha(spyRet);
+            } else if (data.s === 'ok' && data.c && data.c.length === 1 && exitIsToday) {
+              // Trade closed today — today's candle not finalized yet, use live SPY quote
+              const liveSpyCache = PRICE_CACHE['SPY'];
+              if (liveSpyCache && liveSpyCache.price && data.c[0]) {
+                const spyRet = parseFloat(((liveSpyCache.price - data.c[0]) / data.c[0] * 100).toFixed(2));
+                r.spy_return = spyRet;
+                renderAlpha(spyRet);
+              } else {
+                // Fallback: use today's % change from SPY cache as SPY return
+                const spyRet = liveSpyCache ? parseFloat((liveSpyCache.changePercent || 0).toFixed(2)) : 0;
+                r.spy_return = spyRet;
+                renderAlpha(spyRet);
+              }
+            } else if (r.date === r.exit_date) {
+              // Same-day trade — SPY return effectively 0
+              r.spy_return = 0;
+              renderAlpha(0);
             } else {
-              // Can't fetch — show our return only
               fmtVal(r.result, 'tdmOurReturn');
               document.getElementById('tdmSpyReturn').textContent = 'N/A';
               document.getElementById('tdmAlpha').textContent     = '—';
