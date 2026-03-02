@@ -2096,6 +2096,66 @@
   })();
 
 
+  /* ── PERF BACKFILL EDIT ── */
+  function openPerfEdit(row) {
+    document.getElementById('perfEditId').value    = row.id;
+    document.getElementById('perfEditLabel').textContent = (row.asset || '') + ' · ' + (row.direction || '') + ' · ' + (row.date || '');
+    document.getElementById('peAsset').value       = row.asset || '';
+    document.getElementById('peType').value        = row.type || '';
+    document.getElementById('peDir').value         = row.direction || 'BULL';
+    document.getElementById('peDate').value        = row.date || '';
+    document.getElementById('peStatus').value      = row.status || 'T2_HIT';
+    document.getElementById('peResult').value      = row.result !== null && row.result !== undefined ? row.result : '';
+    document.getElementById('peEntryPrice').value  = row.entry_price !== null && row.entry_price !== undefined ? row.entry_price : '';
+    document.getElementById('peExitPrice').value   = row.exit_price !== null && row.exit_price !== undefined ? row.exit_price : '';
+    document.getElementById('peExitDate').value    = row.exit_date || '';
+    document.getElementById('peExitReason').value  = row.exit_reason || '';
+    document.getElementById('peDays').value        = row.days !== null && row.days !== undefined ? row.days : '';
+    document.getElementById('peConf').value        = row.conf !== null && row.conf !== undefined ? row.conf : '';
+    document.getElementById('peSpyReturn').value   = row.spy_return !== null && row.spy_return !== undefined ? row.spy_return : '';
+    document.getElementById('peNotes').value       = row.notes || '';
+    const el = document.getElementById('perfEditOverlay');
+    el.style.display = 'flex';
+  }
+  function closePerfEdit() {
+    document.getElementById('perfEditOverlay').style.display = 'none';
+  }
+  document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
+    const id = document.getElementById('perfEditId').value;
+    if (!id) return;
+    const patch = {
+      asset:       document.getElementById('peAsset').value.trim().toUpperCase() || undefined,
+      type:        document.getElementById('peType').value.trim() || undefined,
+      direction:   document.getElementById('peDir').value,
+      date:        document.getElementById('peDate').value.trim() || undefined,
+      status:      document.getElementById('peStatus').value,
+      result:      document.getElementById('peResult').value !== '' ? parseFloat(document.getElementById('peResult').value) : null,
+      entry_price: document.getElementById('peEntryPrice').value !== '' ? parseFloat(document.getElementById('peEntryPrice').value) : null,
+      exit_price:  document.getElementById('peExitPrice').value !== '' ? parseFloat(document.getElementById('peExitPrice').value) : null,
+      exit_date:   document.getElementById('peExitDate').value.trim() || null,
+      exit_reason: document.getElementById('peExitReason').value || null,
+      days:        document.getElementById('peDays').value !== '' ? parseInt(document.getElementById('peDays').value) : null,
+      conf:        document.getElementById('peConf').value !== '' ? parseFloat(document.getElementById('peConf').value) : null,
+      spy_return:  document.getElementById('peSpyReturn').value !== '' ? parseFloat(document.getElementById('peSpyReturn').value) : null,
+      notes:       document.getElementById('peNotes').value.trim() || null,
+    };
+    // Strip undefined keys
+    Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
+    const ok = await sbPatch('performance', id, patch);
+    if (ok) {
+      toast('Trade updated ✓');
+      closePerfEdit();
+      await loadAll();
+    } else {
+      toast('Save failed', false);
+    }
+  });
+  // Close on backdrop click
+  document.getElementById('perfEditOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('perfEditOverlay')) closePerfEdit();
+  });
+
+
   /* ── MACRO REGIME DASHBOARD ── */
   (function initMacro() {
     const SB_SETTINGS_URL = `${SB_URL}/app_settings`;
@@ -2185,65 +2245,6 @@
       } catch(e) { console.warn("Macro load failed", e); }
       renderMacroEditor();
     }
-
-    /* ── PERF BACKFILL EDIT ── */
-    function openPerfEdit(row) {
-      document.getElementById('perfEditId').value    = row.id;
-      document.getElementById('perfEditLabel').textContent = (row.asset || '') + ' · ' + (row.direction || '') + ' · ' + (row.date || '');
-      document.getElementById('peAsset').value       = row.asset || '';
-      document.getElementById('peType').value        = row.type || '';
-      document.getElementById('peDir').value         = row.direction || 'BULL';
-      document.getElementById('peDate').value        = row.date || '';
-      document.getElementById('peStatus').value      = row.status || 'T2_HIT';
-      document.getElementById('peResult').value      = row.result !== null && row.result !== undefined ? row.result : '';
-      document.getElementById('peEntryPrice').value  = row.entry_price !== null && row.entry_price !== undefined ? row.entry_price : '';
-      document.getElementById('peExitPrice').value   = row.exit_price !== null && row.exit_price !== undefined ? row.exit_price : '';
-      document.getElementById('peExitDate').value    = row.exit_date || '';
-      document.getElementById('peExitReason').value  = row.exit_reason || '';
-      document.getElementById('peDays').value        = row.days !== null && row.days !== undefined ? row.days : '';
-      document.getElementById('peConf').value        = row.conf !== null && row.conf !== undefined ? row.conf : '';
-      document.getElementById('peSpyReturn').value   = row.spy_return !== null && row.spy_return !== undefined ? row.spy_return : '';
-      document.getElementById('peNotes').value       = row.notes || '';
-      const el = document.getElementById('perfEditOverlay');
-      el.style.display = 'flex';
-    }
-    function closePerfEdit() {
-      document.getElementById('perfEditOverlay').style.display = 'none';
-    }
-    document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
-      const id = document.getElementById('perfEditId').value;
-      if (!id) return;
-      const patch = {
-        asset:       document.getElementById('peAsset').value.trim().toUpperCase() || undefined,
-        type:        document.getElementById('peType').value.trim() || undefined,
-        direction:   document.getElementById('peDir').value,
-        date:        document.getElementById('peDate').value.trim() || undefined,
-        status:      document.getElementById('peStatus').value,
-        result:      document.getElementById('peResult').value !== '' ? parseFloat(document.getElementById('peResult').value) : null,
-        entry_price: document.getElementById('peEntryPrice').value !== '' ? parseFloat(document.getElementById('peEntryPrice').value) : null,
-        exit_price:  document.getElementById('peExitPrice').value !== '' ? parseFloat(document.getElementById('peExitPrice').value) : null,
-        exit_date:   document.getElementById('peExitDate').value.trim() || null,
-        exit_reason: document.getElementById('peExitReason').value || null,
-        days:        document.getElementById('peDays').value !== '' ? parseInt(document.getElementById('peDays').value) : null,
-        conf:        document.getElementById('peConf').value !== '' ? parseFloat(document.getElementById('peConf').value) : null,
-        spy_return:  document.getElementById('peSpyReturn').value !== '' ? parseFloat(document.getElementById('peSpyReturn').value) : null,
-        notes:       document.getElementById('peNotes').value.trim() || null,
-      };
-      // Strip undefined keys
-      Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
-      const ok = await sbPatch('performance', id, patch);
-      if (ok) {
-        toast('Trade updated ✓');
-        closePerfEdit();
-        await loadAll();
-      } else {
-        toast('Save failed', false);
-      }
-    });
-    // Close on backdrop click
-    document.getElementById('perfEditOverlay').addEventListener('click', e => {
-      if (e.target === document.getElementById('perfEditOverlay')) closePerfEdit();
-    });
 
         document.getElementById("saveMacroBtn").addEventListener("click", async () => {
       // Enforce only the 5 canonical categories — strip any old/stale entries
