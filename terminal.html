@@ -5088,6 +5088,8 @@
       { id: 'equities', label: 'EQUITIES',     status: 'yellow', thesis: '', benchmark: 'SPY', benchmark_ticker: 'SPY',             benchmark_price: null, last_changed: null },
       { id: 'dollar',   label: 'DOLLAR INDEX', status: 'yellow', thesis: '', benchmark: 'DXY', benchmark_ticker: 'UUP',             benchmark_price: null, last_changed: null },
       { id: 'bonds',    label: 'BONDS',        status: 'yellow', thesis: '', benchmark: 'TLT', benchmark_ticker: 'TLT',             benchmark_price: null, last_changed: null },
+      { id: 'gold',     label: 'GOLD',         status: 'yellow', thesis: '', benchmark: 'GLD', benchmark_ticker: 'GLD',             benchmark_price: null, last_changed: null },
+      { id: 'silver',   label: 'SILVER',       status: 'yellow', thesis: '', benchmark: 'SLV', benchmark_ticker: 'SLV',             benchmark_price: null, last_changed: null },
       { id: 'risk',     label: 'RISK APPETITE',status: 'yellow', thesis: '', benchmark: null,  benchmark_ticker: null,              benchmark_price: null, last_changed: null },
       { id: 'crypto',   label: 'CRYPTO',       status: 'yellow', thesis: '', benchmark: 'BTC', benchmark_ticker: 'BINANCE:BTCUSDT', benchmark_price: null, last_changed: null },
     ];
@@ -5735,7 +5737,7 @@
               return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
             };
             const from = Math.floor(parseD(r.date).getTime() / 1000);
-            const to   = Math.floor(parseD(r.exit_date).getTime() / 1000);
+            const to   = Math.floor(parseD(r.exit_date).getTime() / 1000) + 86400; // include exit day's candle
             const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
             const data = await resp.json();
             if (data.s === 'ok' && data.c && data.c.length >= 2) {
