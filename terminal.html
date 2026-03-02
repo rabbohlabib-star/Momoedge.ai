@@ -5744,6 +5744,7 @@
             const to   = Math.floor(exitDate.getTime() / 1000) + 86400;
             const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
             const data = await resp.json();
+            console.log('[SPY alpha] date:', r.date, '→', r.exit_date, '| status:', data.s, '| candles:', data.c?.length, '| exitIsToday:', exitIsToday, '| from:', from, 'to:', to);
 
             if (data.s === 'ok' && data.c && data.c.length >= 2) {
               // Normal case — use candle close prices
