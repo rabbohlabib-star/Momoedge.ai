@@ -467,6 +467,22 @@
     /* Desktop history tab relative positioning for badge */
     .deskTab { position: relative; }
 
+    /* ── NEW TRADE HIGHLIGHT ── */
+    #perfBody tr.newTrade {
+      background: rgba(0,229,255,.06) !important;
+      border-left: 2px solid var(--core);
+      animation: newTradeGlow 2.5s ease-in-out infinite;
+    }
+    @keyframes newTradeGlow {
+      0%,100% { background: rgba(0,229,255,.06); }
+      50% { background: rgba(0,229,255,.1); }
+    }
+    .mobileHistCard.newTrade {
+      background: rgba(0,229,255,.06) !important;
+      border-left: 2px solid var(--core) !important;
+      animation: newTradeGlow 2.5s ease-in-out infinite;
+    }
+
 
     #viewerCountDisplay { color: var(--muted); font-size: 9px; letter-spacing: .8px; }
     #viewerCountDisplay b { color: #00ff88; }
@@ -5584,7 +5600,7 @@
           alphaCell = `<span style="font-family:var(--display);font-size:11px;font-weight:700;color:${alpha >= 0 ? 'var(--green)' : 'var(--red)'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(1)}%</span>`;
         }
 
-        return `<tr data-id="${r.id}">
+        return `<tr data-id="${r.id}" class="${isUnseenTrade(r.id) ? 'newTrade' : ''}">
           <td><div class="tdAsset"><div class="assetDot ${isBull ? "bull" : "bear"}"></div><div><div class="assetName">${r.asset}</div><div class="assetSub">${r.type}</div></div></div></td>
           <td><span class="dirBadge ${isBull ? "dirBull" : "dirBear"}">${r.direction}</span></td>
           <td style="font-size:10px;color:var(--muted);white-space:nowrap">${r.date}</td>
@@ -5608,6 +5624,9 @@
     function openTradeDetail(id) {
       const r = PERF_DATA.find(x => x.id === id);
       if (!r) return;
+
+      // Mark this trade as seen — remove highlight
+      markTradeAsSeen(id);
 
       document.getElementById('tdmAsset').textContent = r.asset;
       document.getElementById('tdmSub').textContent = `${r.type} · ${r.direction} · ${r.signal}`;
@@ -7340,6 +7359,77 @@
       try { localStorage.setItem('momoedge_perf', JSON.stringify(PERF_DATA)); } catch(e) {}
     }
 
+    // ── HISTORY BADGE + UNSEEN TRADE TRACKING (main scope) ──
+    let _seenClosedIds = new Set();
+
+    function _loadSeenClosedIds() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('oracle_seen_closed_ids') || '[]');
+        _seenClosedIds = new Set(stored);
+      } catch(e) { _seenClosedIds = new Set(); }
+    }
+    function _saveSeenClosedIds() {
+      try { localStorage.setItem('oracle_seen_closed_ids', JSON.stringify([..._seenClosedIds])); } catch(e) {}
+    }
+    _loadSeenClosedIds();
+
+    function getClosedTrades() {
+      return PERF_DATA.filter(r => r.status !== 'ACTIVE');
+    }
+
+    function getUnseenClosedIds() {
+      const closed = getClosedTrades();
+      return closed.filter(r => r.id && !_seenClosedIds.has(r.id)).map(r => r.id);
+    }
+
+    function isUnseenTrade(id) {
+      return id && !_seenClosedIds.has(id);
+    }
+
+    function seedSeenClosedTrades() {
+      // On first ever load, mark all existing closed trades as "seen"
+      if (!localStorage.getItem('oracle_seen_closed_ids')) {
+        getClosedTrades().forEach(r => { if (r.id) _seenClosedIds.add(r.id); });
+        _saveSeenClosedIds();
+      }
+    }
+
+    function markTradeAsSeen(id) {
+      if (!id) return;
+      _seenClosedIds.add(id);
+      _saveSeenClosedIds();
+      // Remove highlight from this trade's row/card
+      document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.remove('newTrade'));
+      // If no more unseen trades, clear badge
+      if (!getUnseenClosedIds().length) {
+        clearHistoryBadge();
+      }
+    }
+
+    function markAllTradesAsSeen() {
+      getClosedTrades().forEach(r => { if (r.id) _seenClosedIds.add(r.id); });
+      _saveSeenClosedIds();
+    }
+
+    function checkHistoryBadge() {
+      const unseen = getUnseenClosedIds();
+      const showBadge = unseen.length > 0;
+      ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('visible', showBadge);
+      });
+    }
+
+    function clearHistoryBadge() {
+      markAllTradesAsSeen();
+      ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('visible');
+      });
+      // Remove all newTrade highlights
+      document.querySelectorAll('.newTrade').forEach(el => el.classList.remove('newTrade'));
+    }
+
     async function init() {
       console.log('[Oracle] init starting...');
 
@@ -7373,30 +7463,8 @@
       refreshAll();
       renderFlow("all");
 
-      // ── NOTIFICATION BADGE: track new closed trades ──
-      function getClosedCount() {
-        return PERF_DATA.filter(r => r.status !== 'ACTIVE').length;
-      }
-      function checkHistoryBadge() {
-        const seen = parseInt(localStorage.getItem('oracle_seen_closed') || '0');
-        const current = getClosedCount();
-        const showBadge = current > seen;
-        ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.toggle('visible', showBadge);
-        });
-      }
-      function clearHistoryBadge() {
-        localStorage.setItem('oracle_seen_closed', getClosedCount());
-        ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.remove('visible');
-        });
-      }
-      // Seed on first load
-      if (!localStorage.getItem('oracle_seen_closed')) {
-        localStorage.setItem('oracle_seen_closed', getClosedCount());
-      }
+      // Seed closed trade tracking on first load
+      seedSeenClosedTrades();
       checkHistoryBadge();
 
       // ── POLL FOR UPDATES every 30 seconds ──
@@ -9165,7 +9233,8 @@
         var alpha = r.result - parseFloat(r.spy_return);
         alphaStr = '<span style="font-family:Orbitron,monospace;font-size:7px;color:' + (alpha >= 0 ? '#00ff88' : '#ff4466') + ';">' + (alpha >= 0 ? '+' : '') + alpha.toFixed(1) + '% α</span>';
       }
-      return '<div class="mobileHistCard" data-id="' + r.id + '" style="' + clickable + '">' +
+      var unseenCls = (typeof isUnseenTrade === 'function' && isUnseenTrade(r.id)) ? ' newTrade' : '';
+      return '<div class="mobileHistCard' + unseenCls + '" data-id="' + r.id + '" style="' + clickable + '">' +
         '<div class="mhcLeft">' +
           '<span class="mhcAsset">' + r.asset + '</span>' +
           '<span class="mhcType">' + (r.signal || r.type || '—') + '</span>' +
@@ -9213,6 +9282,8 @@
         _dtTimer = null; _dtLastId = null;
         if (typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
       } else {
+        // Single tap — mark as seen (remove highlight)
+        if (typeof markTradeAsSeen === 'function') markTradeAsSeen(id);
         _dtLastId = id;
         _dtTimer = setTimeout(function() { _dtTimer = null; _dtLastId = null; }, 350);
       }
