@@ -1,4 +1,4 @@
-<!doctype html> 
+<!doctype html>
 
 <html lang="en">
 <head>
@@ -14,7 +14,8 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvamlxZmVlbWtzdm9jbmFlbGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjg2NTgsImV4cCI6MjA4Njg0NDY1OH0.oOrfkygK_MM-zZyemF0D2HtL8YRuzrryRQ2dmSRwAXI'
       );
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.replace('./login.html'); return; }
+      // DEV BYPASS — uncomment before merging to main
+      // if (!session) { window.location.replace('./login.html'); return; }
       // Authenticated — remove the display:none block
       document.getElementById('authBlock').remove();
     } catch(e) {
