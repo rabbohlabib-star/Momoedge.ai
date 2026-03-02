@@ -2189,7 +2189,8 @@
     }
 
     /* ── PERF BACKFILL EDIT ── */
-    function openPerfEdit(row) {
+    // Exposed globally so renderPerf() (outside this IIFE) can call it
+    window.openPerfEdit = function(row) {
       document.getElementById('perfEditId').value    = row.id;
       document.getElementById('perfEditLabel').textContent = (row.asset || '') + ' · ' + (row.direction || '') + ' · ' + (row.date || '');
       document.getElementById('peAsset').value       = row.asset || '';
@@ -2209,7 +2210,7 @@
       const el = document.getElementById('perfEditOverlay');
       el.style.display = 'flex';
     }
-    function closePerfEdit() {
+    window.closePerfEdit = function() {
       document.getElementById('perfEditOverlay').style.display = 'none';
     }
     document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
