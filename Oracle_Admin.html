@@ -1074,13 +1074,16 @@
 
     try {
       const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
-      if (!r.ok) return null;
+      if (r.status === 429) { console.warn('[backfill] Finnhub rate limited'); return null; }
+      if (!r.ok) { console.warn('[backfill] Finnhub HTTP error:', r.status); return null; }
       const d = await r.json();
-      if (d.s !== 'ok' || !d.c || d.c.length < 2) return null;
+      console.log('[backfill] SPY candle:', d.s, 'candles:', d.c && d.c.length, 'range:', entryDate, '->', exitDate);
+      if (!d.c || d.c.length === 0 || d.s !== 'ok') return null;
+      if (d.c.length === 1) return 0;
       const spyEntry = d.c[0];
       const spyExit = d.c[d.c.length - 1];
       return parseFloat(((spyExit - spyEntry) / spyEntry * 100).toFixed(2));
-    } catch(e) { return null; }
+    } catch(e) { console.error('[backfill] error:', e); return null; }
   }
 
   async function sbGet(table, params='') {
@@ -1243,10 +1246,12 @@
     btn.textContent = '⟳ BACKFILL SPY ALPHA';
 
     if (updated) {
-      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} failed)` : ''}`);
-      await loadAll(); // refresh data
+      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} no historical data)` : ''}`);
+      await loadAll();
+    } else if (failed) {
+      toast(`⚠️ No SPY data found — trades may be older than Finnhub's 1-year free tier limit. Check console for details.`, false);
     } else {
-      toast(`⚠️ Backfill failed — check Finnhub rate limits`, true);
+      toast(`⚠️ Backfill failed — check console for details`, false);
     }
   }
 
