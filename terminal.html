@@ -483,6 +483,17 @@
       animation: newTradeGlow 2.5s ease-in-out infinite;
     }
 
+    /* ── NEW SIGNAL PULSE ── */
+    .item.newSignalPulse {
+      border-color: rgba(0,229,255,.5) !important;
+      box-shadow: 0 0 12px rgba(0,229,255,.25), inset 0 0 20px rgba(0,229,255,.05) !important;
+      animation: signalPulse 2s ease-in-out infinite;
+    }
+    @keyframes signalPulse {
+      0%,100% { box-shadow: 0 0 8px rgba(0,229,255,.2), inset 0 0 15px rgba(0,229,255,.03); }
+      50% { box-shadow: 0 0 18px rgba(0,229,255,.4), inset 0 0 25px rgba(0,229,255,.08); }
+    }
+
 
     #viewerCountDisplay { color: var(--muted); font-size: 9px; letter-spacing: .8px; }
     #viewerCountDisplay b { color: #00ff88; }
@@ -3968,6 +3979,7 @@
     // ── NEW SIGNAL DETECTION ──
     let _knownSignalIds = new Set();
     let _signalBadgeActive = false;
+    let _newSignalIds = new Set(); // tracks visually "new" signals for pulse effect
 
     function seedKnownSignals() {
       _knownSignalIds = new Set(SIGNALS.map(s => s.id || s.streamLabel || s.asset));
@@ -3981,16 +3993,33 @@
       });
       if (newSignals.length) {
         newSignals.forEach(sig => {
+          const key = sig.id || sig.streamLabel || sig.asset;
           // Push notification + sound for each new signal
           sendNewSignalNotification(sig);
-          _knownSignalIds.add(sig.id || sig.streamLabel || sig.asset);
+          _knownSignalIds.add(key);
+          _newSignalIds.add(key);
         });
         // Show badge on mobile Signals tab (if not currently on it)
         showSignalsBadge();
         // In-app toast
         const names = newSignals.map(s => s.asset).join(', ');
         showToast(`⚡ New signal: ${names}`);
+        // Re-render signal lists to show pulse
+        renderList();
+        if (typeof window._renderMList === 'function') window._renderMList();
       }
+    }
+
+    function isNewSignal(sig) {
+      const key = sig.id || sig.streamLabel || sig.asset;
+      return _newSignalIds.has(key);
+    }
+
+    function clearNewSignalPulse(sig) {
+      const key = sig.id || sig.streamLabel || sig.asset;
+      _newSignalIds.delete(key);
+      document.querySelectorAll(`[data-sig-id="${sig.id || sig.asset}"]`).forEach(el => el.classList.remove('newSignalPulse'));
+      if (!_newSignalIds.size) clearSignalsBadge();
     }
 
     function sendNewSignalNotification(sig) {
@@ -6167,7 +6196,7 @@
     /* ─────────────── CSV EXPORT ─────────────── */
     document.getElementById("exportCsv").addEventListener("click", () => {
       const headers = ["Asset", "Type", "Direction", "Date", "Signal", "Status", "Result %", "Days", "Confidence"];
-      const rows = PERF_DATA.map(r => [r.asset, r.type, r.direction, r.date, r.signal, r.status, r.result === null ? "ACTIVE" : r.result.toFixed(2), r.days === null ? "" : r.days, r.conf.toFixed(2)]);
+      const rows = PERF_DATA.map(r => [r.asset || '', r.type || '', r.direction || '', r.date || '', r.signal || '', r.status || '', r.result != null ? r.result.toFixed(2) : "ACTIVE", r.days != null ? r.days : "", r.conf != null ? r.conf.toFixed(2) : ""]);
       const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -6714,6 +6743,7 @@
 
         const div = document.createElement("div");
         div.className = `item ${isBull ? "bull-item" : "bear-item"}`;
+        if (isNewSignal(sig)) div.classList.add('newSignalPulse');
         div.dataset.sigId = sig.id || sig.asset;
 
         // Duration clock data
@@ -6831,6 +6861,7 @@
           autoRotate = false;
           updateAutoBtn();
           const originalIdx = SIGNALS.findIndex(s => s.id === sig.id);
+          if (isNewSignal(sig)) clearNewSignalPulse(sig);
           setActive(originalIdx);
         });
         listEl.appendChild(div);
@@ -8260,6 +8291,7 @@
       var isTriggered = tr && tr.hit;
       div.className = 'item ' + (isBull ? 'bull-item' : 'bear-item');
       if (isTriggered) div.classList.add('triggered-item');
+      if (typeof isNewSignal === 'function' && isNewSignal(sig)) div.classList.add('newSignalPulse');
       div.dataset.sigId = sig.id || sig.asset;
       div.innerHTML =
         // ── COLORED HEADER BAR ──
@@ -8423,6 +8455,7 @@
         autoRotate = false;
         updateAutoBtn();
         if (mAutoBtn) mAutoBtn.textContent = 'AUTO: OFF';
+        if (typeof isNewSignal === 'function' && isNewSignal(sig)) clearNewSignalPulse(sig);
         setActive(idx);
         mSelectedSig = sig;
         switchTab('Analysis');
