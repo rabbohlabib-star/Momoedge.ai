@@ -1819,7 +1819,7 @@
     tbody.querySelectorAll(".perfEdit[data-pid]").forEach(btn => {
       btn.addEventListener("click", () => {
         const pid = btn.dataset.pid;
-        const row = PERF.find(r => r.id === pid);
+        const row = PERF.find(r => String(r.id) === String(pid));
         if (!row) return;
         openPerfEdit(row);
       });
