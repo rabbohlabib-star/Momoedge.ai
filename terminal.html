@@ -3949,6 +3949,142 @@
     let soundEnabled = false;
     let lastNotifiedSignal = null;
 
+    // ── NEW SIGNAL DETECTION ──
+    let _knownSignalIds = new Set();
+    let _signalBadgeActive = false;
+
+    function seedKnownSignals() {
+      _knownSignalIds = new Set(SIGNALS.map(s => s.id || s.streamLabel || s.asset));
+    }
+
+    function checkForNewSignals() {
+      if (!_knownSignalIds.size) return; // not seeded yet
+      const newSignals = SIGNALS.filter(s => {
+        const key = s.id || s.streamLabel || s.asset;
+        return !_knownSignalIds.has(key);
+      });
+      if (newSignals.length) {
+        newSignals.forEach(sig => {
+          // Push notification + sound for each new signal
+          sendNewSignalNotification(sig);
+          _knownSignalIds.add(sig.id || sig.streamLabel || sig.asset);
+        });
+        // Show badge on mobile Signals tab (if not currently on it)
+        showSignalsBadge();
+        // In-app toast
+        const names = newSignals.map(s => s.asset).join(', ');
+        showToast(`⚡ New signal: ${names}`);
+      }
+    }
+
+    function sendNewSignalNotification(sig) {
+      if (!notificationsEnabled || Notification.permission !== "granted") return;
+      const isBull = sig.direction === "BULL";
+      new Notification(`⚡ NEW SIGNAL: ${sig.asset}`, {
+        body: `${sig.level} · ${sig.direction} · Confidence: ${(sig.confidence != null ? parseFloat(sig.confidence).toFixed(1) : '—')}%\n${sig.horizon || ''}`,
+        icon: isBull ? 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%2300ffa3"/></svg>' : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ff3b3b"/></svg>',
+        tag: 'new-signal-' + (sig.id || sig.asset),
+        requireInteraction: true
+      });
+      playAlertSound();
+    }
+
+    function showSignalsBadge() {
+      _signalBadgeActive = true;
+      const el = document.getElementById('sigNotifBadgeMob');
+      if (el) el.classList.add('visible');
+    }
+
+    function clearSignalsBadge() {
+      _signalBadgeActive = false;
+      const el = document.getElementById('sigNotifBadgeMob');
+      if (el) el.classList.remove('visible');
+    }
+
+    // ── TARGET HIT ALERTS ──
+    // Track which hits we've already notified: { "signalId": { t1: true, t2: true, ... } }
+    let _notifiedHits = {};
+    (function loadNotifiedHits() {
+      try { _notifiedHits = JSON.parse(localStorage.getItem('oracle_notified_hits') || '{}'); } catch(e) { _notifiedHits = {}; }
+    })();
+    function saveNotifiedHits() {
+      try { localStorage.setItem('oracle_notified_hits', JSON.stringify(_notifiedHits)); } catch(e) {}
+    }
+
+    function checkTargetHitAlerts() {
+      if (!SIGNALS.length) return;
+      SIGNALS.forEach(sig => {
+        const key = sig.id || sig.streamLabel || sig.asset;
+        const live = calculateLiveConfidence(sig);
+        if (!live || live.zone === 'base') return;
+
+        if (!_notifiedHits[key]) _notifiedHits[key] = {};
+        const seen = _notifiedHits[key];
+
+        // T1 hit
+        if (live.t1Hit && !seen.t1) {
+          seen.t1 = true;
+          sendTargetNotification(sig, 'T1', live.price);
+        }
+        // T2 hit
+        if (live.t2Hit && !seen.t2) {
+          seen.t2 = true;
+          sendTargetNotification(sig, 'T2', live.price);
+        }
+        // T3 hit
+        if (live.t3Hit && !seen.t3) {
+          seen.t3 = true;
+          sendTargetNotification(sig, 'T3', live.price);
+        }
+        // Invalidation
+        if (live.zone === 'invalidated' && !seen.invalidated) {
+          seen.invalidated = true;
+          sendInvalidationNotification(sig, live.price);
+        }
+      });
+      saveNotifiedHits();
+    }
+
+    function sendTargetNotification(sig, target, price) {
+      showToast(`🎯 ${sig.asset} hit ${target}! Price: $${price.toFixed(2)}`);
+      if (!notificationsEnabled || Notification.permission !== "granted") return;
+      new Notification(`🎯 ${sig.asset} — ${target} HIT`, {
+        body: `${sig.direction} signal reached ${target}.\nLive: $${price.toFixed(2)} · ${sig.level}`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ffd700"/></svg>',
+        tag: `target-${sig.id || sig.asset}-${target}`,
+        requireInteraction: true
+      });
+      playAlertSound();
+    }
+
+    function sendInvalidationNotification(sig, price) {
+      showToast(`🚨 ${sig.asset} INVALIDATED! Price: $${price.toFixed(2)}`);
+      if (!notificationsEnabled || Notification.permission !== "granted") return;
+      new Notification(`🚨 ${sig.asset} — INVALIDATED`, {
+        body: `${sig.direction} signal has been invalidated.\nLive: $${price.toFixed(2)} · Exit recommended.`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ff3b3b"/></svg>',
+        tag: `invalidated-${sig.id || sig.asset}`,
+        requireInteraction: true
+      });
+      playAlertSound();
+      playAlertSound(); // double beep for urgency
+    }
+
+    // Stamp all currently-hit targets as "seen" so first load doesn't spam
+    function seedExistingTargetHits() {
+      SIGNALS.forEach(sig => {
+        const key = sig.id || sig.streamLabel || sig.asset;
+        const live = calculateLiveConfidence(sig);
+        if (!live || live.zone === 'base') return;
+        if (!_notifiedHits[key]) _notifiedHits[key] = {};
+        if (live.t1Hit) _notifiedHits[key].t1 = true;
+        if (live.t2Hit) _notifiedHits[key].t2 = true;
+        if (live.t3Hit) _notifiedHits[key].t3 = true;
+        if (live.zone === 'invalidated') _notifiedHits[key].invalidated = true;
+      });
+      saveNotifiedHits();
+    }
+
     let audioContext = null;
     
     function getAudioContext() {
@@ -4709,6 +4845,9 @@
       
       renderList();
       applyTriggerStates();
+      
+      // Check for target hits after fresh prices
+      checkTargetHitAlerts();
       
       // Re-render macro regime with fresh prices
       renderMacroRegime();
@@ -6936,8 +7075,7 @@
       const sig = SIGNALS[activeIndex];
       streamName.textContent = sig.streamLabel;
 
-      // Send notification for new signal
-      sendNotification(sig);
+      // Notification moved to new-signal detection (no longer fires on carousel rotation)
 
       // Fetch live price for this asset
       const asset = sig.asset.split(' ')[0].toUpperCase();
@@ -7216,11 +7354,15 @@
       renderList();
       updateAutoBtn();
       updateAvgConf();
+      // Seed known signals — everything loaded on first visit is "seen"
+      seedKnownSignals();
       if (SIGNALS.length) {
         setActive(0);
         setTimeout(() => {
           updateAllPrices().then(function() {
             applyTriggerStates();
+            // Seed target hit states — anything already hit on first load is "seen"
+            seedExistingTargetHits();
             if (typeof window._renderMList === 'function') {
               window._renderMList();
             }
@@ -7261,10 +7403,14 @@
       setInterval(async () => {
         await Promise.allSettled([loadSignals(), loadPerf(), loadBroadcast(), loadMacroRegime()]);
         syncActiveSignalsToPerf();   // re-sync after every loadPerf wipe
+        // Check for newly published signals
+        checkForNewSignals();
         renderList();
         updateAvgConf();
         refreshAll();
         checkHistoryBadge();
+        // Check target hits with cached prices
+        checkTargetHitAlerts();
         // Re-render history tab so active trades stay visible without manual refresh
         if (typeof window._renderMHistory === 'function') {
           window._renderMHistory();
@@ -7776,7 +7922,7 @@
 </div>
 
 <div class="mobileTabBar">
-  <button class="mobileTabBtn active" data-mtab="Signals"><span class="tabIcon">⚡</span><span class="tabLabel">SIGNALS</span></button>
+  <button class="mobileTabBtn active" data-mtab="Signals" id="mobSigTab" style="position:relative;"><span class="tabIcon">⚡</span><span class="tabLabel">SIGNALS</span><span class="tabNotifBadge" id="sigNotifBadgeMob"></span></button>
   <button class="mobileTabBtn" data-mtab="Analysis"><span class="tabIcon">◈</span><span class="tabLabel">ANALYSIS</span></button>
   <button class="mobileTabBtn" data-mtab="Macro"><span class="tabIcon">🌐</span><span class="tabLabel">MACRO</span></button>
   <button class="mobileTabBtn" data-mtab="Flow"><span class="tabIcon">🌊</span><span class="tabLabel">FLOW</span></button>
@@ -7803,6 +7949,7 @@
     if (tabName === 'Analysis') renderMAnalysis();
     if (tabName === 'Macro')    renderMMacro();
     if (tabName === 'Flow')     renderMFlow();
+    if (tabName === 'Signals') { if (typeof clearSignalsBadge === 'function') clearSignalsBadge(); }
     if (tabName === 'History') { renderMHistory(); if (typeof clearHistoryBadge === 'function') clearHistoryBadge(); }
     window.scrollTo(0, 0);
   }
