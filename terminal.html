@@ -4007,12 +4007,16 @@
     }
 
     function checkForNewSignals() {
-      if (!_knownSignalIds.size) return; // not seeded yet
+      if (!_knownSignalIds.size) {
+        console.warn('[Oracle] checkForNewSignals skipped — _knownSignalIds empty');
+        return;
+      }
       const newSignals = SIGNALS.filter(s => {
         const key = s.id || s.streamLabel || s.asset;
         return !_knownSignalIds.has(key);
       });
       if (newSignals.length) {
+        console.log('[Oracle] NEW SIGNALS DETECTED:', newSignals.map(s => s.asset));
         newSignals.forEach(sig => {
           const key = sig.id || sig.streamLabel || sig.asset;
           // Push notification + sound for each new signal
@@ -4025,9 +4029,6 @@
         // In-app toast
         const names = newSignals.map(s => s.asset).join(', ');
         showToast(`⚡ New signal: ${names}`);
-        // Re-render signal lists to show pulse
-        renderList();
-        if (typeof window._renderMList === 'function') window._renderMList();
       }
     }
 
@@ -7488,6 +7489,10 @@
       await Promise.allSettled([loadSignals(), loadPerf(), loadFlow(), loadBroadcast(), loadMacroRegime()]);
       console.log('[Oracle] data loaded — SIGNALS:', SIGNALS.length, 'PERF:', PERF_DATA.length);
 
+      // Seed known signals FIRST — before anything that could throw
+      seedKnownSignals();
+      console.log('[Oracle] seeded known signal IDs:', _knownSignalIds.size);
+
       // ── AUTO-SYNC: create ACTIVE perf row for any signal that doesn't have one ──
       syncActiveSignalsToPerf();
       // Persist synced data
@@ -7496,8 +7501,6 @@
       renderList();
       updateAutoBtn();
       updateAvgConf();
-      // Seed known signals — everything loaded on first visit is "seen"
-      seedKnownSignals();
       if (SIGNALS.length) {
         setActive(0);
         setTimeout(() => {
@@ -7526,6 +7529,7 @@
         // Check for newly published signals
         checkForNewSignals();
         renderList();
+        if (typeof window._renderMList === 'function') window._renderMList();
         updateAvgConf();
         refreshAll();
         checkHistoryBadge();
@@ -7581,12 +7585,9 @@
       document.getElementById('analysisSignalDropdown')?.addEventListener('change', function() {
         const idx = parseInt(this.value);
         if (!isNaN(idx) && SIGNALS[idx]) {
-          activeIndex = idx;
-          setRightPanel(SIGNALS[idx]);
-          // Also highlight in left list
-          document.querySelectorAll('.signalItem').forEach((el, i) => {
-            el.classList.toggle('active', i === idx);
-          });
+          autoRotate = false;
+          updateAutoBtn();
+          setActive(idx);
         }
       });
 
