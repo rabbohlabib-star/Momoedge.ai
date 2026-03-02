@@ -1821,7 +1821,7 @@
         const pid = btn.dataset.pid;
         const row = PERF.find(r => String(r.id) === String(pid));
         if (!row) return;
-        openPerfEdit(row);
+        window.openPerfEdit(row);
       });
     });
 
