@@ -7808,17 +7808,6 @@
         }
       });
 
-      document.getElementById('mAnalysisDropdown')?.addEventListener('change', function() {
-        const idx = parseInt(this.value);
-        if (!isNaN(idx) && SIGNALS[idx]) {
-          mSelectedSig = SIGNALS[idx];
-          if (typeof renderMAnalysis === 'function') renderMAnalysis(SIGNALS[idx]);
-          // Sync desktop dropdown
-          const dd = document.getElementById('analysisSignalDropdown');
-          if (dd) { dd.value = idx; autoRotate = false; updateAutoBtn(); setActive(idx); }
-        }
-      });
-
       function switchDeskTab(tabId) {
         // Update tab buttons
         document.querySelectorAll('.deskTab').forEach(btn => {
@@ -8737,19 +8726,23 @@
     if (sig) mSelectedSig = sig;
     var content = document.getElementById('mAnalysisContent');
     if (!content) return;
+    var assetEl = document.getElementById('mAnalysisAsset'); // may be null — all uses are guarded
 
-    // Sync dropdown selection
+    // Sync dropdown to show current signal
     var mdd = document.getElementById('mAnalysisDropdown');
     if (mdd && sig && SIGNALS.length) {
-      var idx = SIGNALS.indexOf(sig);
-      if (idx < 0) idx = SIGNALS.findIndex(function(s) { return s.id === sig.id; });
-      if (idx >= 0) mdd.value = idx;
+      var ddIdx = SIGNALS.indexOf(sig);
+      if (ddIdx < 0) ddIdx = SIGNALS.findIndex(function(s) { return s.id === sig.id; });
+      if (ddIdx >= 0) mdd.value = ddIdx;
     }
 
     if (!sig) {
+      if (assetEl) assetEl.textContent = '—';
       content.innerHTML = '<div style="text-align:center;padding:60px 20px;font-family:Orbitron,monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);">TAP A SIGNAL TO VIEW ANALYSIS</div>';
       return;
     }
+
+    if (assetEl) assetEl.textContent = sig.asset;
 
     var live      = calculateLiveConfidence(sig);
     var cfg       = ZONE_CONFIG[live.zone] || ZONE_CONFIG['base'];
@@ -9646,6 +9639,22 @@
   window._renderMList = renderMList;
   window._renderMAnalysis = renderMAnalysis;
   window._renderMHistory = renderMHistory;
+
+  // Mobile analysis dropdown change — wire in mobile scope so renderMAnalysis is accessible
+  var mAnalysisDd = document.getElementById('mAnalysisDropdown');
+  if (mAnalysisDd) {
+    mAnalysisDd.addEventListener('change', function() {
+      var idx = parseInt(this.value);
+      if (!isNaN(idx) && SIGNALS[idx]) {
+        mSelectedSig = SIGNALS[idx];
+        renderMAnalysis(SIGNALS[idx]);
+        // Sync desktop dropdown + setActive
+        var dd = document.getElementById('analysisSignalDropdown');
+        if (dd) dd.value = idx;
+        if (typeof setActive === 'function') { autoRotate = false; updateAutoBtn(); setActive(idx); }
+      }
+    });
+  }
 })();
 </script>
 
