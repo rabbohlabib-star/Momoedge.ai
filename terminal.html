@@ -6004,7 +6004,6 @@
           <div id="shareCardPreview" style="width:100%;border-radius:12px;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.8);margin-bottom:20px;"></div>
           <div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:rgba(180,210,240,.4);text-align:center;margin-bottom:14px;">SHARE TO</div>
           <div id="shareSocials" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"></div>
-          <button id="shareDownloadBtn" style="width:100%;padding:14px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:10px;color:rgba(0,229,255,.7);font-family:var(--display);font-size:9px;letter-spacing:2px;cursor:pointer;">↓ SAVE IMAGE</button>
         </div>
       </div>`;
     document.body.insertAdjacentHTML('beforeend', shareModalHTML);
@@ -6046,12 +6045,17 @@
 
           const socials = [
             {
-              label: '𝕏  Twitter / X',
+              label: '𝕏  Post on X',
               color: '#1a1a2e',
               border: 'rgba(255,255,255,.2)',
               text: '#fff',
               action: () => {
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+                // Download image first, then open tweet — user attaches it
+                const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+                setTimeout(() => {
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
+                  showToast('Image saved — attach it to your tweet 📎');
+                }, 400);
               }
             },
             {
@@ -6060,7 +6064,11 @@
               border: 'rgba(0,136,204,.4)',
               text: '#29b6f6',
               action: () => {
-                window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+                const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+                setTimeout(() => {
+                  window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+                  showToast('Image saved — send it in your Telegram message 📎');
+                }, 400);
               }
             },
             {
@@ -6069,10 +6077,9 @@
               border: 'rgba(88,101,242,.4)',
               text: '#7289da',
               action: () => {
-                // Discord has no direct web share URL — copy text + download image
-                navigator.clipboard.writeText(shareText + '\n' + shareUrl).catch(()=>{});
-                const a = document.createElement('a'); a.href = dataUrl; a.download = _shareFilename; a.click();
-                showToast('Image saved + text copied — paste both in Discord');
+                navigator.clipboard.writeText(shareText).catch(()=>{});
+                const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+                showToast('Image saved + text copied — paste both in Discord 📎');
               }
             },
             {
@@ -6081,40 +6088,28 @@
               border: 'rgba(225,48,108,.35)',
               text: '#e1306c',
               action: () => {
-                // Instagram web has no share API — just save + hint
-                const a = document.createElement('a'); a.href = dataUrl; a.download = _shareFilename; a.click();
+                const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
                 showToast('Image saved — upload to Instagram from your camera roll');
               }
             },
             {
-              label: '🔗  Copy Link',
+              label: '🔗  Copy Text',
               color: 'rgba(0,229,255,.08)',
               border: 'rgba(0,229,255,.25)',
               text: '#00e5ff',
               action: () => {
                 navigator.clipboard.writeText(shareText + '\n' + shareUrl).catch(()=>{});
-                showToast('Copied to clipboard');
+                showToast('Copied to clipboard ✓');
               }
             },
             {
-              label: '📱  Share Sheet',
+              label: '↓  Save Image',
               color: 'rgba(0,255,136,.08)',
               border: 'rgba(0,255,136,.25)',
               text: '#00ff88',
-              action: async () => {
-                if (navigator.share) {
-                  const file = new File([_shareBlob], _shareFilename, { type: 'image/png' });
-                  const canShare = navigator.canShare && navigator.canShare({ files: [file] });
-                  try {
-                    if (canShare) {
-                      await navigator.share({ files: [file], title: shareText, text: shareText });
-                    } else {
-                      await navigator.share({ title: shareText, text: shareText, url: shareUrl });
-                    }
-                  } catch(e) {}
-                } else {
-                  showToast('Share sheet not supported on this browser');
-                }
+              action: () => {
+                const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+                showToast('Image saved ✓');
               }
             }
           ];
@@ -6141,12 +6136,7 @@
       btn.disabled = false;
     });
 
-    document.getElementById('shareDownloadBtn').addEventListener('click', () => {
-      if (!_shareBlob) return;
-      const url = URL.createObjectURL(_shareBlob);
-      const a = document.createElement('a'); a.href = url; a.download = _shareFilename; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    });
+
 
     /* ─────────────── SHARE TRADE RESULT ─────────────── */
     async function generateShareCard(trade) {
