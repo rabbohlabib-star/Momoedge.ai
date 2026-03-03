@@ -7787,13 +7787,11 @@
       // Populate analysis signal dropdown
       function populateAnalysisDropdown() {
         const dd = document.getElementById('analysisSignalDropdown');
-        const mdd = document.getElementById('mAnalysisDropdown');
-        if (!SIGNALS.length) return;
-        const opts = SIGNALS.map((s, i) =>
+        if (!dd || !SIGNALS.length) return;
+        dd.innerHTML = SIGNALS.map((s, i) =>
           `<option value="${i}">${s.asset} — ${s.level} (${s.direction})</option>`
         ).join('');
-        if (dd) { dd.innerHTML = opts; dd.value = activeIndex; }
-        if (mdd) { mdd.innerHTML = opts; mdd.value = activeIndex; }
+        dd.value = activeIndex;
       }
 
       document.getElementById('analysisSignalDropdown')?.addEventListener('change', function() {
@@ -7802,9 +7800,6 @@
           autoRotate = false;
           updateAutoBtn();
           setActive(idx);
-          // Sync mobile dropdown
-          const mdd = document.getElementById('mAnalysisDropdown');
-          if (mdd) mdd.value = idx;
         }
       });
 
@@ -7965,6 +7960,7 @@
   <div class="mobileHeader">
     <span class="mobileHeaderLabel">SIGNAL ANALYSIS</span>
     <div style="display:flex;align-items:center;gap:8px;">
+      <span id="mAnalysisAsset" style="font-family:Orbitron,monospace;font-size:11px;font-weight:900;color:#00e5ff;">—</span>
       <div class="miniOracle" data-tab="Analysis" id="miniOracleAnalysis" style="--mo-color:#00e5ff;--mo-color-dim:rgba(0,229,255,.15);">
         <div class="mo-core"></div>
         <div class="mo-hex"></div>
@@ -7975,12 +7971,7 @@
       </div>
     </div>
   </div>
-  <div style="padding:8px 12px 0;">
-    <select id="mAnalysisDropdown" style="width:100%;font-family:Orbitron,monospace;font-size:10px;font-weight:700;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);border-radius:8px;color:#00e5ff;padding:9px 12px;cursor:pointer;outline:none;letter-spacing:1px;-webkit-appearance:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;">
-      <option value="">— SELECT SIGNAL —</option>
-    </select>
-  </div>
-  <div id="mAnalysisContent" style="padding:10px 12px 80px;"></div>
+    <div id="mAnalysisContent" style="padding:10px 12px 80px;"></div>
 </div>
 
 <div class="mobilePane" id="mobilePaneFlow">
@@ -8500,17 +8491,6 @@
     if (!el) return;
     el.innerHTML = '';
 
-    // Keep mobile analysis dropdown in sync with live signals
-    var mdd = document.getElementById('mAnalysisDropdown');
-    if (mdd && SIGNALS.length) {
-      var currentVal = mdd.value;
-      mdd.innerHTML = SIGNALS.map(function(s, i) {
-        return '<option value="' + i + '">' + s.asset + ' — ' + s.level + ' (' + s.direction + ')</option>';
-      }).join('');
-      // Restore selection if still valid
-      if (currentVal !== '' && SIGNALS[parseInt(currentVal)]) mdd.value = currentVal;
-    }
-
     var sorted = SIGNALS.slice().sort(function(a, b) {
       var da = new Date(a.signal_date || 0), db = new Date(b.signal_date || 0);
       return currentStreamSort === 'newest' ? db - da : da - db;
@@ -8728,14 +8708,6 @@
     if (!content) return;
     var assetEl = document.getElementById('mAnalysisAsset'); // may be null — all uses are guarded
 
-    // Sync dropdown to show current signal
-    var mdd = document.getElementById('mAnalysisDropdown');
-    if (mdd && sig && SIGNALS.length) {
-      var ddIdx = SIGNALS.indexOf(sig);
-      if (ddIdx < 0) ddIdx = SIGNALS.findIndex(function(s) { return s.id === sig.id; });
-      if (ddIdx >= 0) mdd.value = ddIdx;
-    }
-
     if (!sig) {
       if (assetEl) assetEl.textContent = '—';
       content.innerHTML = '<div style="text-align:center;padding:60px 20px;font-family:Orbitron,monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);">TAP A SIGNAL TO VIEW ANALYSIS</div>';
@@ -8744,7 +8716,6 @@
 
     if (assetEl) assetEl.textContent = sig.asset;
 
-    try {
     var live      = calculateLiveConfidence(sig);
     var cfg       = ZONE_CONFIG[live.zone] || ZONE_CONFIG['base'];
     var isBull    = sig.direction === 'BULL';
@@ -9069,12 +9040,6 @@
       '</div>'+
       '<div id="mChartBody" style="height:360px;transition:height .3s ease;"></div>'+
     '</div>';
-
-    } catch(err) {
-      console.error('[renderMAnalysis ERROR]', err);
-      content.innerHTML = '<div style="padding:20px;font-family:Orbitron,monospace;font-size:10px;color:#ff4466;word-break:break-all;">⚠ RENDER ERROR: ' + err.message + '</div>';
-      return;
-    }
 
     setTimeout(function() {
       var mChartBody = document.getElementById('mChartBody');
@@ -9646,22 +9611,6 @@
   window._renderMList = renderMList;
   window._renderMAnalysis = renderMAnalysis;
   window._renderMHistory = renderMHistory;
-
-  // Mobile analysis dropdown change — wire in mobile scope so renderMAnalysis is accessible
-  var mAnalysisDd = document.getElementById('mAnalysisDropdown');
-  if (mAnalysisDd) {
-    mAnalysisDd.addEventListener('change', function() {
-      var idx = parseInt(this.value);
-      if (!isNaN(idx) && SIGNALS[idx]) {
-        mSelectedSig = SIGNALS[idx];
-        renderMAnalysis(SIGNALS[idx]);
-        // Sync desktop dropdown + setActive
-        var dd = document.getElementById('analysisSignalDropdown');
-        if (dd) dd.value = idx;
-        if (typeof setActive === 'function') { autoRotate = false; updateAutoBtn(); setActive(idx); }
-      }
-    });
-  }
 })();
 </script>
 
