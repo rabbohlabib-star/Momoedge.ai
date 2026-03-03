@@ -3522,6 +3522,11 @@
           </div>
         </div>
       </div>
+      <div id="tdmShareSection" style="display:none;padding:0 0 16px;">
+        <button id="tdmShareBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,229,255,.1),rgba(0,229,255,.05));border:1px solid rgba(0,229,255,.3);border-radius:10px;color:#00e5ff;font-family:var(--display);font-size:10px;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;">
+          ↗ SHARE TRADE RESULT
+        </button>
+      </div>
       <div class="tdmSection" id="tdmNotesSection">
         <div class="tdmSectionTitle">NOTES</div>
         <div class="tdmNotes" id="tdmNotes">—</div>
@@ -5334,7 +5339,7 @@
         <div class="perfStat sWin"><div class="psLabel">AVG GAIN</div><div class="psValue vWin">+${s.avgWin.toFixed(1)}%</div><div class="psSub">per winner</div></div>
         <div class="perfStat sLoss"><div class="psLabel">AVG LOSS</div><div class="psValue vLoss">${s.avgLoss.toFixed(1)}%</div><div class="psSub">per loser</div></div>
         <div class="perfStat sAmber"><div class="psLabel">AVG DAYS</div><div class="psValue vAmber">${s.avgDays.toFixed(1)}d</div><div class="psSub">to target</div></div>
-        <div class="perfStat sPurple"><div class="psLabel">TOTAL ALPHA</div><div class="psValue vPurple">+${s.totalAlpha.toFixed(1)}%</div><div class="psSub">cumulative</div></div>
+        <div class="perfStat sPurple"><div class="psLabel">TOTAL ALPHA</div><div class="psValue vPurple">${s.totalAlpha >= 0 ? '+' : ''}${s.totalAlpha.toFixed(1)}%</div><div class="psSub">cumulative</div></div>
         <div class="perfStat"><div class="psLabel">BULL WIN RATE</div><div class="psValue vWin">${s.bullWR.toFixed(1)}%</div><div class="psSub">long signals</div></div>
         <div class="perfStat"><div class="psLabel">BEAR WIN RATE</div><div class="psValue vLoss">${s.bearWR.toFixed(1)}%</div><div class="psSub">short signals</div></div>
         <div class="perfStat sLoss"><div class="psLabel">MAX DRAWDOWN</div><div class="psValue vLoss">${s.maxDD.toFixed(1)}%</div><div class="psSub">worst run</div></div>
@@ -5734,17 +5739,37 @@
               const p = d.split('-');
               return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
             };
+            const exitDate  = parseD(r.exit_date);
+            const todayStr  = (() => { const n = new Date(); return `${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}-${n.getFullYear()}`; })();
+            const exitIsToday = r.exit_date === todayStr;
+
             const from = Math.floor(parseD(r.date).getTime() / 1000);
-            const to   = Math.floor(parseD(r.exit_date).getTime() / 1000);
+            const to   = Math.floor(exitDate.getTime() / 1000) + 86400;
             const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
             const data = await resp.json();
+            console.log('[SPY alpha] date:', r.date, '→', r.exit_date, '| status:', data.s, '| candles:', data.c?.length, '| exitIsToday:', exitIsToday);
+
             if (data.s === 'ok' && data.c && data.c.length >= 2) {
               const spyRet = parseFloat(((data.c[data.c.length-1] - data.c[0]) / data.c[0] * 100).toFixed(2));
-              // Cache it back so the row table also shows it
               r.spy_return = spyRet;
               renderAlpha(spyRet);
+            } else if (data.s === 'ok' && data.c && data.c.length === 1 && exitIsToday) {
+              // Trade closed today — use live SPY price vs entry candle
+              const liveSpyCache = PRICE_CACHE['SPY'];
+              if (liveSpyCache && liveSpyCache.price && data.c[0]) {
+                const spyRet = parseFloat(((liveSpyCache.price - data.c[0]) / data.c[0] * 100).toFixed(2));
+                r.spy_return = spyRet;
+                renderAlpha(spyRet);
+              } else {
+                const spyRet = liveSpyCache ? parseFloat((liveSpyCache.changePercent || 0).toFixed(2)) : 0;
+                r.spy_return = spyRet;
+                renderAlpha(spyRet);
+              }
+            } else if (r.date === r.exit_date) {
+              // Same-day trade — SPY return = 0
+              r.spy_return = 0;
+              renderAlpha(0);
             } else {
-              // Can't fetch — show our return only
               fmtVal(r.result, 'tdmOurReturn');
               document.getElementById('tdmSpyReturn').textContent = 'N/A';
               document.getElementById('tdmAlpha').textContent     = '—';
@@ -5765,7 +5790,14 @@
       }
 
       // Aftermath — stored as raw price, calculate % change from exit price
-      const exitPx = r.exit_price ? parseFloat(r.exit_price) : null;
+      // If exit_price missing, derive from entry_price + result%
+      let exitPx = r.exit_price ? parseFloat(r.exit_price) : null;
+      if (!exitPx && r.entry_price && r.result !== null) {
+        const isBull = r.direction === 'BULL';
+        exitPx = isBull
+          ? parseFloat(r.entry_price) * (1 + r.result / 100)
+          : parseFloat(r.entry_price) * (1 - r.result / 100);
+      }
       const fmtAfter = (rawPrice, elId) => {
         const el = document.getElementById(elId);
         if (rawPrice === null || rawPrice === undefined || !exitPx) {
@@ -5785,8 +5817,14 @@
       // Notes
       document.getElementById('tdmNotes').textContent = r.notes || '—';
 
+      // Share button — only for closed trades
+      document.getElementById('tdmShareSection').style.display = r.result !== null ? 'block' : 'none';
+      _currentShareTrade = r;
+
       document.getElementById('tradeDetailBackdrop').classList.add('open');
     }
+
+    let _currentShareTrade = null;
 
     window.openTradeDetail = openTradeDetail; // expose to mobile scope
 
@@ -5808,7 +5846,180 @@
 
     // ESC key to close modal
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeTradeDetail();
+      if (e.key === 'Escape') {
+        const so = document.getElementById('shareOverlay');
+        if (so && so.style.display !== 'none') { so.style.display = 'none'; return; }
+        closeTradeDetail();
+      }
+    });
+
+    /* ─────────────── SHARE TRADE RESULT ─────────────── */
+    async function generateShareCard(trade) {
+      const isWin = trade.result >= 0;
+      const accent = isWin ? '#00ff88' : '#ff4466';
+      const accentDim = isWin ? 'rgba(0,255,136,' : 'rgba(255,68,102,';
+      const W = 1080, H = 1350;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#000a14'; ctx.fillRect(0,0,W,H);
+      const glow = ctx.createRadialGradient(W/2,H*.46,0,W/2,H*.46,560);
+      glow.addColorStop(0,accentDim+'0.2)'); glow.addColorStop(.6,accentDim+'0.07)'); glow.addColorStop(1,'transparent');
+      ctx.fillStyle=glow; ctx.fillRect(0,0,W,H);
+
+      ctx.strokeStyle=accentDim+'0.5)'; ctx.lineWidth=3; ctx.strokeRect(18,18,W-36,H-36);
+      ctx.strokeStyle=accentDim+'0.12)'; ctx.lineWidth=14; ctx.strokeRect(18,18,W-36,H-36);
+
+      const cH=[90,140,70,160,110,80,150,100,125,75];
+      function drawCandles(x0,count){
+        for(let i=0;i<count;i++){
+          const h=cH[i%cH.length], x=x0+i*62, y=H*.33-h/2+Math.sin(i*1.4)*45, bull=i%3!==2;
+          ctx.strokeStyle=bull?accentDim+'0.3)':accentDim+'0.15)'; ctx.lineWidth=3;
+          ctx.beginPath(); ctx.moveTo(x+19,y-30); ctx.lineTo(x+19,y+h+30); ctx.stroke();
+          ctx.fillStyle=bull?accentDim+'0.32)':accentDim+'0.14)'; ctx.fillRect(x,y,38,h);
+        }
+      }
+      ctx.globalAlpha=.55; drawCandles(-40,6); drawCandles(W-370,6); ctx.globalAlpha=1;
+
+      try { await document.fonts.load('900 80px Orbitron'); await document.fonts.load('700 48px Orbitron'); } catch(e){}
+
+      function divider(y){
+        const g=ctx.createLinearGradient(80,y,W-80,y);
+        g.addColorStop(0,'transparent'); g.addColorStop(.5,accentDim+'0.4)'); g.addColorStop(1,'transparent');
+        ctx.strokeStyle=g; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(80,y); ctx.lineTo(W-80,y); ctx.stroke();
+      }
+
+      const dirLabel = trade.direction==='BULL'?'Long':'Short';
+      ctx.font='900 80px Orbitron,monospace'; ctx.fillStyle='#fff'; ctx.textAlign='center';
+      ctx.shadowColor=accentDim+'0.6)'; ctx.shadowBlur=28;
+      ctx.fillText(`${trade.asset} ${dirLabel}`,W/2,215); ctx.shadowBlur=0;
+      divider(258);
+
+      ctx.font='700 46px Orbitron,monospace'; ctx.fillStyle='rgba(255,255,255,0.82)';
+      const ep=trade.entry_price?`Entry:  $${parseFloat(trade.entry_price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'Entry:  —';
+      const xp=trade.exit_price?`Exit:    $${parseFloat(trade.exit_price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'Exit:    —';
+      ctx.fillText(ep,W/2,355); ctx.fillText(xp,W/2,425);
+      divider(472);
+
+      const sign=trade.result>=0?'+':'';
+      ctx.font='900 138px Orbitron,monospace'; ctx.fillStyle=accent;
+      ctx.shadowColor=accentDim+'0.9)'; ctx.shadowBlur=55;
+      ctx.fillText(`${sign}${trade.result.toFixed(1)}%`,W/2,638); ctx.shadowBlur=0;
+      ctx.font='700 46px Orbitron,monospace'; ctx.fillStyle=accentDim+'0.72)';
+      ctx.fillText(isWin?'Gain':'Loss',W/2,706);
+
+      ctx.font='400 38px Orbitron,monospace'; ctx.fillStyle='rgba(255,255,255,0.55)';
+      if(trade.days) ctx.fillText(`Held:  ${trade.days} Day${trade.days!==1?'s':''}`,W/2,784);
+      if(trade.spy_return!==null&&trade.spy_return!==undefined){
+        const alpha=trade.result-parseFloat(trade.spy_return);
+        ctx.font='400 32px Orbitron,monospace'; ctx.fillStyle='rgba(180,210,240,0.45)';
+        ctx.fillText(`Alpha vs SPY:  ${alpha>=0?'+':''}${alpha.toFixed(1)}%`,W/2,848);
+      }
+
+      const tx=W/2,ty=1000,ts=115;
+      const tg=ctx.createRadialGradient(tx,ty+ts*.15,0,tx,ty+ts*.15,ts*1.3);
+      tg.addColorStop(0,accentDim+'0.32)'); tg.addColorStop(1,'transparent');
+      ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(tx,ty+ts*.15,ts*1.3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(tx,ty-ts*.65); ctx.lineTo(tx+ts*.75,ty+ts*.55); ctx.lineTo(tx-ts*.75,ty+ts*.55); ctx.closePath();
+      const tf=ctx.createLinearGradient(tx,ty-ts*.65,tx,ty+ts*.55);
+      tf.addColorStop(0,accentDim+'0.95)'); tf.addColorStop(1,accentDim+'0.45)');
+      ctx.fillStyle=tf; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(tx,ty-ts*.38); ctx.lineTo(tx+ts*.44,ty+ts*.34); ctx.lineTo(tx-ts*.44,ty+ts*.34);
+      ctx.closePath(); ctx.fillStyle=accentDim+'0.22)'; ctx.fill();
+      ctx.strokeStyle=accent; ctx.lineWidth=3; ctx.shadowColor=accentDim+'0.95)'; ctx.shadowBlur=22; ctx.stroke(); ctx.shadowBlur=0;
+
+      ctx.font='400 34px Orbitron,monospace'; ctx.fillStyle='rgba(180,210,240,0.5)'; ctx.textAlign='center';
+      ctx.fillText('Oracle Terminal',W/2,1168);
+      ctx.font='900 70px Orbitron,monospace';
+      const bg=ctx.createLinearGradient(W/2-210,0,W/2+210,0);
+      bg.addColorStop(0,accent); bg.addColorStop(1,isWin?'#00e5ff':'#ff8866');
+      ctx.fillStyle=bg; ctx.shadowColor=accentDim+'0.5)'; ctx.shadowBlur=22;
+      ctx.fillText('MOMOEDGE',W/2,1268); ctx.shadowBlur=0;
+      ctx.font='400 24px Orbitron,monospace'; ctx.fillStyle='rgba(180,210,240,0.22)';
+      ctx.fillText('momoedge.ai',W/2,1312);
+
+      return canvas;
+    }
+
+    // Share overlay
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="shareOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10001;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+        <div style="max-width:480px;margin:0 auto;padding:24px 16px 48px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:rgba(0,229,255,.7);">◆ SHARE RESULT</div>
+            <button id="shareOverlayClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1;padding:8px;">✕</button>
+          </div>
+          <div id="shareCardPreview" style="width:100%;border-radius:12px;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.8);margin-bottom:20px;"></div>
+          <div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:rgba(180,210,240,.4);text-align:center;margin-bottom:14px;">SHARE TO</div>
+          <div id="shareSocials" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+        </div>
+      </div>`);
+
+    document.getElementById('shareOverlayClose').addEventListener('click', () => {
+      document.getElementById('shareOverlay').style.display = 'none';
+    });
+
+    let _shareCanvas = null;
+    let _shareFilename = '';
+
+    document.getElementById('tdmShareBtn').addEventListener('click', async function() {
+      if (!_currentShareTrade) return;
+      const btn = this;
+      btn.textContent = '⟳ GENERATING...';
+      btn.style.opacity = '.6'; btn.disabled = true;
+
+      try {
+        const trade = _currentShareTrade;
+        _shareCanvas = await generateShareCard(trade);
+        const sign = trade.result >= 0 ? '+' : '';
+        _shareFilename = `oracle-${trade.asset}-${sign}${trade.result.toFixed(1)}pct.png`;
+        const shareText = `${trade.asset} ${trade.direction==='BULL'?'Long':'Short'} — ${sign}${trade.result.toFixed(1)}% ${trade.result>=0?'📈':'📉'} · Oracle Terminal by MOMOEDGE`;
+        const shareUrl = 'https://momoedge.ai';
+
+        _shareCanvas.style.width = '100%'; _shareCanvas.style.height = 'auto'; _shareCanvas.style.display = 'block';
+        const preview = document.getElementById('shareCardPreview');
+        preview.innerHTML = ''; preview.appendChild(_shareCanvas);
+
+        const socials = [
+          { label: '𝕏  Post on X', color: '#1a1a2e', border: 'rgba(255,255,255,.2)', text: '#fff',
+            action: () => {
+              const a = document.createElement('a'); a.href = _shareCanvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+              setTimeout(() => { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank'); }, 400);
+            }},
+          { label: '✈  Telegram', color: 'rgba(0,136,204,.15)', border: 'rgba(0,136,204,.4)', text: '#29b6f6',
+            action: () => {
+              const a = document.createElement('a'); a.href = _shareCanvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+              setTimeout(() => { window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank'); }, 400);
+            }},
+          { label: '◈  Discord', color: 'rgba(88,101,242,.15)', border: 'rgba(88,101,242,.4)', text: '#7289da',
+            action: () => {
+              navigator.clipboard.writeText(shareText).catch(()=>{});
+              const a = document.createElement('a'); a.href = _shareCanvas.toDataURL('image/png'); a.download = _shareFilename; a.click();
+            }},
+          { label: '📸  Instagram', color: 'rgba(225,48,108,.12)', border: 'rgba(225,48,108,.35)', text: '#e1306c',
+            action: () => { const a = document.createElement('a'); a.href = _shareCanvas.toDataURL('image/png'); a.download = _shareFilename; a.click(); }},
+          { label: '🔗  Copy Text', color: 'rgba(0,229,255,.08)', border: 'rgba(0,229,255,.25)', text: '#00e5ff',
+            action: () => { navigator.clipboard.writeText(shareText+'\n'+shareUrl).catch(()=>{}); }},
+          { label: '↓  Save Image', color: 'rgba(0,255,136,.08)', border: 'rgba(0,255,136,.25)', text: '#00ff88',
+            action: () => { const a = document.createElement('a'); a.href = _shareCanvas.toDataURL('image/png'); a.download = _shareFilename; a.click(); }}
+        ];
+
+        const grid = document.getElementById('shareSocials');
+        grid.innerHTML = '';
+        socials.forEach(s => {
+          const b = document.createElement('button');
+          b.textContent = s.label;
+          b.style.cssText = `padding:13px 8px;background:${s.color};border:1px solid ${s.border};border-radius:10px;color:${s.text};font-family:var(--display);font-size:9px;letter-spacing:1.5px;cursor:pointer;`;
+          b.addEventListener('click', s.action);
+          grid.appendChild(b);
+        });
+
+        document.getElementById('shareOverlay').style.display = 'block';
+      } catch(e) { console.error('[Share]', e); }
+
+      btn.textContent = '↗ SHARE TRADE RESULT';
+      btn.style.opacity = '1'; btn.disabled = false;
     });
 
     // Desktop: single click opens modal directly (mouse = intentional)
@@ -9332,16 +9543,9 @@
       var id = card.dataset.id;
       var r = PERF_DATA.find(function(x) { return x.id === id; });
       if (!r || r.status === 'ACTIVE') return;
-      if (_dtLastId === id && _dtTimer) {
-        clearTimeout(_dtTimer);
-        _dtTimer = null; _dtLastId = null;
-        if (typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
-      } else {
-        // Single tap — mark as seen (remove highlight)
-        if (typeof markTradeAsSeen === 'function') markTradeAsSeen(id);
-        _dtLastId = id;
-        _dtTimer = setTimeout(function() { _dtTimer = null; _dtLastId = null; }, 350);
-      }
+      // Mark as seen and open detail on single tap
+      if (typeof markTradeAsSeen === 'function') markTradeAsSeen(id);
+      if (typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
     });
   }
 
