@@ -5093,6 +5093,7 @@
       { id: 'equities', label: 'EQUITIES',     status: 'yellow', thesis: '', benchmark: 'SPY', benchmark_ticker: 'SPY',             benchmark_price: null, last_changed: null },
       { id: 'dollar',   label: 'DOLLAR INDEX', status: 'yellow', thesis: '', benchmark: 'DXY', benchmark_ticker: 'UUP',             benchmark_price: null, last_changed: null },
       { id: 'bonds',    label: 'BONDS',        status: 'yellow', thesis: '', benchmark: 'TLT', benchmark_ticker: 'TLT',             benchmark_price: null, last_changed: null },
+      { id: 'metals',   label: 'METALS',       status: 'yellow', thesis: '', benchmark: 'GLD', benchmark_ticker: 'GLD',             benchmark_price: null, last_changed: null },
       { id: 'risk',     label: 'RISK APPETITE',status: 'yellow', thesis: '', benchmark: null,  benchmark_ticker: null,              benchmark_price: null, last_changed: null },
       { id: 'crypto',   label: 'CRYPTO',       status: 'yellow', thesis: '', benchmark: 'BTC', benchmark_ticker: 'BINANCE:BTCUSDT', benchmark_price: null, last_changed: null },
     ];
@@ -5106,7 +5107,7 @@
           // Map saved data onto new 5-category structure, preserving thesis/benchmark fields
           const newIds = new Set(MACRO_DEFAULTS.map(d => d.id));
           // Migrate old ids to new ones
-          const idMap = { spy: 'equities', rates: 'bonds', dxy: 'dollar', btc: 'crypto' };
+          const idMap = { spy: 'equities', rates: 'bonds', dxy: 'dollar', btc: 'crypto', gold: 'metals', silver: 'metals' };
           MACRO_DATA = MACRO_DEFAULTS.map(def => {
             // Try exact match first, then migration map
             let s = saved.find(x => x.id === def.id);
@@ -7786,11 +7787,13 @@
       // Populate analysis signal dropdown
       function populateAnalysisDropdown() {
         const dd = document.getElementById('analysisSignalDropdown');
-        if (!dd || !SIGNALS.length) return;
-        dd.innerHTML = SIGNALS.map((s, i) =>
+        const mdd = document.getElementById('mAnalysisDropdown');
+        if (!SIGNALS.length) return;
+        const opts = SIGNALS.map((s, i) =>
           `<option value="${i}">${s.asset} — ${s.level} (${s.direction})</option>`
         ).join('');
-        dd.value = activeIndex;
+        if (dd) { dd.innerHTML = opts; dd.value = activeIndex; }
+        if (mdd) { mdd.innerHTML = opts; mdd.value = activeIndex; }
       }
 
       document.getElementById('analysisSignalDropdown')?.addEventListener('change', function() {
@@ -7799,6 +7802,20 @@
           autoRotate = false;
           updateAutoBtn();
           setActive(idx);
+          // Sync mobile dropdown
+          const mdd = document.getElementById('mAnalysisDropdown');
+          if (mdd) mdd.value = idx;
+        }
+      });
+
+      document.getElementById('mAnalysisDropdown')?.addEventListener('change', function() {
+        const idx = parseInt(this.value);
+        if (!isNaN(idx) && SIGNALS[idx]) {
+          mSelectedSig = SIGNALS[idx];
+          if (typeof renderMAnalysis === 'function') renderMAnalysis(SIGNALS[idx]);
+          // Sync desktop dropdown
+          const dd = document.getElementById('analysisSignalDropdown');
+          if (dd) { dd.value = idx; autoRotate = false; updateAutoBtn(); setActive(idx); }
         }
       });
 
@@ -7959,7 +7976,6 @@
   <div class="mobileHeader">
     <span class="mobileHeaderLabel">SIGNAL ANALYSIS</span>
     <div style="display:flex;align-items:center;gap:8px;">
-      <span id="mAnalysisAsset" style="font-family:Orbitron,monospace;font-size:11px;font-weight:900;color:#00e5ff;">—</span>
       <div class="miniOracle" data-tab="Analysis" id="miniOracleAnalysis" style="--mo-color:#00e5ff;--mo-color-dim:rgba(0,229,255,.15);">
         <div class="mo-core"></div>
         <div class="mo-hex"></div>
@@ -7969,6 +7985,11 @@
         <div class="mo-dot"></div>
       </div>
     </div>
+  </div>
+  <div style="padding:8px 12px 0;">
+    <select id="mAnalysisDropdown" style="width:100%;font-family:Orbitron,monospace;font-size:10px;font-weight:700;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);border-radius:8px;color:#00e5ff;padding:9px 12px;cursor:pointer;outline:none;letter-spacing:1px;-webkit-appearance:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;">
+      <option value="">— SELECT SIGNAL —</option>
+    </select>
   </div>
   <div id="mAnalysisContent" style="padding:10px 12px 80px;"></div>
 </div>
@@ -8704,7 +8725,13 @@
     if (sig) mSelectedSig = sig;
     var content = document.getElementById('mAnalysisContent');
     if (!content) return;
-    var assetEl = document.getElementById('mAnalysisAsset');
+
+    // Sync dropdown selection
+    var mdd = document.getElementById('mAnalysisDropdown');
+    if (mdd && sig) {
+      var idx = SIGNALS.indexOf(sig);
+      if (idx >= 0) mdd.value = idx;
+    }
 
     if (!sig) {
       if (assetEl) assetEl.textContent = '—';
