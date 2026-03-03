@@ -8744,6 +8744,7 @@
 
     if (assetEl) assetEl.textContent = sig.asset;
 
+    try {
     var live      = calculateLiveConfidence(sig);
     var cfg       = ZONE_CONFIG[live.zone] || ZONE_CONFIG['base'];
     var isBull    = sig.direction === 'BULL';
@@ -9068,6 +9069,12 @@
       '</div>'+
       '<div id="mChartBody" style="height:360px;transition:height .3s ease;"></div>'+
     '</div>';
+
+    } catch(err) {
+      console.error('[renderMAnalysis ERROR]', err);
+      content.innerHTML = '<div style="padding:20px;font-family:Orbitron,monospace;font-size:10px;color:#ff4466;word-break:break-all;">⚠ RENDER ERROR: ' + err.message + '</div>';
+      return;
+    }
 
     setTimeout(function() {
       var mChartBody = document.getElementById('mChartBody');
