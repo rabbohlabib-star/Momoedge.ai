@@ -2245,6 +2245,22 @@
     window.closePerfEdit = function() {
       document.getElementById('perfEditOverlay').style.display = 'none';
     }
+
+    // Auto-calc result% when entry + exit prices both filled
+    function autoCalcResult() {
+      const entry = parseFloat(document.getElementById('peEntryPrice').value);
+      const exit = parseFloat(document.getElementById('peExitPrice').value);
+      const dir = document.getElementById('peDir').value;
+      if (!entry || !exit || entry <= 0) return;
+      const result = dir === 'BULL'
+        ? ((exit - entry) / entry) * 100
+        : ((entry - exit) / entry) * 100;
+      document.getElementById('peResult').value = result.toFixed(2);
+    }
+    document.getElementById('peEntryPrice').addEventListener('input', autoCalcResult);
+    document.getElementById('peExitPrice').addEventListener('input', autoCalcResult);
+    document.getElementById('peDir').addEventListener('change', autoCalcResult);
+
     document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
       const id = document.getElementById('perfEditId').value;
       if (!id) return;
