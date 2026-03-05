@@ -685,6 +685,10 @@
         <input class="fInput" id="pfDate" placeholder="e.g. 01-08-2025"/>
       </div>
       <div class="formGroup">
+        <div class="fLabel">DATE CLOSED (MM-DD-YYYY)</div>
+        <input class="fInput" id="pfClosedDate" placeholder="e.g. 02-15-2025"/>
+      </div>
+      <div class="formGroup">
         <div class="fLabel">SIGNAL KEY</div>
         <input class="fInput" id="pfSignal" placeholder="e.g. PHOENIX_BREAKOUT"/>
       </div>
@@ -693,6 +697,7 @@
         <select class="fSelect" id="pfStatus">
           <option value="T2_HIT">T2 HIT</option>
           <option value="T1_HIT">T1 HIT</option>
+          <option value="CLOSED_EARLY">CLOSED EARLY</option>
           <option value="INVALIDATED">INVALIDATED</option>
           <option value="ACTIVE">ACTIVE</option>
         </select>
@@ -709,6 +714,10 @@
         <div class="fLabel">CONFIDENCE %</div>
         <input class="fInput" id="pfConf" type="number" step="0.01" placeholder="e.g. 87.40"/>
       </div>
+    </div>
+    <div class="formGroup" style="margin-top:10px;">
+      <div class="fLabel">THESIS</div>
+      <textarea class="fInput" id="pfThesis" placeholder="Trade thesis / context..." style="min-height:70px;resize:vertical;line-height:1.6;"></textarea>
     </div>
     <div class="formActions">
       <button class="fSave" id="savePerfBtn">SAVE TRADE</button>
@@ -1970,11 +1979,13 @@
       type: document.getElementById("pfType").value.trim(),
       direction: document.getElementById("pfDir").value,
       date: document.getElementById("pfDate").value.trim() || new Date().toLocaleDateString("en-US", {month:"2-digit",day:"2-digit",year:"numeric"}).replace(/\//g,"-"),
+      closed_date: document.getElementById("pfClosedDate").value.trim() || null,
       signal: document.getElementById("pfSignal").value.trim(),
       status: document.getElementById("pfStatus").value,
       result: parseFloat(document.getElementById("pfResult").value) || null,
       days: parseInt(document.getElementById("pfDays").value) || null,
-      conf: parseFloat(document.getElementById("pfConf").value) || null
+      conf: parseFloat(document.getElementById("pfConf").value) || null,
+      thesis: document.getElementById("pfThesis").value.trim() || null
     };
     const ok = await sbPost('performance', payload);
     PERF.push(payload); // always update local cache
