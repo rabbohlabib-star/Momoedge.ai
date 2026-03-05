@@ -1070,17 +1070,20 @@
 
     // Use Finnhub candle API for SPY
     const from = Math.floor(entry.getTime() / 1000);
-    const to = Math.floor(exit.getTime() / 1000);
+    const to = Math.floor(exit.getTime() / 1000) + 86400; // include exit day's candle
 
     try {
       const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
-      if (!r.ok) return null;
+      if (r.status === 429) { console.warn('[backfill] Finnhub rate limited'); return null; }
+      if (!r.ok) { console.warn('[backfill] Finnhub HTTP error:', r.status); return null; }
       const d = await r.json();
-      if (d.s !== 'ok' || !d.c || d.c.length < 2) return null;
+      console.log('[backfill] SPY candle:', d.s, 'candles:', d.c && d.c.length, 'range:', entryDate, '->', exitDate);
+      if (!d.c || d.c.length === 0 || d.s !== 'ok') return null;
+      if (d.c.length === 1) return 0;
       const spyEntry = d.c[0];
       const spyExit = d.c[d.c.length - 1];
       return parseFloat(((spyExit - spyEntry) / spyEntry * 100).toFixed(2));
-    } catch(e) { return null; }
+    } catch(e) { console.error('[backfill] error:', e); return null; }
   }
 
   async function sbGet(table, params='') {
@@ -1243,10 +1246,12 @@
     btn.textContent = '⟳ BACKFILL SPY ALPHA';
 
     if (updated) {
-      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} failed)` : ''}`);
-      await loadAll(); // refresh data
+      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} no historical data)` : ''}`);
+      await loadAll();
+    } else if (failed) {
+      toast(`⚠️ No SPY data found — trades may be older than Finnhub's 1-year free tier limit. Check console for details.`, false);
     } else {
-      toast(`⚠️ Backfill failed — check Finnhub rate limits`, true);
+      toast(`⚠️ Backfill failed — check console for details`, false);
     }
   }
 
@@ -1268,16 +1273,21 @@
       if (!exitMs) continue;
       const daysSinceExit = (now - exitMs.getTime()) / 86400000;
 
-      const needs1d = daysSinceExit >= 1 && row.aftermath_1d == null;
-      const needs3d = daysSinceExit >= 3 && row.aftermath_3d == null;
-      const needs1w = daysSinceExit >= 7 && row.aftermath_1w == null;
+      const needs1d = daysSinceExit >= 1  && row.aftermath_1d == null;
+      const needs3d = daysSinceExit >= 3  && row.aftermath_3d == null;
+      const needs1w = daysSinceExit >= 7  && row.aftermath_1w == null;
       const needs1m = daysSinceExit >= 30 && row.aftermath_1m == null;
       const needs3m = daysSinceExit >= 90 && row.aftermath_3m == null;
+      const needsExitPrice  = !row.exit_price  && row.result !== null;
+      const needsEntryPrice = !row.entry_price && row.result !== null;
 
-      if (!needs1d && !needs3d && !needs1w && !needs1m && !needs3m) continue;
+      if (!needs1d && !needs3d && !needs1w && !needs1m && !needs3m && !needsExitPrice && !needsEntryPrice) continue;
 
       const price = await fetchLivePrice(row.asset);
-      if (!price) continue;
+      if (!price) {
+        console.warn('[Aftermath] Could not fetch price for', row.asset);
+        continue;
+      }
 
       const patch = {};
       if (needs1d) patch.aftermath_1d = price;
@@ -1286,12 +1296,36 @@
       if (needs1m) patch.aftermath_1m = price;
       if (needs3m) patch.aftermath_3m = price;
 
+      // Backfill missing exit_price using result% and current price as approximation
+      // If result is known, derive: exit = entry * (1 + result/100) for BULL, (1 - result/100) for BEAR
+      if (needsExitPrice) {
+        if (row.entry_price && row.result !== null) {
+          const isBull = row.direction === 'BULL';
+          patch.exit_price = isBull
+            ? parseFloat((row.entry_price * (1 + row.result / 100)).toFixed(4))
+            : parseFloat((row.entry_price * (1 - row.result / 100)).toFixed(4));
+        } else {
+          // No entry price — use current price as best guess for display
+          patch.exit_price = price;
+        }
+      }
+      // Backfill missing entry_price with current live price (rough — better than null)
+      if (needsEntryPrice && !needsExitPrice) {
+        if (row.exit_price && row.result !== null) {
+          const isBull = row.direction === 'BULL';
+          patch.entry_price = isBull
+            ? parseFloat((row.exit_price / (1 + row.result / 100)).toFixed(4))
+            : parseFloat((row.exit_price / (1 - row.result / 100)).toFixed(4));
+        }
+      }
+
       await sbPatch('performance', row.id, patch);
       updated++;
-      console.log(`[Aftermath] Updated ${row.asset}: `, patch);
+      console.log(`[Aftermath] Updated ${row.asset}:`, patch);
     }
     if (updated) {
-      toast(`✓ Aftermath prices updated for ${updated} trade${updated > 1 ? 's' : ''}`);
+      toast(`✓ Aftermath updated for ${updated} trade${updated > 1 ? 's' : ''}`);
+      await loadAll();
     }
   }
 
@@ -1556,6 +1590,14 @@
       is_active: true
     };
 
+    // Auto-fetch live price as entry_price if not manually set
+    if (!payload.entry_price) {
+      try {
+        const liveEntry = await fetchLivePrice(asset);
+        if (liveEntry) payload.entry_price = liveEntry;
+      } catch(e) {}
+    }
+
     // Only set signal_date on NEW signals — never overwrite on edit
     if (!editId) {
       payload.signal_date = signalDateVal ? new Date(signalDateVal).toISOString() : new Date().toISOString();
@@ -1819,9 +1861,9 @@
     tbody.querySelectorAll(".perfEdit[data-pid]").forEach(btn => {
       btn.addEventListener("click", () => {
         const pid = btn.dataset.pid;
-        const row = PERF.find(r => r.id === pid);
+        const row = PERF.find(r => String(r.id) === String(pid));
         if (!row) return;
-        openPerfEdit(row);
+        window.openPerfEdit(row);
       });
     });
 
@@ -2096,66 +2138,6 @@
   })();
 
 
-  /* ── PERF BACKFILL EDIT ── */
-  function openPerfEdit(row) {
-    document.getElementById('perfEditId').value    = row.id;
-    document.getElementById('perfEditLabel').textContent = (row.asset || '') + ' · ' + (row.direction || '') + ' · ' + (row.date || '');
-    document.getElementById('peAsset').value       = row.asset || '';
-    document.getElementById('peType').value        = row.type || '';
-    document.getElementById('peDir').value         = row.direction || 'BULL';
-    document.getElementById('peDate').value        = row.date || '';
-    document.getElementById('peStatus').value      = row.status || 'T2_HIT';
-    document.getElementById('peResult').value      = row.result !== null && row.result !== undefined ? row.result : '';
-    document.getElementById('peEntryPrice').value  = row.entry_price !== null && row.entry_price !== undefined ? row.entry_price : '';
-    document.getElementById('peExitPrice').value   = row.exit_price !== null && row.exit_price !== undefined ? row.exit_price : '';
-    document.getElementById('peExitDate').value    = row.exit_date || '';
-    document.getElementById('peExitReason').value  = row.exit_reason || '';
-    document.getElementById('peDays').value        = row.days !== null && row.days !== undefined ? row.days : '';
-    document.getElementById('peConf').value        = row.conf !== null && row.conf !== undefined ? row.conf : '';
-    document.getElementById('peSpyReturn').value   = row.spy_return !== null && row.spy_return !== undefined ? row.spy_return : '';
-    document.getElementById('peNotes').value       = row.notes || '';
-    const el = document.getElementById('perfEditOverlay');
-    el.style.display = 'flex';
-  }
-  function closePerfEdit() {
-    document.getElementById('perfEditOverlay').style.display = 'none';
-  }
-  document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
-    const id = document.getElementById('perfEditId').value;
-    if (!id) return;
-    const patch = {
-      asset:       document.getElementById('peAsset').value.trim().toUpperCase() || undefined,
-      type:        document.getElementById('peType').value.trim() || undefined,
-      direction:   document.getElementById('peDir').value,
-      date:        document.getElementById('peDate').value.trim() || undefined,
-      status:      document.getElementById('peStatus').value,
-      result:      document.getElementById('peResult').value !== '' ? parseFloat(document.getElementById('peResult').value) : null,
-      entry_price: document.getElementById('peEntryPrice').value !== '' ? parseFloat(document.getElementById('peEntryPrice').value) : null,
-      exit_price:  document.getElementById('peExitPrice').value !== '' ? parseFloat(document.getElementById('peExitPrice').value) : null,
-      exit_date:   document.getElementById('peExitDate').value.trim() || null,
-      exit_reason: document.getElementById('peExitReason').value || null,
-      days:        document.getElementById('peDays').value !== '' ? parseInt(document.getElementById('peDays').value) : null,
-      conf:        document.getElementById('peConf').value !== '' ? parseFloat(document.getElementById('peConf').value) : null,
-      spy_return:  document.getElementById('peSpyReturn').value !== '' ? parseFloat(document.getElementById('peSpyReturn').value) : null,
-      notes:       document.getElementById('peNotes').value.trim() || null,
-    };
-    // Strip undefined keys
-    Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
-    const ok = await sbPatch('performance', id, patch);
-    if (ok) {
-      toast('Trade updated ✓');
-      closePerfEdit();
-      await loadAll();
-    } else {
-      toast('Save failed', false);
-    }
-  });
-  // Close on backdrop click
-  document.getElementById('perfEditOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('perfEditOverlay')) closePerfEdit();
-  });
-
-
   /* ── MACRO REGIME DASHBOARD ── */
   (function initMacro() {
     const SB_SETTINGS_URL = `${SB_URL}/app_settings`;
@@ -2164,6 +2146,7 @@
       { id: "equities", label: "EQUITIES",     status: "yellow", thesis: "", benchmark: "SPY",  benchmark_ticker: "SPY",              benchmark_price: null, last_changed: null },
       { id: "dollar",   label: "DOLLAR INDEX", status: "yellow", thesis: "", benchmark: "DXY",  benchmark_ticker: "UUP",              benchmark_price: null, last_changed: null },
       { id: "bonds",    label: "BONDS",        status: "yellow", thesis: "", benchmark: "TLT",  benchmark_ticker: "TLT",              benchmark_price: null, last_changed: null },
+      { id: "metals",   label: "METALS",       status: "yellow", thesis: "", benchmark: "GLD",  benchmark_ticker: "GLD",              benchmark_price: null, last_changed: null },
       { id: "risk",     label: "RISK APPETITE",status: "yellow", thesis: "", benchmark: null,   benchmark_ticker: null,               benchmark_price: null, last_changed: null },
       { id: "crypto",   label: "CRYPTO",       status: "yellow", thesis: "", benchmark: "BTC",  benchmark_ticker: "BINANCE:BTCUSDT",  benchmark_price: null, last_changed: null },
     ];
@@ -2245,6 +2228,66 @@
       } catch(e) { console.warn("Macro load failed", e); }
       renderMacroEditor();
     }
+
+    /* ── PERF BACKFILL EDIT ── */
+    // Exposed globally so renderPerf() (outside this IIFE) can call it
+    window.openPerfEdit = function(row) {
+      document.getElementById('perfEditId').value    = row.id;
+      document.getElementById('perfEditLabel').textContent = (row.asset || '') + ' · ' + (row.direction || '') + ' · ' + (row.date || '');
+      document.getElementById('peAsset').value       = row.asset || '';
+      document.getElementById('peType').value        = row.type || '';
+      document.getElementById('peDir').value         = row.direction || 'BULL';
+      document.getElementById('peDate').value        = row.date || '';
+      document.getElementById('peStatus').value      = row.status || 'T2_HIT';
+      document.getElementById('peResult').value      = row.result !== null && row.result !== undefined ? row.result : '';
+      document.getElementById('peEntryPrice').value  = row.entry_price !== null && row.entry_price !== undefined ? row.entry_price : '';
+      document.getElementById('peExitPrice').value   = row.exit_price !== null && row.exit_price !== undefined ? row.exit_price : '';
+      document.getElementById('peExitDate').value    = row.exit_date || '';
+      document.getElementById('peExitReason').value  = row.exit_reason || '';
+      document.getElementById('peDays').value        = row.days !== null && row.days !== undefined ? row.days : '';
+      document.getElementById('peConf').value        = row.conf !== null && row.conf !== undefined ? row.conf : '';
+      document.getElementById('peSpyReturn').value   = row.spy_return !== null && row.spy_return !== undefined ? row.spy_return : '';
+      document.getElementById('peNotes').value       = row.notes || '';
+      const el = document.getElementById('perfEditOverlay');
+      el.style.display = 'flex';
+    }
+    window.closePerfEdit = function() {
+      document.getElementById('perfEditOverlay').style.display = 'none';
+    }
+    document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
+      const id = document.getElementById('perfEditId').value;
+      if (!id) return;
+      const patch = {
+        asset:       document.getElementById('peAsset').value.trim().toUpperCase() || undefined,
+        type:        document.getElementById('peType').value.trim() || undefined,
+        direction:   document.getElementById('peDir').value,
+        date:        document.getElementById('peDate').value.trim() || undefined,
+        status:      document.getElementById('peStatus').value,
+        result:      document.getElementById('peResult').value !== '' ? parseFloat(document.getElementById('peResult').value) : null,
+        entry_price: document.getElementById('peEntryPrice').value !== '' ? parseFloat(document.getElementById('peEntryPrice').value) : null,
+        exit_price:  document.getElementById('peExitPrice').value !== '' ? parseFloat(document.getElementById('peExitPrice').value) : null,
+        exit_date:   document.getElementById('peExitDate').value.trim() || null,
+        exit_reason: document.getElementById('peExitReason').value || null,
+        days:        document.getElementById('peDays').value !== '' ? parseInt(document.getElementById('peDays').value) : null,
+        conf:        document.getElementById('peConf').value !== '' ? parseFloat(document.getElementById('peConf').value) : null,
+        spy_return:  document.getElementById('peSpyReturn').value !== '' ? parseFloat(document.getElementById('peSpyReturn').value) : null,
+        notes:       document.getElementById('peNotes').value.trim() || null,
+      };
+      // Strip undefined keys
+      Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
+      const ok = await sbPatch('performance', id, patch);
+      if (ok) {
+        toast('Trade updated ✓');
+        closePerfEdit();
+        await loadAll();
+      } else {
+        toast('Save failed', false);
+      }
+    });
+    // Close on backdrop click
+    document.getElementById('perfEditOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('perfEditOverlay')) closePerfEdit();
+    });
 
         document.getElementById("saveMacroBtn").addEventListener("click", async () => {
       // Enforce only the 5 canonical categories — strip any old/stale entries
