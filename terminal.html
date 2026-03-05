@@ -14,7 +14,8 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvamlxZmVlbWtzdm9jbmFlbGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjg2NTgsImV4cCI6MjA4Njg0NDY1OH0.oOrfkygK_MM-zZyemF0D2HtL8YRuzrryRQ2dmSRwAXI'
       );
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.replace('./login.html'); return; }
+      // DEV BYPASS — uncomment before merging to main
+      // if (!session) { window.location.replace('./login.html'); return; }
       // Authenticated — remove the display:none block
       document.getElementById('authBlock').remove();
     } catch(e) {
@@ -465,6 +466,54 @@
     @keyframes badgePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
     /* Desktop history tab relative positioning for badge */
     .deskTab { position: relative; }
+
+    /* ── NEW TRADE HIGHLIGHT ── */
+    #perfBody tr.newTrade {
+      background: rgba(0,229,255,.06) !important;
+      border-left: 2px solid var(--core);
+      animation: newTradeGlow 2.5s ease-in-out infinite;
+    }
+    @keyframes newTradeGlow {
+      0%,100% { background: rgba(0,229,255,.06); }
+      50% { background: rgba(0,229,255,.1); }
+    }
+    .mobileHistCard.newTrade {
+      background: rgba(0,229,255,.06) !important;
+      border-left: 2px solid var(--core) !important;
+      animation: newTradeGlow 2.5s ease-in-out infinite;
+    }
+
+    /* ── NEW SIGNAL PULSE — gold/amber, distinct from trigger green/red ── */
+    .item.newSignalPulse {
+      border-color: rgba(255,200,0,.6) !important;
+      box-shadow: 0 0 12px rgba(255,200,0,.2), inset 0 0 20px rgba(255,200,0,.04) !important;
+      animation: signalPulse 1.5s ease-in-out infinite;
+      position: relative;
+    }
+    .item.newSignalPulse::after {
+      content: '⚡ NEW';
+      position: absolute;
+      top: 6px; right: 8px;
+      font-family: var(--display);
+      font-size: 7px;
+      letter-spacing: 1.5px;
+      font-weight: 900;
+      color: #ffc800;
+      background: rgba(255,200,0,.1);
+      border: 1px solid rgba(255,200,0,.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      z-index: 2;
+      animation: newBadgePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes signalPulse {
+      0%,100% { border-color: rgba(255,200,0,.4); box-shadow: 0 0 6px rgba(255,200,0,.1), inset 0 0 12px rgba(255,200,0,.02); }
+      50% { border-color: rgba(255,200,0,.8); box-shadow: 0 0 16px rgba(255,200,0,.3), inset 0 0 24px rgba(255,200,0,.06); }
+    }
+    @keyframes newBadgePulse {
+      0%,100% { opacity: .7; }
+      50% { opacity: 1; }
+    }
 
 
     #viewerCountDisplay { color: var(--muted); font-size: 9px; letter-spacing: .8px; }
@@ -3473,11 +3522,28 @@
           </div>
         </div>
       </div>
+      <div class="tdmSection" id="tdmShareSection" style="display:none;">
+        <button id="tdmShareBtn" style="width:100%;padding:12px;font-family:'Orbitron',monospace;font-size:10px;font-weight:900;letter-spacing:2px;color:#00e5ff;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,229,255,.15)';this.style.boxShadow='0 0 16px rgba(0,229,255,.12)'" onmouseout="this.style.background='rgba(0,229,255,.08)';this.style.boxShadow='none'">↗ SHARE TRADE RESULT</button>
+      </div>
       <div class="tdmSection" id="tdmNotesSection">
         <div class="tdmSectionTitle">NOTES</div>
         <div class="tdmNotes" id="tdmNotes">—</div>
       </div>
     </div>
+  </div>
+
+  <!-- SHARE TRADE OVERLAY -->
+  <div id="shareOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+    <canvas id="shareCanvas" style="max-width:90vw;max-height:60vh;border-radius:12px;box-shadow:0 0 40px rgba(0,0,0,.8);"></canvas>
+    <div id="shareButtons" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="shareBtn" data-action="twitter" style="padding:10px 18px;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:1px;border-radius:8px;cursor:pointer;border:1px solid rgba(29,155,240,.4);background:rgba(29,155,240,.12);color:#1d9bf0;">𝕏 TWITTER</button>
+      <button class="shareBtn" data-action="telegram" style="padding:10px 18px;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:1px;border-radius:8px;cursor:pointer;border:1px solid rgba(0,136,204,.4);background:rgba(0,136,204,.12);color:#0088cc;">TELEGRAM</button>
+      <button class="shareBtn" data-action="discord" style="padding:10px 18px;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:1px;border-radius:8px;cursor:pointer;border:1px solid rgba(88,101,242,.4);background:rgba(88,101,242,.12);color:#5865f2;">DISCORD</button>
+      <button class="shareBtn" data-action="instagram" style="padding:10px 18px;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:1px;border-radius:8px;cursor:pointer;border:1px solid rgba(225,48,108,.4);background:rgba(225,48,108,.12);color:#e1306c;">INSTAGRAM</button>
+      <button class="shareBtn" data-action="copytext" style="padding:10px 18px;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:1px;border-radius:8px;cursor:pointer;border:1px solid rgba(0,229,255,.4);background:rgba(0,229,255,.12);color:#00e5ff;">COPY TEXT</button>
+      <button class="shareBtn" data-action="save" style="padding:10px 18px;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:1px;border-radius:8px;cursor:pointer;border:1px solid rgba(0,255,163,.4);background:rgba(0,255,163,.12);color:#00ffa3;">SAVE IMAGE</button>
+    </div>
+    <button id="shareOverlayClose" style="position:absolute;top:20px;right:20px;background:none;border:1px solid rgba(255,255,255,.2);color:#fff;font-family:'Orbitron',monospace;font-size:10px;padding:8px 14px;border-radius:6px;cursor:pointer;letter-spacing:1px;">✕ CLOSE</button>
   </div>
 
   <!-- OPTIONS FLOW MODAL -->
@@ -3947,6 +4013,161 @@
     let notificationsEnabled = false;
     let soundEnabled = false;
     let lastNotifiedSignal = null;
+
+    // ── NEW SIGNAL DETECTION ──
+    let _knownSignalIds = new Set();
+    let _signalBadgeActive = false;
+    let _newSignalIds = new Set(); // tracks visually "new" signals for pulse effect
+
+    function seedKnownSignals() {
+      _knownSignalIds = new Set(SIGNALS.map(s => s.id || s.streamLabel || s.asset));
+    }
+
+    function checkForNewSignals() {
+      if (!_knownSignalIds.size) {
+        console.warn('[Oracle] checkForNewSignals skipped — _knownSignalIds empty');
+        return;
+      }
+      const newSignals = SIGNALS.filter(s => {
+        const key = s.id || s.streamLabel || s.asset;
+        return !_knownSignalIds.has(key);
+      });
+      if (newSignals.length) {
+        console.log('[Oracle] NEW SIGNALS DETECTED:', newSignals.map(s => s.asset));
+        newSignals.forEach(sig => {
+          const key = sig.id || sig.streamLabel || sig.asset;
+          // Push notification + sound for each new signal
+          sendNewSignalNotification(sig);
+          _knownSignalIds.add(key);
+          _newSignalIds.add(key);
+        });
+        // Show badge on mobile Signals tab (if not currently on it)
+        showSignalsBadge();
+        // In-app toast
+        const names = newSignals.map(s => s.asset).join(', ');
+        showToast(`⚡ New signal: ${names}`);
+      }
+    }
+
+    function isNewSignal(sig) {
+      const key = sig.id || sig.streamLabel || sig.asset;
+      return _newSignalIds.has(key);
+    }
+
+    function clearNewSignalPulse(sig) {
+      const key = sig.id || sig.streamLabel || sig.asset;
+      _newSignalIds.delete(key);
+      document.querySelectorAll(`[data-sig-id="${sig.id || sig.asset}"]`).forEach(el => el.classList.remove('newSignalPulse'));
+      if (!_newSignalIds.size) clearSignalsBadge();
+    }
+
+    function sendNewSignalNotification(sig) {
+      if (!notificationsEnabled || Notification.permission !== "granted") return;
+      const isBull = sig.direction === "BULL";
+      new Notification(`⚡ NEW SIGNAL: ${sig.asset}`, {
+        body: `${sig.level} · ${sig.direction} · Confidence: ${(sig.confidence != null ? parseFloat(sig.confidence).toFixed(1) : '—')}%\n${sig.horizon || ''}`,
+        icon: isBull ? 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%2300ffa3"/></svg>' : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ff3b3b"/></svg>',
+        tag: 'new-signal-' + (sig.id || sig.asset),
+        requireInteraction: true
+      });
+      playAlertSound();
+    }
+
+    function showSignalsBadge() {
+      _signalBadgeActive = true;
+      const el = document.getElementById('sigNotifBadgeMob');
+      if (el) el.classList.add('visible');
+    }
+
+    function clearSignalsBadge() {
+      _signalBadgeActive = false;
+      const el = document.getElementById('sigNotifBadgeMob');
+      if (el) el.classList.remove('visible');
+    }
+
+    // ── TARGET HIT ALERTS ──
+    // Track which hits we've already notified: { "signalId": { t1: true, t2: true, ... } }
+    let _notifiedHits = {};
+    (function loadNotifiedHits() {
+      try { _notifiedHits = JSON.parse(localStorage.getItem('oracle_notified_hits') || '{}'); } catch(e) { _notifiedHits = {}; }
+    })();
+    function saveNotifiedHits() {
+      try { localStorage.setItem('oracle_notified_hits', JSON.stringify(_notifiedHits)); } catch(e) {}
+    }
+
+    function checkTargetHitAlerts() {
+      if (!SIGNALS.length) return;
+      SIGNALS.forEach(sig => {
+        const key = sig.id || sig.streamLabel || sig.asset;
+        const live = calculateLiveConfidence(sig);
+        if (!live || live.zone === 'base') return;
+
+        if (!_notifiedHits[key]) _notifiedHits[key] = {};
+        const seen = _notifiedHits[key];
+
+        // T1 hit
+        if (live.t1Hit && !seen.t1) {
+          seen.t1 = true;
+          sendTargetNotification(sig, 'T1', live.price);
+        }
+        // T2 hit
+        if (live.t2Hit && !seen.t2) {
+          seen.t2 = true;
+          sendTargetNotification(sig, 'T2', live.price);
+        }
+        // T3 hit
+        if (live.t3Hit && !seen.t3) {
+          seen.t3 = true;
+          sendTargetNotification(sig, 'T3', live.price);
+        }
+        // Invalidation
+        if (live.zone === 'invalidated' && !seen.invalidated) {
+          seen.invalidated = true;
+          sendInvalidationNotification(sig, live.price);
+        }
+      });
+      saveNotifiedHits();
+    }
+
+    function sendTargetNotification(sig, target, price) {
+      showToast(`🎯 ${sig.asset} hit ${target}! Price: $${price.toFixed(2)}`);
+      if (!notificationsEnabled || Notification.permission !== "granted") return;
+      new Notification(`🎯 ${sig.asset} — ${target} HIT`, {
+        body: `${sig.direction} signal reached ${target}.\nLive: $${price.toFixed(2)} · ${sig.level}`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ffd700"/></svg>',
+        tag: `target-${sig.id || sig.asset}-${target}`,
+        requireInteraction: true
+      });
+      playAlertSound();
+    }
+
+    function sendInvalidationNotification(sig, price) {
+      showToast(`🚨 ${sig.asset} INVALIDATED! Price: $${price.toFixed(2)}`);
+      if (!notificationsEnabled || Notification.permission !== "granted") return;
+      new Notification(`🚨 ${sig.asset} — INVALIDATED`, {
+        body: `${sig.direction} signal has been invalidated.\nLive: $${price.toFixed(2)} · Exit recommended.`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ff3b3b"/></svg>',
+        tag: `invalidated-${sig.id || sig.asset}`,
+        requireInteraction: true
+      });
+      playAlertSound();
+      playAlertSound(); // double beep for urgency
+    }
+
+    // Stamp all currently-hit targets as "seen" so first load doesn't spam
+    function seedExistingTargetHits() {
+      SIGNALS.forEach(sig => {
+        const key = sig.id || sig.streamLabel || sig.asset;
+        const live = calculateLiveConfidence(sig);
+        if (!live || live.zone === 'base') return;
+        if (!_notifiedHits[key]) _notifiedHits[key] = {};
+        if (live.t1Hit) _notifiedHits[key].t1 = true;
+        if (live.t2Hit) _notifiedHits[key].t2 = true;
+        if (live.t3Hit) _notifiedHits[key].t3 = true;
+        if (live.zone === 'invalidated') _notifiedHits[key].invalidated = true;
+      });
+      saveNotifiedHits();
+    }
 
     let audioContext = null;
     
@@ -4709,6 +4930,9 @@
       renderList();
       applyTriggerStates();
       
+      // Check for target hits after fresh prices
+      checkTargetHitAlerts();
+      
       // Re-render macro regime with fresh prices
       renderMacroRegime();
 
@@ -4881,6 +5105,7 @@
       { id: 'equities', label: 'EQUITIES',     status: 'yellow', thesis: '', benchmark: 'SPY', benchmark_ticker: 'SPY',             benchmark_price: null, last_changed: null },
       { id: 'dollar',   label: 'DOLLAR INDEX', status: 'yellow', thesis: '', benchmark: 'DXY', benchmark_ticker: 'UUP',             benchmark_price: null, last_changed: null },
       { id: 'bonds',    label: 'BONDS',        status: 'yellow', thesis: '', benchmark: 'TLT', benchmark_ticker: 'TLT',             benchmark_price: null, last_changed: null },
+      { id: 'metals',   label: 'METALS',       status: 'yellow', thesis: '', benchmark: 'GLD', benchmark_ticker: 'GLD',             benchmark_price: null, last_changed: null },
       { id: 'risk',     label: 'RISK APPETITE',status: 'yellow', thesis: '', benchmark: null,  benchmark_ticker: null,              benchmark_price: null, last_changed: null },
       { id: 'crypto',   label: 'CRYPTO',       status: 'yellow', thesis: '', benchmark: 'BTC', benchmark_ticker: 'BINANCE:BTCUSDT', benchmark_price: null, last_changed: null },
     ];
@@ -4894,7 +5119,7 @@
           // Map saved data onto new 5-category structure, preserving thesis/benchmark fields
           const newIds = new Set(MACRO_DEFAULTS.map(d => d.id));
           // Migrate old ids to new ones
-          const idMap = { spy: 'equities', rates: 'bonds', dxy: 'dollar', btc: 'crypto' };
+          const idMap = { spy: 'equities', rates: 'bonds', dxy: 'dollar', btc: 'crypto', gold: 'metals', silver: 'metals' };
           MACRO_DATA = MACRO_DEFAULTS.map(def => {
             // Try exact match first, then migration map
             let s = saved.find(x => x.id === def.id);
@@ -5127,7 +5352,7 @@
         <div class="perfStat sWin"><div class="psLabel">AVG GAIN</div><div class="psValue vWin">+${s.avgWin.toFixed(1)}%</div><div class="psSub">per winner</div></div>
         <div class="perfStat sLoss"><div class="psLabel">AVG LOSS</div><div class="psValue vLoss">${s.avgLoss.toFixed(1)}%</div><div class="psSub">per loser</div></div>
         <div class="perfStat sAmber"><div class="psLabel">AVG DAYS</div><div class="psValue vAmber">${s.avgDays.toFixed(1)}d</div><div class="psSub">to target</div></div>
-        <div class="perfStat sPurple"><div class="psLabel">TOTAL ALPHA</div><div class="psValue vPurple">+${s.totalAlpha.toFixed(1)}%</div><div class="psSub">cumulative</div></div>
+        <div class="perfStat sPurple"><div class="psLabel">TOTAL ALPHA</div><div class="psValue vPurple">${s.totalAlpha >= 0 ? '+' : ''}${s.totalAlpha.toFixed(1)}%</div><div class="psSub">cumulative</div></div>
         <div class="perfStat"><div class="psLabel">BULL WIN RATE</div><div class="psValue vWin">${s.bullWR.toFixed(1)}%</div><div class="psSub">long signals</div></div>
         <div class="perfStat"><div class="psLabel">BEAR WIN RATE</div><div class="psValue vLoss">${s.bearWR.toFixed(1)}%</div><div class="psSub">short signals</div></div>
         <div class="perfStat sLoss"><div class="psLabel">MAX DRAWDOWN</div><div class="psValue vLoss">${s.maxDD.toFixed(1)}%</div><div class="psSub">worst run</div></div>
@@ -5444,7 +5669,7 @@
           alphaCell = `<span style="font-family:var(--display);font-size:11px;font-weight:700;color:${alpha >= 0 ? 'var(--green)' : 'var(--red)'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(1)}%</span>`;
         }
 
-        return `<tr data-id="${r.id}">
+        return `<tr data-id="${r.id}" class="${isUnseenTrade(r.id) ? 'newTrade' : ''}">
           <td><div class="tdAsset"><div class="assetDot ${isBull ? "bull" : "bear"}"></div><div><div class="assetName">${r.asset}</div><div class="assetSub">${r.type}</div></div></div></td>
           <td><span class="dirBadge ${isBull ? "dirBull" : "dirBear"}">${r.direction}</span></td>
           <td style="font-size:10px;color:var(--muted);white-space:nowrap">${r.date}</td>
@@ -5468,6 +5693,9 @@
     function openTradeDetail(id) {
       const r = PERF_DATA.find(x => x.id === id);
       if (!r) return;
+
+      // Mark this trade as seen — remove highlight
+      markTradeAsSeen(id);
 
       document.getElementById('tdmAsset').textContent = r.asset;
       document.getElementById('tdmSub').textContent = `${r.type} · ${r.direction} · ${r.signal}`;
@@ -5524,17 +5752,39 @@
               const p = d.split('-');
               return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
             };
+            const exitDate = parseD(r.exit_date);
+            const todayStr = (() => { const n = new Date(); return `${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}-${n.getFullYear()}`; })();
+            const exitIsToday = r.exit_date === todayStr;
+
             const from = Math.floor(parseD(r.date).getTime() / 1000);
-            const to   = Math.floor(parseD(r.exit_date).getTime() / 1000);
+            const to   = Math.floor(exitDate.getTime() / 1000) + 86400;
             const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
             const data = await resp.json();
+            console.log('[SPY alpha] date:', r.date, '→', r.exit_date, '| status:', data.s, '| candles:', data.c?.length, '| exitIsToday:', exitIsToday, '| from:', from, 'to:', to);
+
             if (data.s === 'ok' && data.c && data.c.length >= 2) {
+              // Normal case — use candle close prices
               const spyRet = parseFloat(((data.c[data.c.length-1] - data.c[0]) / data.c[0] * 100).toFixed(2));
-              // Cache it back so the row table also shows it
               r.spy_return = spyRet;
               renderAlpha(spyRet);
+            } else if (data.s === 'ok' && data.c && data.c.length === 1 && exitIsToday) {
+              // Trade closed today — today's candle not finalized yet, use live SPY quote
+              const liveSpyCache = PRICE_CACHE['SPY'];
+              if (liveSpyCache && liveSpyCache.price && data.c[0]) {
+                const spyRet = parseFloat(((liveSpyCache.price - data.c[0]) / data.c[0] * 100).toFixed(2));
+                r.spy_return = spyRet;
+                renderAlpha(spyRet);
+              } else {
+                // Fallback: use today's % change from SPY cache as SPY return
+                const spyRet = liveSpyCache ? parseFloat((liveSpyCache.changePercent || 0).toFixed(2)) : 0;
+                r.spy_return = spyRet;
+                renderAlpha(spyRet);
+              }
+            } else if (r.date === r.exit_date) {
+              // Same-day trade — SPY return effectively 0
+              r.spy_return = 0;
+              renderAlpha(0);
             } else {
-              // Can't fetch — show our return only
               fmtVal(r.result, 'tdmOurReturn');
               document.getElementById('tdmSpyReturn').textContent = 'N/A';
               document.getElementById('tdmAlpha').textContent     = '—';
@@ -5555,7 +5805,14 @@
       }
 
       // Aftermath — stored as raw price, calculate % change from exit price
-      const exitPx = r.exit_price ? parseFloat(r.exit_price) : null;
+      // If exit_price is missing, derive it from entry_price + result%
+      let exitPx = r.exit_price ? parseFloat(r.exit_price) : null;
+      if (!exitPx && r.entry_price && r.result !== null) {
+        const isBull = r.direction === 'BULL';
+        exitPx = isBull
+          ? parseFloat(r.entry_price) * (1 + r.result / 100)
+          : parseFloat(r.entry_price) * (1 - r.result / 100);
+      }
       const fmtAfter = (rawPrice, elId) => {
         const el = document.getElementById(elId);
         if (rawPrice === null || rawPrice === undefined || !exitPx) {
@@ -5574,6 +5831,13 @@
 
       // Notes
       document.getElementById('tdmNotes').textContent = r.notes || '—';
+
+      // Share button — visible only for closed trades
+      const shareSection = document.getElementById('tdmShareSection');
+      if (shareSection) {
+        shareSection.style.display = (r.result !== null) ? 'block' : 'none';
+      }
+      window._currentShareTrade = r;
 
       document.getElementById('tradeDetailBackdrop').classList.add('open');
     }
@@ -5598,7 +5862,229 @@
 
     // ESC key to close modal
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeTradeDetail();
+      if (e.key === 'Escape') {
+        const shareOv = document.getElementById('shareOverlay');
+        if (shareOv && shareOv.style.display === 'flex') {
+          shareOv.style.display = 'none';
+        } else {
+          closeTradeDetail();
+        }
+      }
+    });
+
+    /* ── SHARE TRADE CARD SYSTEM ── */
+    window._currentShareTrade = null;
+
+    function generateShareCard(trade) {
+      const canvas = document.getElementById('shareCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1080;
+      canvas.height = 1350;
+
+      const isWin = trade.result >= 0;
+      const glowColor = isWin ? 'rgba(0,255,163,' : 'rgba(255,59,59,';
+
+      // Dark background
+      ctx.fillStyle = '#020408';
+      ctx.fillRect(0, 0, 1080, 1350);
+
+      // Radial glow
+      const grd = ctx.createRadialGradient(540, 500, 50, 540, 500, 600);
+      grd.addColorStop(0, glowColor + '0.15)');
+      grd.addColorStop(0.5, glowColor + '0.05)');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, 1080, 1350);
+
+      // Subtle grid lines
+      ctx.strokeStyle = 'rgba(0,229,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let y = 0; y < 1350; y += 60) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1080, y); ctx.stroke();
+      }
+
+      // Candlestick decoration (top area)
+      const drawCandle = (x, open, close, high, low) => {
+        const isBullCandle = close > open;
+        ctx.strokeStyle = isBullCandle ? 'rgba(0,255,163,0.3)' : 'rgba(255,59,59,0.3)';
+        ctx.fillStyle = isBullCandle ? 'rgba(0,255,163,0.15)' : 'rgba(255,59,59,0.15)';
+        ctx.lineWidth = 1;
+        // Wick
+        ctx.beginPath(); ctx.moveTo(x, high); ctx.lineTo(x, low); ctx.stroke();
+        // Body
+        const bodyTop = Math.min(open, close);
+        const bodyH = Math.abs(close - open);
+        ctx.fillRect(x - 8, bodyTop, 16, bodyH);
+        ctx.strokeRect(x - 8, bodyTop, 16, bodyH);
+      };
+      // Decorative candles
+      const candleData = [
+        [200, 180, 210, 160, 220], [260, 210, 195, 185, 225], [320, 195, 230, 190, 240],
+        [380, 230, 220, 210, 245], [440, 220, 260, 215, 270], [500, 260, 250, 240, 275],
+        [560, 250, 280, 245, 290], [620, 280, 270, 260, 295], [680, 270, 310, 265, 320],
+        [740, 310, 300, 290, 325], [800, 300, 340, 295, 350], [860, 340, 330, 320, 355],
+      ];
+      candleData.forEach(c => drawCandle(c[0], c[1], c[2], c[3], c[4]));
+
+      // Asset + Direction hero text
+      ctx.font = '900 64px Orbitron, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText(trade.asset, 540, 440);
+
+      ctx.font = '700 24px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ffa3' : '#ff3b3b';
+      ctx.fillText(trade.direction + (trade.type ? ' · ' + trade.type : ''), 540, 490);
+
+      // Entry / Exit prices
+      const entryPx = trade.entry_price ? '$' + parseFloat(trade.entry_price).toFixed(2) : '—';
+      let exitPx = trade.exit_price ? '$' + parseFloat(trade.exit_price).toFixed(2) : null;
+      if (!exitPx && trade.entry_price && trade.result !== null) {
+        const isBull = trade.direction === 'BULL';
+        const derived = isBull
+          ? parseFloat(trade.entry_price) * (1 + trade.result / 100)
+          : parseFloat(trade.entry_price) * (1 - trade.result / 100);
+        exitPx = '$' + derived.toFixed(2);
+      }
+      exitPx = exitPx || '—';
+
+      ctx.font = '400 18px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(74,106,138,0.8)';
+      ctx.fillText('ENTRY: ' + entryPx + '  →  EXIT: ' + exitPx, 540, 550);
+
+      // Result % in huge font
+      const resultStr = (trade.result >= 0 ? '+' : '') + trade.result.toFixed(1) + '%';
+      ctx.font = '900 138px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ffa3' : '#ff3b3b';
+      // Glow effect
+      ctx.shadowColor = isWin ? 'rgba(0,255,163,0.6)' : 'rgba(255,59,59,0.6)';
+      ctx.shadowBlur = 40;
+      ctx.fillText(resultStr, 540, 740);
+      ctx.shadowBlur = 0;
+
+      // Days held + dates
+      if (trade.days || trade.date) {
+        ctx.font = '400 16px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(74,106,138,0.7)';
+        const info = [];
+        if (trade.days) info.push(trade.days + ' days');
+        if (trade.date) info.push(trade.date + (trade.exit_date ? ' → ' + trade.exit_date : ''));
+        ctx.fillText(info.join(' · '), 540, 800);
+      }
+
+      // Oracle triangle logo
+      ctx.beginPath();
+      ctx.moveTo(540, 900); ctx.lineTo(510, 950); ctx.lineTo(570, 950);
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(0,229,255,0.08)';
+      ctx.fill();
+
+      // Inner triangle
+      ctx.beginPath();
+      ctx.moveTo(540, 915); ctx.lineTo(525, 940); ctx.lineTo(555, 940);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(0,229,255,0.3)';
+      ctx.fill();
+
+      // MOMOEDGE branding
+      ctx.font = '900 28px Orbitron, monospace';
+      ctx.fillStyle = '#00e5ff';
+      ctx.shadowColor = 'rgba(0,229,255,0.5)';
+      ctx.shadowBlur = 20;
+      ctx.fillText('ORACLE', 540, 1010);
+      ctx.shadowBlur = 0;
+
+      ctx.font = '400 14px Orbitron, monospace';
+      ctx.fillStyle = 'rgba(0,229,255,0.5)';
+      ctx.letterSpacing = '4px';
+      ctx.fillText('POWERED BY MOMOEDGE', 540, 1045);
+
+      // momoedge.ai watermark
+      ctx.font = '400 13px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(74,106,138,0.35)';
+      ctx.fillText('momoedge.ai', 540, 1300);
+
+      // Border
+      ctx.strokeStyle = 'rgba(0,229,255,0.12)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, 1078, 1348);
+    }
+
+    function downloadShareCanvas(filename) {
+      const canvas = document.getElementById('shareCanvas');
+      const link = document.createElement('a');
+      link.download = filename || 'oracle-trade.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function getShareText(trade) {
+      const sign = trade.result >= 0 ? '+' : '';
+      return `${trade.asset} ${trade.direction} ${sign}${trade.result.toFixed(1)}% | Oracle Signal by @momoedge_ai\n\nmomoedge.ai`;
+    }
+
+    // Share button click
+    document.getElementById('tdmShareBtn').addEventListener('click', function() {
+      const trade = window._currentShareTrade;
+      if (!trade || trade.result === null) return;
+      generateShareCard(trade);
+      document.getElementById('shareOverlay').style.display = 'flex';
+    });
+
+    // Close share overlay
+    document.getElementById('shareOverlayClose').addEventListener('click', function() {
+      document.getElementById('shareOverlay').style.display = 'none';
+    });
+    document.getElementById('shareOverlay').addEventListener('click', function(e) {
+      if (e.target === this) this.style.display = 'none';
+    });
+
+    // Share action buttons
+    document.querySelectorAll('.shareBtn[data-action]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const action = this.dataset.action;
+        const trade = window._currentShareTrade;
+        if (!trade) return;
+        const text = getShareText(trade);
+        const url = 'https://momoedge.ai';
+
+        switch(action) {
+          case 'twitter':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            setTimeout(function() {
+              window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+            }, 500);
+            break;
+          case 'telegram':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            setTimeout(function() {
+              window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text), '_blank');
+            }, 500);
+            break;
+          case 'discord':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            navigator.clipboard.writeText(text).then(function() {
+              btn.textContent = 'COPIED!';
+              setTimeout(function() { btn.textContent = 'DISCORD'; }, 2000);
+            });
+            break;
+          case 'instagram':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            break;
+          case 'copytext':
+            navigator.clipboard.writeText(text).then(function() {
+              btn.textContent = 'COPIED!';
+              setTimeout(function() { btn.textContent = 'COPY TEXT'; }, 2000);
+            });
+            break;
+          case 'save':
+            downloadShareCanvas('oracle-' + trade.asset + '-' + (trade.result >= 0 ? 'win' : 'loss') + '.png');
+            break;
+        }
+      });
     });
 
     // Desktop: single click opens modal directly (mouse = intentional)
@@ -6008,7 +6494,7 @@
     /* ─────────────── CSV EXPORT ─────────────── */
     document.getElementById("exportCsv").addEventListener("click", () => {
       const headers = ["Asset", "Type", "Direction", "Date", "Signal", "Status", "Result %", "Days", "Confidence"];
-      const rows = PERF_DATA.map(r => [r.asset, r.type, r.direction, r.date, r.signal, r.status, r.result === null ? "ACTIVE" : r.result.toFixed(2), r.days === null ? "" : r.days, r.conf.toFixed(2)]);
+      const rows = PERF_DATA.map(r => [r.asset || '', r.type || '', r.direction || '', r.date || '', r.signal || '', r.status || '', r.result != null ? r.result.toFixed(2) : "ACTIVE", r.days != null ? r.days : "", r.conf != null ? r.conf.toFixed(2) : ""]);
       const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -6555,6 +7041,7 @@
 
         const div = document.createElement("div");
         div.className = `item ${isBull ? "bull-item" : "bear-item"}`;
+        if (isNewSignal(sig)) div.classList.add('newSignalPulse');
         div.dataset.sigId = sig.id || sig.asset;
 
         // Duration clock data
@@ -6672,6 +7159,7 @@
           autoRotate = false;
           updateAutoBtn();
           const originalIdx = SIGNALS.findIndex(s => s.id === sig.id);
+          if (isNewSignal(sig)) clearNewSignalPulse(sig);
           setActive(originalIdx);
         });
         listEl.appendChild(div);
@@ -6935,8 +7423,7 @@
       const sig = SIGNALS[activeIndex];
       streamName.textContent = sig.streamLabel;
 
-      // Send notification for new signal
-      sendNotification(sig);
+      // Notification moved to new-signal detection (no longer fires on carousel rotation)
 
       // Fetch live price for this asset
       const asset = sig.asset.split(' ')[0].toUpperCase();
@@ -7201,11 +7688,86 @@
       try { localStorage.setItem('momoedge_perf', JSON.stringify(PERF_DATA)); } catch(e) {}
     }
 
+    // ── HISTORY BADGE + UNSEEN TRADE TRACKING (main scope) ──
+    let _seenClosedIds = new Set();
+
+    function _loadSeenClosedIds() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('oracle_seen_closed_ids') || '[]');
+        _seenClosedIds = new Set(stored);
+      } catch(e) { _seenClosedIds = new Set(); }
+    }
+    function _saveSeenClosedIds() {
+      try { localStorage.setItem('oracle_seen_closed_ids', JSON.stringify([..._seenClosedIds])); } catch(e) {}
+    }
+    _loadSeenClosedIds();
+
+    function getClosedTrades() {
+      return PERF_DATA.filter(r => r.status !== 'ACTIVE');
+    }
+
+    function getUnseenClosedIds() {
+      const closed = getClosedTrades();
+      return closed.filter(r => r.id && !_seenClosedIds.has(r.id)).map(r => r.id);
+    }
+
+    function isUnseenTrade(id) {
+      return id && !_seenClosedIds.has(id);
+    }
+
+    function seedSeenClosedTrades() {
+      // On first ever load, mark all existing closed trades as "seen"
+      if (!localStorage.getItem('oracle_seen_closed_ids')) {
+        getClosedTrades().forEach(r => { if (r.id) _seenClosedIds.add(r.id); });
+        _saveSeenClosedIds();
+      }
+    }
+
+    function markTradeAsSeen(id) {
+      if (!id) return;
+      _seenClosedIds.add(id);
+      _saveSeenClosedIds();
+      // Remove highlight from this trade's row/card
+      document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.remove('newTrade'));
+      // If no more unseen trades, clear badge
+      if (!getUnseenClosedIds().length) {
+        clearHistoryBadge();
+      }
+    }
+
+    function markAllTradesAsSeen() {
+      getClosedTrades().forEach(r => { if (r.id) _seenClosedIds.add(r.id); });
+      _saveSeenClosedIds();
+    }
+
+    function checkHistoryBadge() {
+      const unseen = getUnseenClosedIds();
+      const showBadge = unseen.length > 0;
+      ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('visible', showBadge);
+      });
+    }
+
+    function clearHistoryBadge() {
+      markAllTradesAsSeen();
+      ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('visible');
+      });
+      // Remove all newTrade highlights
+      document.querySelectorAll('.newTrade').forEach(el => el.classList.remove('newTrade'));
+    }
+
     async function init() {
       console.log('[Oracle] init starting...');
 
       await Promise.allSettled([loadSignals(), loadPerf(), loadFlow(), loadBroadcast(), loadMacroRegime()]);
       console.log('[Oracle] data loaded — SIGNALS:', SIGNALS.length, 'PERF:', PERF_DATA.length);
+
+      // Seed known signals FIRST — before anything that could throw
+      seedKnownSignals();
+      console.log('[Oracle] seeded known signal IDs:', _knownSignalIds.size);
 
       // ── AUTO-SYNC: create ACTIVE perf row for any signal that doesn't have one ──
       syncActiveSignalsToPerf();
@@ -7220,6 +7782,8 @@
         setTimeout(() => {
           updateAllPrices().then(function() {
             applyTriggerStates();
+            // Seed target hit states — anything already hit on first load is "seen"
+            seedExistingTargetHits();
             if (typeof window._renderMList === 'function') {
               window._renderMList();
             }
@@ -7230,40 +7794,23 @@
       refreshAll();
       renderFlow("all");
 
-      // ── NOTIFICATION BADGE: track new closed trades ──
-      function getClosedCount() {
-        return PERF_DATA.filter(r => r.status !== 'ACTIVE').length;
-      }
-      function checkHistoryBadge() {
-        const seen = parseInt(localStorage.getItem('oracle_seen_closed') || '0');
-        const current = getClosedCount();
-        const showBadge = current > seen;
-        ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.toggle('visible', showBadge);
-        });
-      }
-      function clearHistoryBadge() {
-        localStorage.setItem('oracle_seen_closed', getClosedCount());
-        ['histNotifBadgeDk', 'histNotifBadgeMob'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.remove('visible');
-        });
-      }
-      // Seed on first load
-      if (!localStorage.getItem('oracle_seen_closed')) {
-        localStorage.setItem('oracle_seen_closed', getClosedCount());
-      }
+      // Seed closed trade tracking on first load
+      seedSeenClosedTrades();
       checkHistoryBadge();
 
       // ── POLL FOR UPDATES every 30 seconds ──
       setInterval(async () => {
         await Promise.allSettled([loadSignals(), loadPerf(), loadBroadcast(), loadMacroRegime()]);
         syncActiveSignalsToPerf();   // re-sync after every loadPerf wipe
+        // Check for newly published signals
+        checkForNewSignals();
         renderList();
+        if (typeof window._renderMList === 'function') window._renderMList();
         updateAvgConf();
         refreshAll();
         checkHistoryBadge();
+        // Check target hits with cached prices
+        checkTargetHitAlerts();
         // Re-render history tab so active trades stay visible without manual refresh
         if (typeof window._renderMHistory === 'function') {
           window._renderMHistory();
@@ -7314,12 +7861,9 @@
       document.getElementById('analysisSignalDropdown')?.addEventListener('change', function() {
         const idx = parseInt(this.value);
         if (!isNaN(idx) && SIGNALS[idx]) {
-          activeIndex = idx;
-          setRightPanel(SIGNALS[idx]);
-          // Also highlight in left list
-          document.querySelectorAll('.signalItem').forEach((el, i) => {
-            el.classList.toggle('active', i === idx);
-          });
+          autoRotate = false;
+          updateAutoBtn();
+          setActive(idx);
         }
       });
 
@@ -7775,7 +8319,7 @@
 </div>
 
 <div class="mobileTabBar">
-  <button class="mobileTabBtn active" data-mtab="Signals"><span class="tabIcon">⚡</span><span class="tabLabel">SIGNALS</span></button>
+  <button class="mobileTabBtn active" data-mtab="Signals" id="mobSigTab" style="position:relative;"><span class="tabIcon">⚡</span><span class="tabLabel">SIGNALS</span><span class="tabNotifBadge" id="sigNotifBadgeMob"></span></button>
   <button class="mobileTabBtn" data-mtab="Analysis"><span class="tabIcon">◈</span><span class="tabLabel">ANALYSIS</span></button>
   <button class="mobileTabBtn" data-mtab="Macro"><span class="tabIcon">🌐</span><span class="tabLabel">MACRO</span></button>
   <button class="mobileTabBtn" data-mtab="Flow"><span class="tabIcon">🌊</span><span class="tabLabel">FLOW</span></button>
@@ -7802,6 +8346,7 @@
     if (tabName === 'Analysis') renderMAnalysis();
     if (tabName === 'Macro')    renderMMacro();
     if (tabName === 'Flow')     renderMFlow();
+    if (tabName === 'Signals') { if (typeof clearSignalsBadge === 'function') clearSignalsBadge(); }
     if (tabName === 'History') { renderMHistory(); if (typeof clearHistoryBadge === 'function') clearHistoryBadge(); }
     window.scrollTo(0, 0);
   }
@@ -8044,6 +8589,7 @@
       var isTriggered = tr && tr.hit;
       div.className = 'item ' + (isBull ? 'bull-item' : 'bear-item');
       if (isTriggered) div.classList.add('triggered-item');
+      if (typeof isNewSignal === 'function' && isNewSignal(sig)) div.classList.add('newSignalPulse');
       div.dataset.sigId = sig.id || sig.asset;
       div.innerHTML =
         // ── COLORED HEADER BAR ──
@@ -8207,6 +8753,7 @@
         autoRotate = false;
         updateAutoBtn();
         if (mAutoBtn) mAutoBtn.textContent = 'AUTO: OFF';
+        if (typeof isNewSignal === 'function' && isNewSignal(sig)) clearNewSignalPulse(sig);
         setActive(idx);
         mSelectedSig = sig;
         switchTab('Analysis');
@@ -8907,7 +9454,7 @@
         statTile('WIN RATE', winRate.toFixed(1)+'%', '#00ff88', wins.length+' of '+closed.length) +
         statTile('AVG GAIN', '+'+avgWin.toFixed(1)+'%', '#00ff88', 'per winner') +
         statTile('AVG LOSS', avgLoss.toFixed(1)+'%', '#ff4466', 'per loser') +
-        statTile('TOTAL ALPHA', '+'+totalAlpha.toFixed(1)+'%', '#a78bfa', 'cumulative') +
+        statTile('TOTAL ALPHA', (totalAlpha >= 0 ? '+' : '')+totalAlpha.toFixed(1)+'%', '#a78bfa', 'cumulative') +
         statTile('WIN STREAK', streak+'W', '#f5a623', 'best streak') +
         statTile('AVG DAYS', avgDays.toFixed(1)+'d', '#00e5ff', 'to target');
 
@@ -9017,7 +9564,8 @@
         var alpha = r.result - parseFloat(r.spy_return);
         alphaStr = '<span style="font-family:Orbitron,monospace;font-size:7px;color:' + (alpha >= 0 ? '#00ff88' : '#ff4466') + ';">' + (alpha >= 0 ? '+' : '') + alpha.toFixed(1) + '% α</span>';
       }
-      return '<div class="mobileHistCard" data-id="' + r.id + '" style="' + clickable + '">' +
+      var unseenCls = (typeof isUnseenTrade === 'function' && isUnseenTrade(r.id)) ? ' newTrade' : '';
+      return '<div class="mobileHistCard' + unseenCls + '" data-id="' + r.id + '" style="' + clickable + '">' +
         '<div class="mhcLeft">' +
           '<span class="mhcAsset">' + r.asset + '</span>' +
           '<span class="mhcType">' + (r.signal || r.type || '—') + '</span>' +
@@ -9050,8 +9598,7 @@
     }
   }, 300);
 
-  // Mobile history cards — double tap to open detail modal
-  var _dtLastId = null, _dtTimer = null;
+  // Mobile history cards — single tap to mark seen AND open detail modal
   var mHistEl = document.getElementById('mHistCards');
   if (mHistEl) {
     mHistEl.addEventListener('click', function(e) {
@@ -9060,14 +9607,10 @@
       var id = card.dataset.id;
       var r = PERF_DATA.find(function(x) { return x.id === id; });
       if (!r || r.status === 'ACTIVE') return;
-      if (_dtLastId === id && _dtTimer) {
-        clearTimeout(_dtTimer);
-        _dtTimer = null; _dtLastId = null;
-        if (typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
-      } else {
-        _dtLastId = id;
-        _dtTimer = setTimeout(function() { _dtTimer = null; _dtLastId = null; }, 350);
-      }
+      // Mark as seen (remove highlight)
+      if (typeof markTradeAsSeen === 'function') markTradeAsSeen(id);
+      // Open trade detail modal
+      if (typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
     });
   }
 
