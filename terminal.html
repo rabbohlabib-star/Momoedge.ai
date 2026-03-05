@@ -564,13 +564,6 @@
     .tdmResult.neg { color:var(--red); }
     .tdmSection { margin-bottom:16px; }
     .tdmSectionTitle { font-size:9px; color:var(--core); letter-spacing:2px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
-    .tdmAftermath { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-    .tdmAfterItem { background:rgba(0,229,255,.04); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center; }
-    .tdmAfterLabel { font-size:9px; color:var(--muted); letter-spacing:1px; margin-bottom:4px; }
-    .tdmAfterValue { font-family:var(--display); font-size:13px; font-weight:700; }
-    .tdmAfterValue.pos { color:var(--green); }
-    .tdmAfterValue.neg { color:var(--red); }
-    .tdmAfterValue.neutral { color:var(--muted); }
     .tdmNotes { font-size:11px; color:var(--muted); line-height:1.6; background:rgba(0,229,255,.04); border:1px solid var(--border); border-radius:8px; padding:12px; }
     .deskTabBar {
       display: flex;
@@ -3480,48 +3473,6 @@
           <div class="tdmStatValue" id="tdmConf">—</div>
         </div>
       </div>
-      <div class="tdmSection" id="tdmAlphaSection">
-        <div class="tdmSectionTitle">ALPHA GENERATED VS SPY</div>
-        <div class="tdmAftermath">
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">OUR RETURN</div>
-            <div class="tdmAfterValue" id="tdmOurReturn">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">SPY RETURN</div>
-            <div class="tdmAfterValue" id="tdmSpyReturn">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">ALPHA</div>
-            <div class="tdmAfterValue" id="tdmAlpha">—</div>
-          </div>
-        </div>
-      </div>
-      <div class="tdmSection" id="tdmAftermathSection">
-        <div class="tdmSectionTitle">POST-EXIT PERFORMANCE</div>
-        <div class="tdmAftermath">
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">1 DAY</div>
-            <div class="tdmAfterValue" id="tdmAfter1d">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">3 DAYS</div>
-            <div class="tdmAfterValue" id="tdmAfter3d">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">1 WEEK</div>
-            <div class="tdmAfterValue" id="tdmAfter1w">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">1 MONTH</div>
-            <div class="tdmAfterValue" id="tdmAfter1m">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">3 MONTHS</div>
-            <div class="tdmAfterValue" id="tdmAfter3m">—</div>
-          </div>
-        </div>
-      </div>
       <div class="tdmSection" id="tdmShareSection" style="display:none;">
         <button id="tdmShareBtn" style="width:100%;padding:12px;font-family:'Orbitron',monospace;font-size:10px;font-weight:900;letter-spacing:2px;color:#00e5ff;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,229,255,.15)';this.style.boxShadow='0 0 16px rgba(0,229,255,.12)'" onmouseout="this.style.background='rgba(0,229,255,.08)';this.style.boxShadow='none'">↗ SHARE TRADE RESULT</button>
       </div>
@@ -5718,117 +5669,6 @@
       document.getElementById('tdmDays').textContent = r.days ? `${r.days}d` : '—';
       document.getElementById('tdmConf').textContent = r.conf != null ? `${parseFloat(r.conf).toFixed(2)}%` : '—';
 
-      // Alpha vs SPY
-      const alphaSection = document.getElementById('tdmAlphaSection');
-      const fmtVal = (v, elId) => {
-        const el = document.getElementById(elId);
-        el.textContent = `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
-        el.className = 'tdmAfterValue ' + (v >= 0 ? 'pos' : 'neg');
-      };
-
-      const renderAlpha = (spyRet) => {
-        if (r.result === null || r.result === undefined) { alphaSection.style.display = 'none'; return; }
-        const ourRet = r.result;
-        const alpha = ourRet - spyRet;
-        fmtVal(ourRet, 'tdmOurReturn');
-        fmtVal(spyRet, 'tdmSpyReturn');
-        fmtVal(alpha, 'tdmAlpha');
-        alphaSection.style.display = 'block';
-      };
-
-      if (r.spy_return !== null && r.spy_return !== undefined) {
-        // Already stored — use it
-        renderAlpha(parseFloat(r.spy_return));
-      } else if (r.result !== null && r.date && r.exit_date) {
-        // Missing — live-fetch SPY candle for the trade's exact date range
-        alphaSection.style.display = 'block';
-        document.getElementById('tdmOurReturn').textContent = '…';
-        document.getElementById('tdmSpyReturn').textContent = '…';
-        document.getElementById('tdmAlpha').textContent     = '…';
-
-        (async () => {
-          try {
-            const parseD = (d) => {
-              const p = d.split('-');
-              return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
-            };
-            const exitDate = parseD(r.exit_date);
-            const todayStr = (() => { const n = new Date(); return `${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}-${n.getFullYear()}`; })();
-            const exitIsToday = r.exit_date === todayStr;
-
-            const from = Math.floor(parseD(r.date).getTime() / 1000);
-            const to   = Math.floor(exitDate.getTime() / 1000) + 86400;
-            const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
-            const data = await resp.json();
-            console.log('[SPY alpha] date:', r.date, '→', r.exit_date, '| status:', data.s, '| candles:', data.c?.length, '| exitIsToday:', exitIsToday, '| from:', from, 'to:', to);
-
-            if (data.s === 'ok' && data.c && data.c.length >= 2) {
-              // Normal case — use candle close prices
-              const spyRet = parseFloat(((data.c[data.c.length-1] - data.c[0]) / data.c[0] * 100).toFixed(2));
-              r.spy_return = spyRet;
-              renderAlpha(spyRet);
-            } else if (data.s === 'ok' && data.c && data.c.length === 1 && exitIsToday) {
-              // Trade closed today — today's candle not finalized yet, use live SPY quote
-              const liveSpyCache = PRICE_CACHE['SPY'];
-              if (liveSpyCache && liveSpyCache.price && data.c[0]) {
-                const spyRet = parseFloat(((liveSpyCache.price - data.c[0]) / data.c[0] * 100).toFixed(2));
-                r.spy_return = spyRet;
-                renderAlpha(spyRet);
-              } else {
-                // Fallback: use today's % change from SPY cache as SPY return
-                const spyRet = liveSpyCache ? parseFloat((liveSpyCache.changePercent || 0).toFixed(2)) : 0;
-                r.spy_return = spyRet;
-                renderAlpha(spyRet);
-              }
-            } else if (r.date === r.exit_date) {
-              // Same-day trade — SPY return effectively 0
-              r.spy_return = 0;
-              renderAlpha(0);
-            } else {
-              fmtVal(r.result, 'tdmOurReturn');
-              document.getElementById('tdmSpyReturn').textContent = 'N/A';
-              document.getElementById('tdmAlpha').textContent     = '—';
-            }
-          } catch(e) {
-            document.getElementById('tdmOurReturn').textContent = r.result >= 0 ? `+${r.result.toFixed(1)}%` : `${r.result.toFixed(1)}%`;
-            document.getElementById('tdmSpyReturn').textContent = 'error';
-            document.getElementById('tdmAlpha').textContent     = '—';
-          }
-        })();
-      } else {
-        alphaSection.style.display = r.result !== null ? 'block' : 'none';
-        if (r.result !== null) {
-          fmtVal(r.result, 'tdmOurReturn');
-          document.getElementById('tdmSpyReturn').textContent = 'no dates';
-          document.getElementById('tdmAlpha').textContent     = '—';
-        }
-      }
-
-      // Aftermath — stored as raw price, calculate % change from exit price
-      // If exit_price is missing, derive it from entry_price + result%
-      let exitPx = r.exit_price ? parseFloat(r.exit_price) : null;
-      if (!exitPx && r.entry_price && r.result !== null) {
-        const isBull = r.direction === 'BULL';
-        exitPx = isBull
-          ? parseFloat(r.entry_price) * (1 + r.result / 100)
-          : parseFloat(r.entry_price) * (1 - r.result / 100);
-      }
-      const fmtAfter = (rawPrice, elId) => {
-        const el = document.getElementById(elId);
-        if (rawPrice === null || rawPrice === undefined || !exitPx) {
-          el.textContent = '—'; el.className = 'tdmAfterValue neutral';
-        } else {
-          const pct = ((parseFloat(rawPrice) - exitPx) / exitPx) * 100;
-          el.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
-          el.className = 'tdmAfterValue ' + (pct >= 0 ? 'pos' : 'neg');
-        }
-      };
-      fmtAfter(r.aftermath_1d, 'tdmAfter1d');
-      fmtAfter(r.aftermath_3d, 'tdmAfter3d');
-      fmtAfter(r.aftermath_1w, 'tdmAfter1w');
-      fmtAfter(r.aftermath_1m, 'tdmAfter1m');
-      fmtAfter(r.aftermath_3m, 'tdmAfter3m');
-
       // Notes
       document.getElementById('tdmNotes').textContent = r.notes || '—';
 
@@ -5882,61 +5722,149 @@
       canvas.height = 1350;
 
       const isWin = trade.result >= 0;
-      const glowColor = isWin ? 'rgba(0,255,163,' : 'rgba(255,59,59,';
+      const absResult = Math.abs(trade.result);
 
-      // Dark background
-      ctx.fillStyle = '#020408';
+      // ── BACKGROUND ──
+      if (isWin) {
+        const bg = ctx.createLinearGradient(0, 0, 0, 1350);
+        bg.addColorStop(0, '#001a0a');
+        bg.addColorStop(0.3, '#002e10');
+        bg.addColorStop(0.7, '#003d15');
+        bg.addColorStop(1, '#001a0a');
+        ctx.fillStyle = bg;
+      } else {
+        const bg = ctx.createLinearGradient(0, 0, 0, 1350);
+        bg.addColorStop(0, '#1a0000');
+        bg.addColorStop(0.3, '#2e0505');
+        bg.addColorStop(0.7, '#3d0a0a');
+        bg.addColorStop(1, '#1a0000');
+        ctx.fillStyle = bg;
+      }
       ctx.fillRect(0, 0, 1080, 1350);
 
-      // Radial glow
-      const grd = ctx.createRadialGradient(540, 500, 50, 540, 500, 600);
-      grd.addColorStop(0, glowColor + '0.15)');
-      grd.addColorStop(0.5, glowColor + '0.05)');
+      // ── RADIAL GLOW CENTER ──
+      const glowC = isWin ? 'rgba(0,255,120,' : 'rgba(255,40,40,';
+      const grd = ctx.createRadialGradient(540, 600, 30, 540, 600, 550);
+      grd.addColorStop(0, glowC + '0.25)');
+      grd.addColorStop(0.4, glowC + '0.1)');
       grd.addColorStop(1, 'transparent');
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, 1080, 1350);
 
-      // Subtle grid lines
-      ctx.strokeStyle = 'rgba(0,229,255,0.04)';
-      ctx.lineWidth = 1;
-      for (let y = 0; y < 1350; y += 60) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1080, y); ctx.stroke();
+      // ── SCATTERED EMOJI PARTICLES ──
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const seed = (trade.asset || 'X').charCodeAt(0);
+      const rng = (i) => ((seed * 9301 + i * 49297) % 233280) / 233280;
+
+      if (isWin) {
+        const winEmojis = ['💰', '🚀', '💵', '🔥', '💎', '📈', '🤑', '💸', '⭐', '🎯', '👑', '🏆'];
+        for (let i = 0; i < 28; i++) {
+          const emoji = winEmojis[i % winEmojis.length];
+          const x = rng(i * 3) * 1080;
+          const y = rng(i * 7 + 1) * 1350;
+          const size = 28 + rng(i * 11) * 42;
+          const alpha = 0.15 + rng(i * 13) * 0.4;
+          ctx.globalAlpha = alpha;
+          ctx.font = `${size}px Arial`;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((rng(i * 17) - 0.5) * 0.6);
+          ctx.fillText(emoji, 0, 0);
+          ctx.restore();
+        }
+      } else {
+        const loseEmojis = ['😭', '💀', '🤡', '📉', '🕳️', '💸', '😵', '🫠', '☠️', '🪦', '😤', '🗑️'];
+        for (let i = 0; i < 28; i++) {
+          const emoji = loseEmojis[i % loseEmojis.length];
+          const x = rng(i * 3) * 1080;
+          const y = rng(i * 7 + 1) * 1350;
+          const size = 28 + rng(i * 11) * 42;
+          const alpha = 0.15 + rng(i * 13) * 0.35;
+          ctx.globalAlpha = alpha;
+          ctx.font = `${size}px Arial`;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((rng(i * 17) - 0.5) * 0.6);
+          ctx.fillText(emoji, 0, 0);
+          ctx.restore();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // ── HERO EMOJI (big center-top) ──
+      ctx.font = '140px Arial';
+      ctx.textAlign = 'center';
+      if (isWin) {
+        ctx.fillText('🤑', 540, 200);
+      } else {
+        ctx.fillText('🤡', 540, 200);
       }
 
-      // Candlestick decoration (top area)
-      const drawCandle = (x, open, close, high, low) => {
-        const isBullCandle = close > open;
-        ctx.strokeStyle = isBullCandle ? 'rgba(0,255,163,0.3)' : 'rgba(255,59,59,0.3)';
-        ctx.fillStyle = isBullCandle ? 'rgba(0,255,163,0.15)' : 'rgba(255,59,59,0.15)';
-        ctx.lineWidth = 1;
-        // Wick
-        ctx.beginPath(); ctx.moveTo(x, high); ctx.lineTo(x, low); ctx.stroke();
-        // Body
-        const bodyTop = Math.min(open, close);
-        const bodyH = Math.abs(close - open);
-        ctx.fillRect(x - 8, bodyTop, 16, bodyH);
-        ctx.strokeRect(x - 8, bodyTop, 16, bodyH);
-      };
-      // Decorative candles
-      const candleData = [
-        [200, 180, 210, 160, 220], [260, 210, 195, 185, 225], [320, 195, 230, 190, 240],
-        [380, 230, 220, 210, 245], [440, 220, 260, 215, 270], [500, 260, 250, 240, 275],
-        [560, 250, 280, 245, 290], [620, 280, 270, 260, 295], [680, 270, 310, 265, 320],
-        [740, 310, 300, 290, 325], [800, 300, 340, 295, 350], [860, 340, 330, 320, 355],
-      ];
-      candleData.forEach(c => drawCandle(c[0], c[1], c[2], c[3], c[4]));
+      // ── HEADER TEXT ──
+      ctx.textAlign = 'center';
+      if (isWin) {
+        ctx.font = '900 72px Orbitron, monospace';
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = 'rgba(255,215,0,0.7)';
+        ctx.shadowBlur = 30;
+        ctx.fillText('WINNING', 540, 340);
+        ctx.fillText('TRADE!', 540, 420);
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.font = '900 72px Orbitron, monospace';
+        ctx.fillStyle = '#ff4444';
+        ctx.shadowColor = 'rgba(255,40,40,0.7)';
+        ctx.shadowBlur = 30;
+        ctx.fillText('LOSING', 540, 340);
+        ctx.fillText('TRADE...', 540, 420);
+        ctx.shadowBlur = 0;
+      }
 
-      // Asset + Direction hero text
+      // ── DIVIDER LINE ──
+      const divColor = isWin ? 'rgba(255,215,0,0.4)' : 'rgba(255,68,68,0.4)';
+      ctx.strokeStyle = divColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(240, 460); ctx.lineTo(840, 460); ctx.stroke();
+
+      // ── RESULT % (massive) ──
+      const resultStr = (isWin ? '+' : '') + trade.result.toFixed(1) + '%';
+      ctx.font = '900 148px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff3b3b';
+      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.8)' : 'rgba(255,59,59,0.8)';
+      ctx.shadowBlur = 50;
+      ctx.fillText(resultStr, 540, 600);
+      ctx.shadowBlur = 0;
+
+      // ── FUNNY SUBTITLE ──
+      ctx.font = '700 28px Orbitron, monospace';
+      if (isWin) {
+        const winLines = absResult > 50 ? 'ABSOLUTELY COOKED IT 🔥'
+          : absResult > 25 ? 'EASY MONEY 💰'
+          : absResult > 10 ? 'CASH REGISTER RINGING 🤑'
+          : 'ANOTHER ONE ✅';
+        ctx.fillStyle = 'rgba(255,215,0,0.85)';
+        ctx.fillText(winLines, 540, 670);
+      } else {
+        const losLines = absResult > 50 ? 'LIQUIDATED MY SOUL 💀'
+          : absResult > 25 ? 'CALL AN AMBULANCE 🚑'
+          : absResult > 10 ? 'EMOTIONAL DAMAGE 😵'
+          : 'JUST A SCRATCH 🩹';
+        ctx.fillStyle = 'rgba(255,100,100,0.85)';
+        ctx.fillText(losLines, 540, 670);
+      }
+
+      // ── ASSET + DIRECTION ──
       ctx.font = '900 64px Orbitron, monospace';
       ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText(trade.asset, 540, 440);
+      ctx.fillText(trade.asset, 540, 770);
 
-      ctx.font = '700 24px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ffa3' : '#ff3b3b';
-      ctx.fillText(trade.direction + (trade.type ? ' · ' + trade.type : ''), 540, 490);
+      ctx.font = '700 28px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff5555';
+      const dirLabel = trade.direction + (trade.type ? ' · ' + trade.type : '');
+      ctx.fillText(dirLabel, 540, 820);
 
-      // Entry / Exit prices
+      // ── ENTRY / EXIT ──
       const entryPx = trade.entry_price ? '$' + parseFloat(trade.entry_price).toFixed(2) : '—';
       let exitPx = trade.exit_price ? '$' + parseFloat(trade.exit_price).toFixed(2) : null;
       if (!exitPx && trade.entry_price && trade.result !== null) {
@@ -5948,69 +5876,72 @@
       }
       exitPx = exitPx || '—';
 
-      ctx.font = '400 18px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(74,106,138,0.8)';
-      ctx.fillText('ENTRY: ' + entryPx + '  →  EXIT: ' + exitPx, 540, 550);
+      ctx.font = '700 32px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(220,235,250,0.85)';
+      ctx.fillText('Entry: ' + entryPx + '  →  Exit: ' + exitPx, 540, 880);
 
-      // Result % in huge font
-      const resultStr = (trade.result >= 0 ? '+' : '') + trade.result.toFixed(1) + '%';
-      ctx.font = '900 138px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ffa3' : '#ff3b3b';
-      // Glow effect
-      ctx.shadowColor = isWin ? 'rgba(0,255,163,0.6)' : 'rgba(255,59,59,0.6)';
-      ctx.shadowBlur = 40;
-      ctx.fillText(resultStr, 540, 740);
-      ctx.shadowBlur = 0;
-
-      // Days held + dates
+      // ── DAYS HELD ──
       if (trade.days || trade.date) {
-        ctx.font = '400 16px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(74,106,138,0.7)';
+        ctx.font = '400 22px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(150,180,210,0.6)';
         const info = [];
-        if (trade.days) info.push(trade.days + ' days');
+        if (trade.days) info.push(trade.days + ' days held');
         if (trade.date) info.push(trade.date + (trade.exit_date ? ' → ' + trade.exit_date : ''));
-        ctx.fillText(info.join(' · '), 540, 800);
+        ctx.fillText(info.join(' · '), 540, 915);
       }
 
-      // Oracle triangle logo
+      // ── ORACLE TRIANGLE LOGO ──
+      const triY = 1000;
       ctx.beginPath();
-      ctx.moveTo(540, 900); ctx.lineTo(510, 950); ctx.lineTo(570, 950);
+      ctx.moveTo(540, triY); ctx.lineTo(500, triY + 65); ctx.lineTo(580, triY + 65);
       ctx.closePath();
-      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
-      ctx.lineWidth = 2;
+      const triColor = isWin ? 'rgba(0,255,136,' : 'rgba(255,59,59,';
+      ctx.strokeStyle = triColor + '0.6)';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
-      ctx.fillStyle = 'rgba(0,229,255,0.08)';
+      ctx.fillStyle = triColor + '0.12)';
       ctx.fill();
-
       // Inner triangle
       ctx.beginPath();
-      ctx.moveTo(540, 915); ctx.lineTo(525, 940); ctx.lineTo(555, 940);
+      ctx.moveTo(540, triY + 18); ctx.lineTo(520, triY + 50); ctx.lineTo(560, triY + 50);
       ctx.closePath();
-      ctx.fillStyle = 'rgba(0,229,255,0.3)';
+      ctx.fillStyle = triColor + '0.35)';
       ctx.fill();
-
-      // MOMOEDGE branding
-      ctx.font = '900 28px Orbitron, monospace';
-      ctx.fillStyle = '#00e5ff';
-      ctx.shadowColor = 'rgba(0,229,255,0.5)';
-      ctx.shadowBlur = 20;
-      ctx.fillText('ORACLE', 540, 1010);
+      // Glow dot
+      ctx.beginPath();
+      ctx.arc(540, triY + 38, 5, 0, Math.PI * 2);
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff3b3b';
+      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.8)' : 'rgba(255,59,59,0.8)';
+      ctx.shadowBlur = 15;
+      ctx.fill();
       ctx.shadowBlur = 0;
 
-      ctx.font = '400 14px Orbitron, monospace';
-      ctx.fillStyle = 'rgba(0,229,255,0.5)';
-      ctx.letterSpacing = '4px';
-      ctx.fillText('POWERED BY MOMOEDGE', 540, 1045);
+      // ── BRANDING ──
+      ctx.font = '900 30px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff5555';
+      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.5)' : 'rgba(255,59,59,0.5)';
+      ctx.shadowBlur = 20;
+      ctx.fillText('ORACLE TERMINAL', 540, 1130);
+      ctx.shadowBlur = 0;
 
-      // momoedge.ai watermark
-      ctx.font = '400 13px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(74,106,138,0.35)';
-      ctx.fillText('momoedge.ai', 540, 1300);
+      ctx.font = '900 44px Orbitron, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('MOMOEDGE', 540, 1185);
 
-      // Border
-      ctx.strokeStyle = 'rgba(0,229,255,0.12)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, 1078, 1348);
+      // ── FOOTER ──
+      ctx.font = '400 14px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(150,180,210,0.4)';
+      ctx.fillText('@momoedgeAI  ·  momoedge.ai', 540, 1250);
+
+      // ── BORDER ──
+      const borderColor = isWin ? 'rgba(0,255,136,0.2)' : 'rgba(255,59,59,0.2)';
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 1076, 1346);
+      // Inner border accent
+      ctx.strokeStyle = isWin ? 'rgba(255,215,0,0.08)' : 'rgba(255,100,100,0.08)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(8, 8, 1064, 1334);
     }
 
     function downloadShareCanvas(filename) {
@@ -6023,7 +5954,7 @@
 
     function getShareText(trade) {
       const sign = trade.result >= 0 ? '+' : '';
-      return `${trade.asset} ${trade.direction} ${sign}${trade.result.toFixed(1)}% | Oracle Signal by @momoedge_ai\n\nmomoedge.ai`;
+      return `${trade.asset} ${trade.direction} ${sign}${trade.result.toFixed(1)}% | Oracle Signal by @momoedgeAI\n\nmomoedge.ai`;
     }
 
     // Share button click
