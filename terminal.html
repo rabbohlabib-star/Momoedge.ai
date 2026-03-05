@@ -5882,61 +5882,149 @@
       canvas.height = 1350;
 
       const isWin = trade.result >= 0;
-      const glowColor = isWin ? 'rgba(0,255,163,' : 'rgba(255,59,59,';
+      const absResult = Math.abs(trade.result);
 
-      // Dark background
-      ctx.fillStyle = '#020408';
+      // ── BACKGROUND ──
+      if (isWin) {
+        const bg = ctx.createLinearGradient(0, 0, 0, 1350);
+        bg.addColorStop(0, '#001a0a');
+        bg.addColorStop(0.3, '#002e10');
+        bg.addColorStop(0.7, '#003d15');
+        bg.addColorStop(1, '#001a0a');
+        ctx.fillStyle = bg;
+      } else {
+        const bg = ctx.createLinearGradient(0, 0, 0, 1350);
+        bg.addColorStop(0, '#1a0000');
+        bg.addColorStop(0.3, '#2e0505');
+        bg.addColorStop(0.7, '#3d0a0a');
+        bg.addColorStop(1, '#1a0000');
+        ctx.fillStyle = bg;
+      }
       ctx.fillRect(0, 0, 1080, 1350);
 
-      // Radial glow
-      const grd = ctx.createRadialGradient(540, 500, 50, 540, 500, 600);
-      grd.addColorStop(0, glowColor + '0.15)');
-      grd.addColorStop(0.5, glowColor + '0.05)');
+      // ── RADIAL GLOW CENTER ──
+      const glowC = isWin ? 'rgba(0,255,120,' : 'rgba(255,40,40,';
+      const grd = ctx.createRadialGradient(540, 600, 30, 540, 600, 550);
+      grd.addColorStop(0, glowC + '0.25)');
+      grd.addColorStop(0.4, glowC + '0.1)');
       grd.addColorStop(1, 'transparent');
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, 1080, 1350);
 
-      // Subtle grid lines
-      ctx.strokeStyle = 'rgba(0,229,255,0.04)';
-      ctx.lineWidth = 1;
-      for (let y = 0; y < 1350; y += 60) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1080, y); ctx.stroke();
+      // ── SCATTERED EMOJI PARTICLES ──
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const seed = (trade.asset || 'X').charCodeAt(0);
+      const rng = (i) => ((seed * 9301 + i * 49297) % 233280) / 233280;
+
+      if (isWin) {
+        const winEmojis = ['💰', '🚀', '💵', '🔥', '💎', '📈', '🤑', '💸', '⭐', '🎯', '👑', '🏆'];
+        for (let i = 0; i < 28; i++) {
+          const emoji = winEmojis[i % winEmojis.length];
+          const x = rng(i * 3) * 1080;
+          const y = rng(i * 7 + 1) * 1350;
+          const size = 28 + rng(i * 11) * 42;
+          const alpha = 0.15 + rng(i * 13) * 0.4;
+          ctx.globalAlpha = alpha;
+          ctx.font = `${size}px Arial`;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((rng(i * 17) - 0.5) * 0.6);
+          ctx.fillText(emoji, 0, 0);
+          ctx.restore();
+        }
+      } else {
+        const loseEmojis = ['😭', '💀', '🤡', '📉', '🕳️', '💸', '😵', '🫠', '☠️', '🪦', '😤', '🗑️'];
+        for (let i = 0; i < 28; i++) {
+          const emoji = loseEmojis[i % loseEmojis.length];
+          const x = rng(i * 3) * 1080;
+          const y = rng(i * 7 + 1) * 1350;
+          const size = 28 + rng(i * 11) * 42;
+          const alpha = 0.15 + rng(i * 13) * 0.35;
+          ctx.globalAlpha = alpha;
+          ctx.font = `${size}px Arial`;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((rng(i * 17) - 0.5) * 0.6);
+          ctx.fillText(emoji, 0, 0);
+          ctx.restore();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // ── HERO EMOJI (big center-top) ──
+      ctx.font = '140px Arial';
+      ctx.textAlign = 'center';
+      if (isWin) {
+        ctx.fillText('🤑', 540, 200);
+      } else {
+        ctx.fillText('🤡', 540, 200);
       }
 
-      // Candlestick decoration (top area)
-      const drawCandle = (x, open, close, high, low) => {
-        const isBullCandle = close > open;
-        ctx.strokeStyle = isBullCandle ? 'rgba(0,255,163,0.3)' : 'rgba(255,59,59,0.3)';
-        ctx.fillStyle = isBullCandle ? 'rgba(0,255,163,0.15)' : 'rgba(255,59,59,0.15)';
-        ctx.lineWidth = 1;
-        // Wick
-        ctx.beginPath(); ctx.moveTo(x, high); ctx.lineTo(x, low); ctx.stroke();
-        // Body
-        const bodyTop = Math.min(open, close);
-        const bodyH = Math.abs(close - open);
-        ctx.fillRect(x - 8, bodyTop, 16, bodyH);
-        ctx.strokeRect(x - 8, bodyTop, 16, bodyH);
-      };
-      // Decorative candles
-      const candleData = [
-        [200, 180, 210, 160, 220], [260, 210, 195, 185, 225], [320, 195, 230, 190, 240],
-        [380, 230, 220, 210, 245], [440, 220, 260, 215, 270], [500, 260, 250, 240, 275],
-        [560, 250, 280, 245, 290], [620, 280, 270, 260, 295], [680, 270, 310, 265, 320],
-        [740, 310, 300, 290, 325], [800, 300, 340, 295, 350], [860, 340, 330, 320, 355],
-      ];
-      candleData.forEach(c => drawCandle(c[0], c[1], c[2], c[3], c[4]));
+      // ── HEADER TEXT ──
+      ctx.textAlign = 'center';
+      if (isWin) {
+        ctx.font = '900 72px Orbitron, monospace';
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = 'rgba(255,215,0,0.7)';
+        ctx.shadowBlur = 30;
+        ctx.fillText('WINNING', 540, 340);
+        ctx.fillText('TRADE!', 540, 420);
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.font = '900 72px Orbitron, monospace';
+        ctx.fillStyle = '#ff4444';
+        ctx.shadowColor = 'rgba(255,40,40,0.7)';
+        ctx.shadowBlur = 30;
+        ctx.fillText('LOSING', 540, 340);
+        ctx.fillText('TRADE...', 540, 420);
+        ctx.shadowBlur = 0;
+      }
 
-      // Asset + Direction hero text
+      // ── DIVIDER LINE ──
+      const divColor = isWin ? 'rgba(255,215,0,0.4)' : 'rgba(255,68,68,0.4)';
+      ctx.strokeStyle = divColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(240, 460); ctx.lineTo(840, 460); ctx.stroke();
+
+      // ── RESULT % (massive) ──
+      const resultStr = (isWin ? '+' : '') + trade.result.toFixed(1) + '%';
+      ctx.font = '900 148px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff3b3b';
+      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.8)' : 'rgba(255,59,59,0.8)';
+      ctx.shadowBlur = 50;
+      ctx.fillText(resultStr, 540, 600);
+      ctx.shadowBlur = 0;
+
+      // ── FUNNY SUBTITLE ──
+      ctx.font = '700 28px Orbitron, monospace';
+      if (isWin) {
+        const winLines = absResult > 50 ? 'ABSOLUTELY COOKED IT 🔥'
+          : absResult > 25 ? 'EASY MONEY 💰'
+          : absResult > 10 ? 'CASH REGISTER RINGING 🤑'
+          : 'ANOTHER ONE ✅';
+        ctx.fillStyle = 'rgba(255,215,0,0.85)';
+        ctx.fillText(winLines, 540, 670);
+      } else {
+        const losLines = absResult > 50 ? 'LIQUIDATED MY SOUL 💀'
+          : absResult > 25 ? 'CALL AN AMBULANCE 🚑'
+          : absResult > 10 ? 'EMOTIONAL DAMAGE 😵'
+          : 'JUST A SCRATCH 🩹';
+        ctx.fillStyle = 'rgba(255,100,100,0.85)';
+        ctx.fillText(losLines, 540, 670);
+      }
+
+      // ── ASSET + DIRECTION ──
       ctx.font = '900 64px Orbitron, monospace';
       ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText(trade.asset, 540, 440);
+      ctx.fillText(trade.asset, 540, 770);
 
-      ctx.font = '700 24px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ffa3' : '#ff3b3b';
-      ctx.fillText(trade.direction + (trade.type ? ' · ' + trade.type : ''), 540, 490);
+      ctx.font = '700 28px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff5555';
+      const dirLabel = trade.direction + (trade.type ? ' · ' + trade.type : '');
+      ctx.fillText(dirLabel, 540, 820);
 
-      // Entry / Exit prices
+      // ── ENTRY / EXIT ──
       const entryPx = trade.entry_price ? '$' + parseFloat(trade.entry_price).toFixed(2) : '—';
       let exitPx = trade.exit_price ? '$' + parseFloat(trade.exit_price).toFixed(2) : null;
       if (!exitPx && trade.entry_price && trade.result !== null) {
@@ -5948,69 +6036,72 @@
       }
       exitPx = exitPx || '—';
 
-      ctx.font = '400 18px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(74,106,138,0.8)';
-      ctx.fillText('ENTRY: ' + entryPx + '  →  EXIT: ' + exitPx, 540, 550);
+      ctx.font = '700 32px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(220,235,250,0.85)';
+      ctx.fillText('Entry: ' + entryPx + '  →  Exit: ' + exitPx, 540, 880);
 
-      // Result % in huge font
-      const resultStr = (trade.result >= 0 ? '+' : '') + trade.result.toFixed(1) + '%';
-      ctx.font = '900 138px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ffa3' : '#ff3b3b';
-      // Glow effect
-      ctx.shadowColor = isWin ? 'rgba(0,255,163,0.6)' : 'rgba(255,59,59,0.6)';
-      ctx.shadowBlur = 40;
-      ctx.fillText(resultStr, 540, 740);
-      ctx.shadowBlur = 0;
-
-      // Days held + dates
+      // ── DAYS HELD ──
       if (trade.days || trade.date) {
-        ctx.font = '400 16px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(74,106,138,0.7)';
+        ctx.font = '400 22px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(150,180,210,0.6)';
         const info = [];
-        if (trade.days) info.push(trade.days + ' days');
+        if (trade.days) info.push(trade.days + ' days held');
         if (trade.date) info.push(trade.date + (trade.exit_date ? ' → ' + trade.exit_date : ''));
-        ctx.fillText(info.join(' · '), 540, 800);
+        ctx.fillText(info.join(' · '), 540, 915);
       }
 
-      // Oracle triangle logo
+      // ── ORACLE TRIANGLE LOGO ──
+      const triY = 1000;
       ctx.beginPath();
-      ctx.moveTo(540, 900); ctx.lineTo(510, 950); ctx.lineTo(570, 950);
+      ctx.moveTo(540, triY); ctx.lineTo(500, triY + 65); ctx.lineTo(580, triY + 65);
       ctx.closePath();
-      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
-      ctx.lineWidth = 2;
+      const triColor = isWin ? 'rgba(0,255,136,' : 'rgba(255,59,59,';
+      ctx.strokeStyle = triColor + '0.6)';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
-      ctx.fillStyle = 'rgba(0,229,255,0.08)';
+      ctx.fillStyle = triColor + '0.12)';
       ctx.fill();
-
       // Inner triangle
       ctx.beginPath();
-      ctx.moveTo(540, 915); ctx.lineTo(525, 940); ctx.lineTo(555, 940);
+      ctx.moveTo(540, triY + 18); ctx.lineTo(520, triY + 50); ctx.lineTo(560, triY + 50);
       ctx.closePath();
-      ctx.fillStyle = 'rgba(0,229,255,0.3)';
+      ctx.fillStyle = triColor + '0.35)';
       ctx.fill();
-
-      // MOMOEDGE branding
-      ctx.font = '900 28px Orbitron, monospace';
-      ctx.fillStyle = '#00e5ff';
-      ctx.shadowColor = 'rgba(0,229,255,0.5)';
-      ctx.shadowBlur = 20;
-      ctx.fillText('ORACLE', 540, 1010);
+      // Glow dot
+      ctx.beginPath();
+      ctx.arc(540, triY + 38, 5, 0, Math.PI * 2);
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff3b3b';
+      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.8)' : 'rgba(255,59,59,0.8)';
+      ctx.shadowBlur = 15;
+      ctx.fill();
       ctx.shadowBlur = 0;
 
-      ctx.font = '400 14px Orbitron, monospace';
-      ctx.fillStyle = 'rgba(0,229,255,0.5)';
-      ctx.letterSpacing = '4px';
-      ctx.fillText('POWERED BY MOMOEDGE', 540, 1045);
+      // ── BRANDING ──
+      ctx.font = '900 30px Orbitron, monospace';
+      ctx.fillStyle = isWin ? '#00ff88' : '#ff5555';
+      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.5)' : 'rgba(255,59,59,0.5)';
+      ctx.shadowBlur = 20;
+      ctx.fillText('ORACLE TERMINAL', 540, 1130);
+      ctx.shadowBlur = 0;
 
-      // momoedge.ai watermark
-      ctx.font = '400 13px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(74,106,138,0.35)';
-      ctx.fillText('momoedge.ai', 540, 1300);
+      ctx.font = '900 44px Orbitron, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('MOMOEDGE', 540, 1185);
 
-      // Border
-      ctx.strokeStyle = 'rgba(0,229,255,0.12)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, 1078, 1348);
+      // ── FOOTER ──
+      ctx.font = '400 14px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(150,180,210,0.4)';
+      ctx.fillText('@momoedgeAI  ·  momoedge.ai', 540, 1250);
+
+      // ── BORDER ──
+      const borderColor = isWin ? 'rgba(0,255,136,0.2)' : 'rgba(255,59,59,0.2)';
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 1076, 1346);
+      // Inner border accent
+      ctx.strokeStyle = isWin ? 'rgba(255,215,0,0.08)' : 'rgba(255,100,100,0.08)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(8, 8, 1064, 1334);
     }
 
     function downloadShareCanvas(filename) {
