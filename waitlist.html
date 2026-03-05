@@ -134,6 +134,8 @@
     .cDot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); flex-shrink:0; animation:blink 2s ease infinite; }
     @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
     .cNum { color:var(--green); font-size:14px; font-weight:900; text-shadow:0 0 12px rgba(0,255,163,.4); }
+    .ovCounter { display:flex; align-items:center; justify-content:center; gap:9px; font-family:var(--display); font-size:9px; letter-spacing:1px; color:var(--muted); margin-top:-4px; }
+    .ovNum { color:var(--red); font-size:14px; font-weight:900; text-shadow:0 0 12px rgba(255,59,59,.4); }
 
     /* Success */
     .success { display:none; flex-direction:column; align-items:center; gap:18px; text-align:center; padding:8px 0; position:relative; z-index:1; }
@@ -293,6 +295,10 @@
       <div class="fullIcon">&#128274;</div>
       <div class="fullTitle">WAITLIST FULL</div>
       <div class="fullMsg">300 founding spots have been claimed. Join the overflow list for priority access when spots open.</div>
+      <div class="ovCounter" id="ovCounter">
+        <div class="cDot" style="background:var(--red);box-shadow:0 0 8px var(--red);"></div>
+        <span><span class="ovNum" id="ovNum">&#8212;</span> on overflow list</span>
+      </div>
       <div class="fullForm">
         <div class="fWrap">
           <div class="fLbl">FULL NAME</div>
@@ -358,14 +364,16 @@ async function getCount(){
     const count=await r.json();
     const display=BASE+(typeof count==='number'?count:0);
     document.getElementById('cNum').textContent=display.toLocaleString();
-    if(display>=CAP) showFull();
+    if(display>=CAP) showFull(display);
   }catch(e){document.getElementById('cNum').textContent=BASE.toString();}
 }
 
-function showFull(){
+function showFull(total){
   document.getElementById('formWrap').style.display='none';
   document.getElementById('fullWrap').style.display='flex';
   document.getElementById('cNum').textContent=CAP.toString();
+  const overflow = (total && total > CAP) ? total - CAP : 0;
+  document.getElementById('ovNum').textContent = overflow.toLocaleString();
 }
 
 getCount();
@@ -382,7 +390,7 @@ async function doSubmit(){
   try{
     const r=await fetch(`${SB}/waitlist`,{method:'POST',headers:SH,body:JSON.stringify({name,email})});
     if(r.status===409){showErr('This email is already on the waitlist.');btn.disabled=false;btn.textContent='REQUEST EARLY ACCESS';return;}
-    if(!r.ok){const errBody=await r.text();showErr('Error '+r.status+': '+errBody);btn.disabled=false;btn.textContent='REQUEST EARLY ACCESS';return;}
+    if(!r.ok)throw new Error();
     let pos=null;
     try{const r2=await fetch(`${SB}/rpc/waitlist_count`,{method:'POST',headers:{...SH,'Prefer':''}});const count=await r2.json();if(typeof count==='number')pos=BASE+count;}catch(e){}
     document.getElementById('formWrap').style.display='none';
@@ -411,6 +419,7 @@ async function doOverflow(){
     if(!r.ok)throw new Error();
     document.getElementById('fullWrap').style.display='none';
     document.getElementById('ovSuccessWrap').style.display='flex';
+    await getCount();
   }catch(e){
     err.textContent='Something went wrong. Please try again.';err.style.display='block';
     btn.disabled=false;btn.textContent='JOIN OVERFLOW LIST';
