@@ -564,13 +564,6 @@
     .tdmResult.neg { color:var(--red); }
     .tdmSection { margin-bottom:16px; }
     .tdmSectionTitle { font-size:9px; color:var(--core); letter-spacing:2px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
-    .tdmAftermath { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-    .tdmAfterItem { background:rgba(0,229,255,.04); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center; }
-    .tdmAfterLabel { font-size:9px; color:var(--muted); letter-spacing:1px; margin-bottom:4px; }
-    .tdmAfterValue { font-family:var(--display); font-size:13px; font-weight:700; }
-    .tdmAfterValue.pos { color:var(--green); }
-    .tdmAfterValue.neg { color:var(--red); }
-    .tdmAfterValue.neutral { color:var(--muted); }
     .tdmNotes { font-size:11px; color:var(--muted); line-height:1.6; background:rgba(0,229,255,.04); border:1px solid var(--border); border-radius:8px; padding:12px; }
     .deskTabBar {
       display: flex;
@@ -3480,47 +3473,8 @@
           <div class="tdmStatValue" id="tdmConf">—</div>
         </div>
       </div>
-      <div class="tdmSection" id="tdmAlphaSection">
-        <div class="tdmSectionTitle">ALPHA GENERATED VS SPY</div>
-        <div class="tdmAftermath">
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">OUR RETURN</div>
-            <div class="tdmAfterValue" id="tdmOurReturn">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">SPY RETURN</div>
-            <div class="tdmAfterValue" id="tdmSpyReturn">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">ALPHA</div>
-            <div class="tdmAfterValue" id="tdmAlpha">—</div>
-          </div>
-        </div>
-      </div>
-      <div class="tdmSection" id="tdmAftermathSection">
-        <div class="tdmSectionTitle">POST-EXIT PERFORMANCE</div>
-        <div class="tdmAftermath">
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">1 DAY</div>
-            <div class="tdmAfterValue" id="tdmAfter1d">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">3 DAYS</div>
-            <div class="tdmAfterValue" id="tdmAfter3d">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">1 WEEK</div>
-            <div class="tdmAfterValue" id="tdmAfter1w">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">1 MONTH</div>
-            <div class="tdmAfterValue" id="tdmAfter1m">—</div>
-          </div>
-          <div class="tdmAfterItem">
-            <div class="tdmAfterLabel">3 MONTHS</div>
-            <div class="tdmAfterValue" id="tdmAfter3m">—</div>
-          </div>
-        </div>
+      <div class="tdmSection" id="tdmShareSection" style="display:none;">
+        <button id="tdmShareBtn" style="width:100%;padding:12px;font-family:'Orbitron',monospace;font-size:10px;font-weight:900;letter-spacing:2px;color:#00e5ff;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,229,255,.15)';this.style.boxShadow='0 0 16px rgba(0,229,255,.12)'" onmouseout="this.style.background='rgba(0,229,255,.08)';this.style.boxShadow='none'">↗ SHARE TRADE RESULT</button>
       </div>
       <div class="tdmSection" id="tdmShareSection" style="display:none;">
         <button id="tdmShareBtn" style="width:100%;padding:12px;font-family:'Orbitron',monospace;font-size:10px;font-weight:900;letter-spacing:2px;color:#00e5ff;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,229,255,.15)';this.style.boxShadow='0 0 16px rgba(0,229,255,.12)'" onmouseout="this.style.background='rgba(0,229,255,.08)';this.style.boxShadow='none'">↗ SHARE TRADE RESULT</button>
@@ -5717,117 +5671,6 @@
       document.getElementById('tdmExitDate').textContent = r.exit_date || '—';
       document.getElementById('tdmDays').textContent = r.days ? `${r.days}d` : '—';
       document.getElementById('tdmConf').textContent = r.conf != null ? `${parseFloat(r.conf).toFixed(2)}%` : '—';
-
-      // Alpha vs SPY
-      const alphaSection = document.getElementById('tdmAlphaSection');
-      const fmtVal = (v, elId) => {
-        const el = document.getElementById(elId);
-        el.textContent = `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
-        el.className = 'tdmAfterValue ' + (v >= 0 ? 'pos' : 'neg');
-      };
-
-      const renderAlpha = (spyRet) => {
-        if (r.result === null || r.result === undefined) { alphaSection.style.display = 'none'; return; }
-        const ourRet = r.result;
-        const alpha = ourRet - spyRet;
-        fmtVal(ourRet, 'tdmOurReturn');
-        fmtVal(spyRet, 'tdmSpyReturn');
-        fmtVal(alpha, 'tdmAlpha');
-        alphaSection.style.display = 'block';
-      };
-
-      if (r.spy_return !== null && r.spy_return !== undefined) {
-        // Already stored — use it
-        renderAlpha(parseFloat(r.spy_return));
-      } else if (r.result !== null && r.date && r.exit_date) {
-        // Missing — live-fetch SPY candle for the trade's exact date range
-        alphaSection.style.display = 'block';
-        document.getElementById('tdmOurReturn').textContent = '…';
-        document.getElementById('tdmSpyReturn').textContent = '…';
-        document.getElementById('tdmAlpha').textContent     = '…';
-
-        (async () => {
-          try {
-            const parseD = (d) => {
-              const p = d.split('-');
-              return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(d);
-            };
-            const exitDate = parseD(r.exit_date);
-            const todayStr = (() => { const n = new Date(); return `${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}-${n.getFullYear()}`; })();
-            const exitIsToday = r.exit_date === todayStr;
-
-            const from = Math.floor(parseD(r.date).getTime() / 1000);
-            const to   = Math.floor(exitDate.getTime() / 1000) + 86400;
-            const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
-            const data = await resp.json();
-            console.log('[SPY alpha] date:', r.date, '→', r.exit_date, '| status:', data.s, '| candles:', data.c?.length, '| exitIsToday:', exitIsToday, '| from:', from, 'to:', to);
-
-            if (data.s === 'ok' && data.c && data.c.length >= 2) {
-              // Normal case — use candle close prices
-              const spyRet = parseFloat(((data.c[data.c.length-1] - data.c[0]) / data.c[0] * 100).toFixed(2));
-              r.spy_return = spyRet;
-              renderAlpha(spyRet);
-            } else if (data.s === 'ok' && data.c && data.c.length === 1 && exitIsToday) {
-              // Trade closed today — today's candle not finalized yet, use live SPY quote
-              const liveSpyCache = PRICE_CACHE['SPY'];
-              if (liveSpyCache && liveSpyCache.price && data.c[0]) {
-                const spyRet = parseFloat(((liveSpyCache.price - data.c[0]) / data.c[0] * 100).toFixed(2));
-                r.spy_return = spyRet;
-                renderAlpha(spyRet);
-              } else {
-                // Fallback: use today's % change from SPY cache as SPY return
-                const spyRet = liveSpyCache ? parseFloat((liveSpyCache.changePercent || 0).toFixed(2)) : 0;
-                r.spy_return = spyRet;
-                renderAlpha(spyRet);
-              }
-            } else if (r.date === r.exit_date) {
-              // Same-day trade — SPY return effectively 0
-              r.spy_return = 0;
-              renderAlpha(0);
-            } else {
-              fmtVal(r.result, 'tdmOurReturn');
-              document.getElementById('tdmSpyReturn').textContent = 'N/A';
-              document.getElementById('tdmAlpha').textContent     = '—';
-            }
-          } catch(e) {
-            document.getElementById('tdmOurReturn').textContent = r.result >= 0 ? `+${r.result.toFixed(1)}%` : `${r.result.toFixed(1)}%`;
-            document.getElementById('tdmSpyReturn').textContent = 'error';
-            document.getElementById('tdmAlpha').textContent     = '—';
-          }
-        })();
-      } else {
-        alphaSection.style.display = r.result !== null ? 'block' : 'none';
-        if (r.result !== null) {
-          fmtVal(r.result, 'tdmOurReturn');
-          document.getElementById('tdmSpyReturn').textContent = 'no dates';
-          document.getElementById('tdmAlpha').textContent     = '—';
-        }
-      }
-
-      // Aftermath — stored as raw price, calculate % change from exit price
-      // If exit_price is missing, derive it from entry_price + result%
-      let exitPx = r.exit_price ? parseFloat(r.exit_price) : null;
-      if (!exitPx && r.entry_price && r.result !== null) {
-        const isBull = r.direction === 'BULL';
-        exitPx = isBull
-          ? parseFloat(r.entry_price) * (1 + r.result / 100)
-          : parseFloat(r.entry_price) * (1 - r.result / 100);
-      }
-      const fmtAfter = (rawPrice, elId) => {
-        const el = document.getElementById(elId);
-        if (rawPrice === null || rawPrice === undefined || !exitPx) {
-          el.textContent = '—'; el.className = 'tdmAfterValue neutral';
-        } else {
-          const pct = ((parseFloat(rawPrice) - exitPx) / exitPx) * 100;
-          el.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
-          el.className = 'tdmAfterValue ' + (pct >= 0 ? 'pos' : 'neg');
-        }
-      };
-      fmtAfter(r.aftermath_1d, 'tdmAfter1d');
-      fmtAfter(r.aftermath_3d, 'tdmAfter3d');
-      fmtAfter(r.aftermath_1w, 'tdmAfter1w');
-      fmtAfter(r.aftermath_1m, 'tdmAfter1m');
-      fmtAfter(r.aftermath_3m, 'tdmAfter3m');
 
       // Notes
       document.getElementById('tdmNotes').textContent = r.notes || '—';
