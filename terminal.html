@@ -5612,11 +5612,12 @@
     }
 
     function getSignalType(row) {
-      if (row.signal.includes("PHOENIX")) return "Phoenix Breakout";
-      if (row.signal.includes("MACRO")) return "Macro Sell";
-      if (row.signal.includes("BULLISH")) return "Bullish Momentum";
-      if (row.signal.includes("SECTOR")) return "Sector Scan";
-      return row.signal;
+      const sig = row.signal || row.type || '';
+      if (sig.includes("PHOENIX")) return "Phoenix Breakout";
+      if (sig.includes("MACRO")) return "Macro Sell";
+      if (sig.includes("BULLISH")) return "Bullish Momentum";
+      if (sig.includes("SECTOR")) return "Sector Scan";
+      return sig || "Unknown";
     }
 
     function renderEnhancedAnalytics() {
@@ -6289,7 +6290,13 @@
       showToast(`Alert closed · ${resultVal >= 0 ? "+" : ""}${resultVal.toFixed(1)}% recorded`);
     });
 
-    function refreshAll() { renderStats(); renderTable(currentFilter); drawEquityCurve(); renderEnhancedAnalytics(); renderPeriodBreakdown(); }
+    function refreshAll() {
+      try { renderStats(); } catch(e) { console.error('[refreshAll] renderStats:', e); }
+      try { renderTable(currentFilter); } catch(e) { console.error('[refreshAll] renderTable:', e); }
+      try { drawEquityCurve(); } catch(e) { console.error('[refreshAll] drawEquityCurve:', e); }
+      try { renderEnhancedAnalytics(); } catch(e) { console.error('[refreshAll] renderEnhancedAnalytics:', e); }
+      try { renderPeriodBreakdown(); } catch(e) { console.error('[refreshAll] renderPeriodBreakdown:', e); }
+    }
 
     // Collapsible section toggles
     document.querySelectorAll('.collapseHeader[data-collapse]').forEach(header => {
@@ -6304,8 +6311,11 @@
         } else {
           header.classList.add('open');
           body.classList.remove('hidden');
-          // Re-render equity curve when opening stats (SVG needs visible container)
+          // Re-render content when opening sections
           if (key === 'statsEquity') drawEquityCurve();
+          if (key === 'periodBreakdown') renderPeriodBreakdown();
+          if (key === 'enhancedAnalytics') renderEnhancedAnalytics();
+          if (key === 'closedAlerts') renderTable(currentFilter);
         }
       });
     });
