@@ -656,7 +656,6 @@
   <div class="aSectionHeader">
     <div class="aSectionTitle">PERFORMANCE HISTORY</div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="addBtn" id="backfillSpyBtn" style="background:rgba(0,255,163,.06);border-color:rgba(0,255,163,.25);color:#00ffa3;font-size:8px;">⟳ BACKFILL SPY ALPHA</button>
       <button class="addBtn" id="addPerfBtn">+ ADD TRADE</button>
     </div>
   </div>
@@ -685,6 +684,10 @@
         <input class="fInput" id="pfDate" placeholder="e.g. 01-08-2025"/>
       </div>
       <div class="formGroup">
+        <div class="fLabel">DATE CLOSED (MM-DD-YYYY)</div>
+        <input class="fInput" id="pfClosedDate" placeholder="e.g. 02-15-2025"/>
+      </div>
+      <div class="formGroup">
         <div class="fLabel">SIGNAL KEY</div>
         <input class="fInput" id="pfSignal" placeholder="e.g. PHOENIX_BREAKOUT"/>
       </div>
@@ -693,6 +696,7 @@
         <select class="fSelect" id="pfStatus">
           <option value="T2_HIT">T2 HIT</option>
           <option value="T1_HIT">T1 HIT</option>
+          <option value="CLOSED_EARLY">CLOSED EARLY</option>
           <option value="INVALIDATED">INVALIDATED</option>
           <option value="ACTIVE">ACTIVE</option>
         </select>
@@ -709,6 +713,10 @@
         <div class="fLabel">CONFIDENCE %</div>
         <input class="fInput" id="pfConf" type="number" step="0.01" placeholder="e.g. 87.40"/>
       </div>
+    </div>
+    <div class="formGroup" style="margin-top:10px;">
+      <div class="fLabel">THESIS</div>
+      <textarea class="fInput" id="pfThesis" placeholder="Trade thesis / context..." style="min-height:70px;resize:vertical;line-height:1.6;"></textarea>
     </div>
     <div class="formActions">
       <button class="fSave" id="savePerfBtn">SAVE TRADE</button>
@@ -1213,48 +1221,6 @@
      Scans closed trades. If 1w/1m/3m has passed since exit_date
      and the aftermath field is still null, fetches current price and saves it.
   */
-  async function backfillSpyReturns() {
-    const btn = document.getElementById('backfillSpyBtn');
-    const missing = PERF.filter(r => r.result !== null && (r.spy_return === null || r.spy_return === undefined) && r.date && r.exit_date);
-    if (!missing.length) { toast('✓ All trades already have SPY alpha data'); return; }
-
-    btn.disabled = true;
-    btn.textContent = `BACKFILLING 0/${missing.length}...`;
-    let updated = 0, failed = 0;
-
-    for (let i = 0; i < missing.length; i++) {
-      const row = missing[i];
-      btn.textContent = `BACKFILLING ${i+1}/${missing.length}...`;
-
-      // Rate limit protection — Finnhub allows ~1 req/sec on free tier
-      if (i > 0) await new Promise(r => setTimeout(r, 1200));
-
-      const spyRet = await fetchSpyReturn(row.date, row.exit_date);
-      if (spyRet === null) { failed++; continue; }
-
-      const res = await fetch(`${SB_URL}/performance?id=eq.${row.id}`, {
-        method: 'PATCH',
-        headers: { ...SB_H, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ spy_return: spyRet })
-      });
-
-      if (res.ok) { updated++; }
-      else { failed++; }
-    }
-
-    btn.disabled = false;
-    btn.textContent = '⟳ BACKFILL SPY ALPHA';
-
-    if (updated) {
-      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} no historical data)` : ''}`);
-      await loadAll();
-    } else if (failed) {
-      toast(`⚠️ No SPY data found — trades may be older than Finnhub's 1-year free tier limit. Check console for details.`, false);
-    } else {
-      toast(`⚠️ Backfill failed — check console for details`, false);
-    }
-  }
-
   async function checkAftermath() {
     const closed = PERF.filter(r => r.exit_date && r.status !== 'ACTIVE');
     if (!closed.length) return;
@@ -1837,12 +1803,12 @@
         <td style="color:var(--muted)">${r.days ? r.days + 'd' : '—'}</td>
         <td style="color:var(--blue);font-family:var(--display)">${r.conf ? parseFloat(r.conf).toFixed(2) + '%' : '—'}</td>
         <td>
-          <input class="perfNoteInput" data-pid="${r.id}" value="${(r.notes || '').replace(/"/g,'&quot;')}"
+          <textarea class="perfNoteInput" data-pid="${r.id}"
             placeholder="Add note..."
-            style="font-family:var(--display);font-size:9px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);color:var(--core);padding:4px 8px;border-radius:5px;width:140px;outline:none;transition:border-color .2s;"
+            style="font-family:var(--display);font-size:9px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);color:var(--core);padding:4px 8px;border-radius:5px;width:140px;min-height:26px;max-height:120px;outline:none;transition:border-color .2s;resize:none;overflow:hidden;line-height:1.5;field-sizing:content;"
             onfocus="this.style.borderColor='rgba(0,229,255,.4)'"
             onblur="this.style.borderColor='rgba(0,229,255,.1)'"
-          />
+          >${(r.notes || '').replace(/</g,'&lt;')}</textarea>
         </td>
         <td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
           <button class="scBtn perfEdit" data-pid="${r.id}"
@@ -1930,8 +1896,11 @@
       });
     });
 
-    // Notes — auto-save on blur or Enter
+    // Notes — auto-save on blur, auto-resize on input
     tbody.querySelectorAll(".perfNoteInput").forEach(input => {
+      const autoResize = () => { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; };
+      autoResize();
+      input.addEventListener('input', autoResize);
       const save = async () => {
         const pid = input.dataset.pid;
         const note = input.value.trim();
@@ -1942,18 +1911,38 @@
         if (ok) {
           row.notes = note || null;
           input.style.borderColor = 'rgba(0,255,163,.5)';
-          setTimeout(() => { input.style.borderColor = 'rgba(0,229,255,.1)'; }, 1000);
+          // Show saved indicator
+          let badge = input.parentElement.querySelector('.noteSavedBadge');
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'noteSavedBadge';
+            badge.style.cssText = 'font-family:var(--display);font-size:8px;letter-spacing:1px;color:#00ffa3;text-align:right;margin-top:2px;opacity:0;transition:opacity .3s;';
+            input.parentElement.appendChild(badge);
+          }
+          badge.textContent = 'SAVED ✓';
+          badge.style.opacity = '1';
+          setTimeout(() => { badge.style.opacity = '0'; }, 2000);
+          setTimeout(() => { input.style.borderColor = 'rgba(0,229,255,.1)'; }, 1500);
         } else {
           input.style.borderColor = 'rgba(255,59,59,.5)';
+          let badge = input.parentElement.querySelector('.noteSavedBadge');
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'noteSavedBadge';
+            badge.style.cssText = 'font-family:var(--display);font-size:8px;letter-spacing:1px;color:#ff3b3b;text-align:right;margin-top:2px;opacity:0;transition:opacity .3s;';
+            input.parentElement.appendChild(badge);
+          }
+          badge.textContent = 'FAILED ✕';
+          badge.style.color = '#ff3b3b';
+          badge.style.opacity = '1';
+          setTimeout(() => { badge.style.opacity = '0'; }, 2000);
         }
       };
       input.addEventListener('blur', save);
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
     });
   }
 
   /* ── ADD PERF FORM ── */
-  document.getElementById('backfillSpyBtn').addEventListener('click', backfillSpyReturns);
 
   document.getElementById("addPerfBtn").addEventListener("click", () => {
     document.getElementById("perfForm").style.display = document.getElementById("perfForm").style.display === "none" ? "block" : "none";
@@ -1970,11 +1959,13 @@
       type: document.getElementById("pfType").value.trim(),
       direction: document.getElementById("pfDir").value,
       date: document.getElementById("pfDate").value.trim() || new Date().toLocaleDateString("en-US", {month:"2-digit",day:"2-digit",year:"numeric"}).replace(/\//g,"-"),
+      closed_date: document.getElementById("pfClosedDate").value.trim() || null,
       signal: document.getElementById("pfSignal").value.trim(),
       status: document.getElementById("pfStatus").value,
       result: parseFloat(document.getElementById("pfResult").value) || null,
       days: parseInt(document.getElementById("pfDays").value) || null,
-      conf: parseFloat(document.getElementById("pfConf").value) || null
+      conf: parseFloat(document.getElementById("pfConf").value) || null,
+      thesis: document.getElementById("pfThesis").value.trim() || null
     };
     const ok = await sbPost('performance', payload);
     PERF.push(payload); // always update local cache
