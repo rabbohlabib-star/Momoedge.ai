@@ -2119,6 +2119,58 @@
       vertical-align: middle;
     }
 
+    /* ── ANALYTICS GRID ── */
+    .analyticsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .analyticsCard {
+      background: rgba(0,229,255,.03);
+      border: 1px solid rgba(0,229,255,.1);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .analyticsCard h4 {
+      font-family: var(--display);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin: 0 0 12px 0;
+    }
+    .analyticsRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .analyticsLabel {
+      font-family: var(--display);
+      font-size: 10px;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .analyticsValue {
+      font-family: var(--display);
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--muted);
+    }
+    .analyticsValue.good { color: var(--green); }
+    .analyticsBar {
+      height: 4px;
+      background: rgba(0,229,255,.08);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .analyticsBarFill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 4px;
+      transition: width .4s ease;
+    }
+
     .tdAsset {
       display: flex;
       align-items: center;
@@ -3905,7 +3957,7 @@
               <table class="perfTable">
                 <thead><tr>
                   <th>ASSET</th><th>DIR</th><th>ISSUED</th><th>SIGNAL TYPE</th>
-                  <th>STATUS</th><th>RESULT %</th><th>α ALPHA</th><th>TIME TO TARGET</th><th>CONFIDENCE</th>
+                  <th>RESULT %</th><th>STATUS</th><th>TIME TO TARGET</th><th>CONFIDENCE</th>
                 </tr></thead>
                 <tbody id="perfBody"></tbody>
               </table>
@@ -5850,7 +5902,7 @@
 
       if (!rows.length) {
         const msg = currentSearch ? `NO RESULTS FOR "${currentSearch.toUpperCase()}"` : 'NO RECORDS';
-        document.getElementById("perfBody").innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--muted);font-family:var(--display);font-size:10px;letter-spacing:1px;">${msg}</td></tr>`;
+        document.getElementById("perfBody").innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted);font-family:var(--display);font-size:10px;letter-spacing:1px;">${msg}</td></tr>`;
         return;
       }
 
@@ -5861,20 +5913,14 @@
         const spark = r.result === null ? '' : `<div class="sparkBar ${r.result >= 0 ? "pos" : "neg"}" style="width:${sparkW}px"></div>`;
         const timeCell = r.days === null ? `<span class="tdDays"><span class="daysBadge">${daysSince(r.date)}d active</span></span>` : `<span class="tdDays"><b>${r.days}d</b> elapsed</span>`;
         const action = `<span style="font-size:9px;color:var(--muted)">CLOSED</span>`;
-        let alphaCell = `<span style="color:var(--muted);font-size:10px">—</span>`;
-        if (r.spy_return !== null && r.spy_return !== undefined && r.result !== null) {
-          const alpha = r.result - parseFloat(r.spy_return);
-          alphaCell = `<span style="font-family:var(--display);font-size:11px;font-weight:700;color:${alpha >= 0 ? 'var(--green)' : 'var(--red)'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(1)}%</span>`;
-        }
 
         return `<tr data-id="${r.id}" class="${isUnseenTrade(r.id) ? 'newTrade' : ''}">
           <td><div class="tdAsset"><div class="assetDot ${isBull ? "bull" : "bear"}"></div><div><div class="assetName">${r.asset}</div><div class="assetSub">${r.type}</div></div></div></td>
           <td><span class="dirBadge ${isBull ? "dirBull" : "dirBear"}">${r.direction}</span></td>
           <td style="font-size:10px;color:var(--muted);white-space:nowrap">${r.date}</td>
           <td style="font-size:9px;color:var(--muted);letter-spacing:.5px">${r.signal}</td>
-          <td>${statusBadge(r.status)}</td>
           <td>${res}${spark}</td>
-          <td>${alphaCell}</td>
+          <td>${statusBadge(r.status)}</td>
           <td>${timeCell}</td>
           <td><span class="confPill"><b>${r.conf != null ? r.conf.toFixed(2) : "—"}%</b></span></td>
         </tr>`;
@@ -5965,231 +6011,162 @@
     function generateShareCard(trade) {
       const canvas = document.getElementById('shareCanvas');
       const ctx = canvas.getContext('2d');
-      canvas.width = 1080;
-      canvas.height = 1350;
+      const W = 1080, H = 1350;
+      canvas.width = W;
+      canvas.height = H;
 
       const isWin = trade.result >= 0;
       const absResult = Math.abs(trade.result);
+      const accent = isWin ? '#00ff88' : '#ff3b3b';
+      const accentDim = isWin ? 'rgba(0,255,136,' : 'rgba(255,59,59,';
 
       // ── BACKGROUND ──
-      if (isWin) {
-        const bg = ctx.createLinearGradient(0, 0, 0, 1350);
-        bg.addColorStop(0, '#001a0a');
-        bg.addColorStop(0.3, '#002e10');
-        bg.addColorStop(0.7, '#003d15');
-        bg.addColorStop(1, '#001a0a');
-        ctx.fillStyle = bg;
-      } else {
-        const bg = ctx.createLinearGradient(0, 0, 0, 1350);
-        bg.addColorStop(0, '#1a0000');
-        bg.addColorStop(0.3, '#2e0505');
-        bg.addColorStop(0.7, '#3d0a0a');
-        bg.addColorStop(1, '#1a0000');
-        ctx.fillStyle = bg;
-      }
-      ctx.fillRect(0, 0, 1080, 1350);
+      const bg = ctx.createLinearGradient(0, 0, W * 0.3, H);
+      if (isWin) { bg.addColorStop(0, '#0a1f0a'); bg.addColorStop(0.4, '#0d2818'); bg.addColorStop(1, '#040e08'); }
+      else { bg.addColorStop(0, '#1f0a0a'); bg.addColorStop(0.4, '#280d0d'); bg.addColorStop(1, '#0e0404'); }
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
 
-      // ── RADIAL GLOW CENTER ──
-      const glowC = isWin ? 'rgba(0,255,120,' : 'rgba(255,40,40,';
-      const grd = ctx.createRadialGradient(540, 600, 30, 540, 600, 550);
-      grd.addColorStop(0, glowC + '0.25)');
-      grd.addColorStop(0.4, glowC + '0.1)');
-      grd.addColorStop(1, 'transparent');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, 1080, 1350);
+      // ── TOP ACCENT BAR ──
+      ctx.fillStyle = accent;
+      ctx.fillRect(0, 0, W, 5);
 
-      // ── SCATTERED EMOJI PARTICLES ──
+      // ── SUBTLE DIAGONAL LINES ──
+      ctx.save();
+      ctx.globalAlpha = 0.025;
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1;
+      for (let i = -H; i < W + H; i += 45) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke(); }
+      ctx.restore();
+
+      // ── CENTER GLOW ──
+      const glow = ctx.createRadialGradient(W/2, 480, 20, W/2, 480, 450);
+      glow.addColorStop(0, accentDim + '0.12)'); glow.addColorStop(0.5, accentDim + '0.04)'); glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      // ── STATUS LABEL ──
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const seed = (trade.asset || 'X').charCodeAt(0);
-      const rng = (i) => ((seed * 9301 + i * 49297) % 233280) / 233280;
+      ctx.font = '900 18px Orbitron, monospace';
+      ctx.fillStyle = accentDim + '0.6)';
+      ctx.fillText(isWin ? 'SIGNAL CLOSED  \u2014  PROFIT' : 'SIGNAL CLOSED  \u2014  LOSS', W/2, 70);
 
-      if (isWin) {
-        const winEmojis = ['💰', '🚀', '💵', '🔥', '💎', '📈', '🤑', '💸', '⭐', '🎯', '👑', '🏆'];
-        for (let i = 0; i < 28; i++) {
-          const emoji = winEmojis[i % winEmojis.length];
-          const x = rng(i * 3) * 1080;
-          const y = rng(i * 7 + 1) * 1350;
-          const size = 28 + rng(i * 11) * 42;
-          const alpha = 0.15 + rng(i * 13) * 0.4;
-          ctx.globalAlpha = alpha;
-          ctx.font = `${size}px Arial`;
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate((rng(i * 17) - 0.5) * 0.6);
-          ctx.fillText(emoji, 0, 0);
-          ctx.restore();
-        }
-      } else {
-        const loseEmojis = ['😭', '💀', '🤡', '📉', '🕳️', '💸', '😵', '🫠', '☠️', '🪦', '😤', '🗑️'];
-        for (let i = 0; i < 28; i++) {
-          const emoji = loseEmojis[i % loseEmojis.length];
-          const x = rng(i * 3) * 1080;
-          const y = rng(i * 7 + 1) * 1350;
-          const size = 28 + rng(i * 11) * 42;
-          const alpha = 0.15 + rng(i * 13) * 0.35;
-          ctx.globalAlpha = alpha;
-          ctx.font = `${size}px Arial`;
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate((rng(i * 17) - 0.5) * 0.6);
-          ctx.fillText(emoji, 0, 0);
-          ctx.restore();
-        }
-      }
-      ctx.globalAlpha = 1;
-
-      // ── HERO EMOJI (big center-top) ──
-      ctx.font = '140px Arial';
-      ctx.textAlign = 'center';
-      if (isWin) {
-        ctx.fillText('🤑', 540, 200);
-      } else {
-        ctx.fillText('🤡', 540, 200);
-      }
-
-      // ── HEADER TEXT ──
-      ctx.textAlign = 'center';
-      if (isWin) {
-        ctx.font = '900 72px Orbitron, monospace';
-        ctx.fillStyle = '#ffd700';
-        ctx.shadowColor = 'rgba(255,215,0,0.7)';
-        ctx.shadowBlur = 30;
-        ctx.fillText('WINNING', 540, 340);
-        ctx.fillText('TRADE!', 540, 420);
-        ctx.shadowBlur = 0;
-      } else {
-        ctx.font = '900 72px Orbitron, monospace';
-        ctx.fillStyle = '#ff4444';
-        ctx.shadowColor = 'rgba(255,40,40,0.7)';
-        ctx.shadowBlur = 30;
-        ctx.fillText('LOSING', 540, 340);
-        ctx.fillText('TRADE...', 540, 420);
-        ctx.shadowBlur = 0;
-      }
-
-      // ── DIVIDER LINE ──
-      const divColor = isWin ? 'rgba(255,215,0,0.4)' : 'rgba(255,68,68,0.4)';
-      ctx.strokeStyle = divColor;
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(240, 460); ctx.lineTo(840, 460); ctx.stroke();
-
-      // ── RESULT % (massive) ──
-      const resultStr = (isWin ? '+' : '') + trade.result.toFixed(1) + '%';
-      ctx.font = '900 148px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ff88' : '#ff3b3b';
-      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.8)' : 'rgba(255,59,59,0.8)';
-      ctx.shadowBlur = 50;
-      ctx.fillText(resultStr, 540, 600);
+      // ── ASSET NAME ──
+      ctx.font = '900 96px Orbitron, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = accentDim + '0.3)';
+      ctx.shadowBlur = 30;
+      ctx.fillText(trade.asset, W/2, 190);
       ctx.shadowBlur = 0;
 
-      // ── FUNNY SUBTITLE ──
-      ctx.font = '700 28px Orbitron, monospace';
-      if (isWin) {
-        const winLines = absResult > 50 ? 'ABSOLUTELY COOKED IT 🔥'
-          : absResult > 25 ? 'EASY MONEY 💰'
-          : absResult > 10 ? 'CASH REGISTER RINGING 🤑'
-          : 'ANOTHER ONE ✅';
-        ctx.fillStyle = 'rgba(255,215,0,0.85)';
-        ctx.fillText(winLines, 540, 670);
-      } else {
-        const losLines = absResult > 50 ? 'LIQUIDATED MY SOUL 💀'
-          : absResult > 25 ? 'CALL AN AMBULANCE 🚑'
-          : absResult > 10 ? 'EMOTIONAL DAMAGE 😵'
-          : 'JUST A SCRATCH 🩹';
-        ctx.fillStyle = 'rgba(255,100,100,0.85)';
-        ctx.fillText(losLines, 540, 670);
-      }
+      // ── DIRECTION + TYPE ──
+      const dirLabel = trade.direction + (trade.type ? '  \u00b7  ' + trade.type.toUpperCase() : '');
+      ctx.font = '700 20px Orbitron, monospace';
+      ctx.fillStyle = accent;
+      ctx.fillText(dirLabel, W/2, 240);
 
-      // ── ASSET + DIRECTION ──
-      ctx.font = '900 64px Orbitron, monospace';
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(trade.asset, 540, 770);
+      // ── DECORATIVE LINE ──
+      const lineGrad = ctx.createLinearGradient(140, 0, W - 140, 0);
+      lineGrad.addColorStop(0, 'transparent'); lineGrad.addColorStop(0.3, accentDim + '0.35)');
+      lineGrad.addColorStop(0.5, accent); lineGrad.addColorStop(0.7, accentDim + '0.35)'); lineGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = lineGrad;
+      ctx.fillRect(140, 275, W - 280, 2);
 
-      ctx.font = '700 28px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ff88' : '#ff5555';
-      const dirLabel = trade.direction + (trade.type ? ' · ' + trade.type : '');
-      ctx.fillText(dirLabel, 540, 820);
+      // ── RESULT % HERO ──
+      const resultStr = (isWin ? '+' : '') + trade.result.toFixed(1) + '%';
+      ctx.font = '900 172px Orbitron, monospace';
+      ctx.fillStyle = accent;
+      ctx.shadowColor = accentDim + '0.7)';
+      ctx.shadowBlur = 60;
+      ctx.fillText(resultStr, W/2, 460);
+      ctx.shadowBlur = 0;
 
-      // ── ENTRY / EXIT ──
-      const entryPx = trade.entry_price ? '$' + parseFloat(trade.entry_price).toFixed(2) : '—';
+      // ── SUBTITLE ──
+      ctx.font = '700 24px Orbitron, monospace';
+      const subtitle = isWin
+        ? (absResult > 50 ? 'MASSIVE WIN' : absResult > 25 ? 'STRONG SIGNAL' : absResult > 10 ? 'CLEAN EXECUTION' : 'TEXTBOOK TRADE')
+        : (absResult > 50 ? 'BLOWN OUT' : absResult > 25 ? 'HEAVY LOSS' : absResult > 10 ? 'TOOK THE L' : 'MINOR SETBACK');
+      ctx.fillStyle = accentDim + '0.7)';
+      ctx.fillText(subtitle, W/2, 510);
+
+      // ── DATA CARD ──
+      const cardY = 560, cardH = 280, cr = 20, cl = 80, cw = W - 160;
+      const cardGrad = ctx.createLinearGradient(0, cardY, 0, cardY + cardH);
+      cardGrad.addColorStop(0, 'rgba(255,255,255,.04)'); cardGrad.addColorStop(1, 'rgba(255,255,255,.01)');
+      ctx.fillStyle = cardGrad;
+      ctx.beginPath();
+      ctx.moveTo(cl + cr, cardY); ctx.lineTo(cl + cw - cr, cardY);
+      ctx.quadraticCurveTo(cl + cw, cardY, cl + cw, cardY + cr);
+      ctx.lineTo(cl + cw, cardY + cardH - cr);
+      ctx.quadraticCurveTo(cl + cw, cardY + cardH, cl + cw - cr, cardY + cardH);
+      ctx.lineTo(cl + cr, cardY + cardH);
+      ctx.quadraticCurveTo(cl, cardY + cardH, cl, cardY + cardH - cr);
+      ctx.lineTo(cl, cardY + cr);
+      ctx.quadraticCurveTo(cl, cardY, cl + cr, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = accentDim + '0.15)'; ctx.lineWidth = 1; ctx.stroke();
+
+      // ── DATA ROWS ──
+      const entryPx = trade.entry_price ? '$' + parseFloat(trade.entry_price).toFixed(2) : '\u2014';
       let exitPx = trade.exit_price ? '$' + parseFloat(trade.exit_price).toFixed(2) : null;
       if (!exitPx && trade.entry_price && trade.result !== null) {
         const isBull = trade.direction === 'BULL';
-        const derived = isBull
-          ? parseFloat(trade.entry_price) * (1 + trade.result / 100)
-          : parseFloat(trade.entry_price) * (1 - trade.result / 100);
+        const derived = isBull ? parseFloat(trade.entry_price) * (1 + trade.result / 100) : parseFloat(trade.entry_price) * (1 - trade.result / 100);
         exitPx = '$' + derived.toFixed(2);
       }
-      exitPx = exitPx || '—';
+      exitPx = exitPx || '\u2014';
 
-      ctx.font = '700 32px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(220,235,250,0.85)';
-      ctx.fillText('Entry: ' + entryPx + '  →  Exit: ' + exitPx, 540, 880);
+      const drawRow = (label, value, y, vc) => {
+        ctx.font = '400 16px Orbitron, monospace'; ctx.fillStyle = 'rgba(150,180,210,0.5)'; ctx.textAlign = 'left'; ctx.fillText(label, 130, y);
+        ctx.font = '700 24px "JetBrains Mono", monospace'; ctx.fillStyle = vc || '#ffffff'; ctx.textAlign = 'right'; ctx.fillText(value, W - 130, y);
+      };
+      drawRow('ENTRY PRICE', entryPx, 620);
+      drawRow('EXIT PRICE', exitPx, 670, accent);
+      drawRow('STATUS', trade.status ? trade.status.replace(/_/g, ' ') : '\u2014', 720, 'rgba(200,220,240,0.7)');
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(120, 745, W - 240, 1);
+      if (trade.days) drawRow('DURATION', trade.days + ' DAYS', 780, 'rgba(200,220,240,0.7)');
+      if (trade.date) { const ds = trade.date + (trade.exit_date ? '  \u2192  ' + trade.exit_date : ''); drawRow('DATES', ds, trade.days ? 820 : 780, 'rgba(150,180,210,0.5)'); }
 
-      // ── DAYS HELD ──
-      if (trade.days || trade.date) {
-        ctx.font = '400 22px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(150,180,210,0.6)';
-        const info = [];
-        if (trade.days) info.push(trade.days + ' days held');
-        if (trade.date) info.push(trade.date + (trade.exit_date ? ' → ' + trade.exit_date : ''));
-        ctx.fillText(info.join(' · '), 540, 915);
+      ctx.textAlign = 'center';
+
+      // ── MINI CHART ──
+      ctx.globalAlpha = 0.4;
+      const seed = (trade.asset || 'X').charCodeAt(0);
+      const prng = (i) => ((seed * 9301 + i * 49297) % 233280) / 233280;
+      for (let i = 0; i < 30; i++) {
+        const x = 140 + i * 27, h = 20 + prng(i * 7) * 50, top = 900 + (80 - h) * prng(i * 3 + 1);
+        const bull = prng(i * 11) > (isWin ? 0.35 : 0.6);
+        ctx.fillStyle = bull ? accentDim + '0.6)' : 'rgba(120,140,160,0.3)';
+        ctx.fillRect(x - 4, top, 8, h);
+        ctx.fillRect(x - 0.5, top - 8 - prng(i) * 15, 1, h + 16 + prng(i) * 15);
       }
+      ctx.globalAlpha = 1;
 
-      // ── ORACLE TRIANGLE LOGO ──
-      const triY = 1000;
-      ctx.beginPath();
-      ctx.moveTo(540, triY); ctx.lineTo(500, triY + 65); ctx.lineTo(580, triY + 65);
-      ctx.closePath();
-      const triColor = isWin ? 'rgba(0,255,136,' : 'rgba(255,59,59,';
-      ctx.strokeStyle = triColor + '0.6)';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      ctx.fillStyle = triColor + '0.12)';
-      ctx.fill();
-      // Inner triangle
-      ctx.beginPath();
-      ctx.moveTo(540, triY + 18); ctx.lineTo(520, triY + 50); ctx.lineTo(560, triY + 50);
-      ctx.closePath();
-      ctx.fillStyle = triColor + '0.35)';
-      ctx.fill();
-      // Glow dot
-      ctx.beginPath();
-      ctx.arc(540, triY + 38, 5, 0, Math.PI * 2);
-      ctx.fillStyle = isWin ? '#00ff88' : '#ff3b3b';
-      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.8)' : 'rgba(255,59,59,0.8)';
-      ctx.shadowBlur = 15;
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      // ── ORACLE LOGO ──
+      const ly = 1040;
+      ctx.beginPath(); ctx.moveTo(W/2, ly); ctx.lineTo(W/2 - 32, ly + 55); ctx.lineTo(W/2 + 32, ly + 55); ctx.closePath();
+      ctx.strokeStyle = accentDim + '0.5)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = accentDim + '0.08)'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W/2, ly + 15); ctx.lineTo(W/2 - 16, ly + 42); ctx.lineTo(W/2 + 16, ly + 42); ctx.closePath();
+      ctx.fillStyle = accentDim + '0.3)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(W/2, ly + 32, 4, 0, Math.PI * 2);
+      ctx.fillStyle = accent; ctx.shadowColor = accentDim + '0.8)'; ctx.shadowBlur = 12; ctx.fill(); ctx.shadowBlur = 0;
 
       // ── BRANDING ──
-      ctx.font = '900 30px Orbitron, monospace';
-      ctx.fillStyle = isWin ? '#00ff88' : '#ff5555';
-      ctx.shadowColor = isWin ? 'rgba(0,255,136,0.5)' : 'rgba(255,59,59,0.5)';
-      ctx.shadowBlur = 20;
-      ctx.fillText('ORACLE TERMINAL', 540, 1130);
-      ctx.shadowBlur = 0;
-
-      ctx.font = '900 44px Orbitron, monospace';
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('MOMOEDGE', 540, 1185);
+      ctx.font = '900 36px Orbitron, monospace'; ctx.fillStyle = accent;
+      ctx.shadowColor = accentDim + '0.4)'; ctx.shadowBlur = 15; ctx.fillText('ORACLE', W/2, 1150); ctx.shadowBlur = 0;
+      ctx.font = '900 20px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillText('P O W E R E D   B Y   M O M O E D G E', W/2, 1190);
 
       // ── FOOTER ──
-      ctx.font = '400 14px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(150,180,210,0.4)';
-      ctx.fillText('@momoedgeAI  ·  momoedge.ai', 540, 1250);
+      ctx.font = '400 15px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(150,180,210,0.35)';
+      ctx.fillText('@momoedgeAI  \u00b7  momoedge.ai', W/2, 1300);
 
       // ── BORDER ──
-      const borderColor = isWin ? 'rgba(0,255,136,0.2)' : 'rgba(255,59,59,0.2)';
-      ctx.strokeStyle = borderColor;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, 1076, 1346);
-      // Inner border accent
-      ctx.strokeStyle = isWin ? 'rgba(255,215,0,0.08)' : 'rgba(255,100,100,0.08)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(8, 8, 1064, 1334);
+      ctx.strokeStyle = accentDim + '0.15)'; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
     }
+
 
     function downloadShareCanvas(filename) {
       const canvas = document.getElementById('shareCanvas');
@@ -6220,47 +6197,50 @@
       if (e.target === this) this.style.display = 'none';
     });
 
-    // Share action buttons
+    // Share action buttons — use native share on mobile, fallback to download + intent
     document.querySelectorAll('.shareBtn[data-action]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', async function() {
         const action = this.dataset.action;
         const trade = window._currentShareTrade;
         if (!trade) return;
         const text = getShareText(trade);
         const url = 'https://momoedge.ai';
+        const filename = 'oracle-' + trade.asset + '-' + (trade.result >= 0 ? 'win' : 'loss') + '.png';
 
-        switch(action) {
-          case 'twitter':
-            downloadShareCanvas('oracle-' + trade.asset + '.png');
-            setTimeout(function() {
-              window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
-            }, 500);
-            break;
-          case 'telegram':
-            downloadShareCanvas('oracle-' + trade.asset + '.png');
-            setTimeout(function() {
-              window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text), '_blank');
-            }, 500);
-            break;
-          case 'discord':
-            downloadShareCanvas('oracle-' + trade.asset + '.png');
+        // Try native share for social buttons
+        if (action === 'twitter' || action === 'telegram' || action === 'discord' || action === 'instagram') {
+          try {
+            const canvas = document.getElementById('shareCanvas');
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({ text: text, files: [file] });
+              return;
+            }
+          } catch(e) { /* cancelled or unsupported, fall through */ }
+
+          // Fallback: download + open intent
+          downloadShareCanvas(filename);
+          if (action === 'twitter') {
+            setTimeout(function() { window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank'); }, 500);
+          } else if (action === 'telegram') {
+            setTimeout(function() { window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text), '_blank'); }, 500);
+          } else if (action === 'discord') {
             navigator.clipboard.writeText(text).then(function() {
               btn.textContent = 'COPIED!';
               setTimeout(function() { btn.textContent = 'DISCORD'; }, 2000);
             });
-            break;
-          case 'instagram':
-            downloadShareCanvas('oracle-' + trade.asset + '.png');
-            break;
-          case 'copytext':
-            navigator.clipboard.writeText(text).then(function() {
-              btn.textContent = 'COPIED!';
-              setTimeout(function() { btn.textContent = 'COPY TEXT'; }, 2000);
-            });
-            break;
-          case 'save':
-            downloadShareCanvas('oracle-' + trade.asset + '-' + (trade.result >= 0 ? 'win' : 'loss') + '.png');
-            break;
+          }
+          return;
+        }
+
+        if (action === 'copytext') {
+          navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = 'COPIED!';
+            setTimeout(function() { btn.textContent = 'COPY TEXT'; }, 2000);
+          });
+        } else if (action === 'save') {
+          downloadShareCanvas(filename);
         }
       });
     });
@@ -8428,13 +8408,13 @@
 
 <!-- STATS + EQUITY (open by default) -->
 <div style="margin-bottom:8px;">
-  <div class="mCollapseHeader mColOpen" data-mcol="mStatsEquity" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:8px 8px 0 0;cursor:pointer;">
-    <span style="display:flex;align-items:center;gap:6px;font-family:Orbitron,monospace;font-size:8px;font-weight:900;letter-spacing:1.5px;color:#00e5ff;">
-      <span class="mColChev" style="font-size:8px;color:rgba(74,106,138,1);display:inline-block;transition:transform .2s;transform:rotate(90deg);">▶</span>
+  <div class="mCollapseHeader mColOpen" data-mcol="mStatsEquity" style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:10px 10px 0 0;cursor:pointer;min-height:48px;">
+    <span style="display:flex;align-items:center;gap:8px;font-family:Orbitron,monospace;font-size:10px;font-weight:900;letter-spacing:1.5px;color:#00e5ff;">
+      <span class="mColChev" style="font-size:12px;color:rgba(0,229,255,.6);display:inline-block;transition:transform .2s;transform:rotate(90deg);">▶</span>
       OVERVIEW & EQUITY
     </span>
   </div>
-  <div class="mColBody" id="mCol_mStatsEquity" style="border:1px solid rgba(0,229,255,.1);border-top:none;border-radius:0 0 8px 8px;padding:10px;">
+  <div class="mColBody" id="mCol_mStatsEquity" style="border:1px solid rgba(0,229,255,.1);border-top:none;border-radius:0 0 10px 10px;padding:12px;">
     <div id="mPerfStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;"></div>
     <div id="mCalloutRow" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
     <div style="border-radius:10px;border:1px solid rgba(0,229,255,.1);padding:10px;background:rgba(0,229,255,.02);">
@@ -8449,9 +8429,9 @@
 
 <!-- PERFORMANCE BREAKDOWN (collapsed) -->
 <div style="margin-bottom:8px;">
-  <div class="mCollapseHeader" data-mcol="mPeriodBreak" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:8px;cursor:pointer;">
-    <span style="display:flex;align-items:center;gap:6px;font-family:Orbitron,monospace;font-size:8px;font-weight:900;letter-spacing:1.5px;color:#00e5ff;">
-      <span class="mColChev" style="font-size:8px;color:rgba(74,106,138,1);display:inline-block;transition:transform .2s;">▶</span>
+  <div class="mCollapseHeader" data-mcol="mPeriodBreak" style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:10px;cursor:pointer;min-height:48px;">
+    <span style="display:flex;align-items:center;gap:8px;font-family:Orbitron,monospace;font-size:10px;font-weight:900;letter-spacing:1.5px;color:#00e5ff;">
+      <span class="mColChev" style="font-size:12px;color:rgba(0,229,255,.6);display:inline-block;transition:transform .2s;">▶</span>
       BREAKDOWN
     </span>
     <div style="display:flex;gap:6px;" id="mPeriodTabs" onclick="event.stopPropagation();">
@@ -8459,20 +8439,20 @@
       <button class="mPeriodBtn" data-mperiod="quarterly" style="font-family:Orbitron,monospace;font-size:8px;letter-spacing:.5px;padding:5px 12px;border-radius:999px;border:1px solid rgba(0,229,255,.1);background:rgba(0,229,255,.03);color:rgba(74,106,138,1);cursor:pointer;">QTR</button>
     </div>
   </div>
-  <div class="mColBody" id="mCol_mPeriodBreak" style="display:none;border:1px solid rgba(0,229,255,.1);border-top:none;border-radius:0 0 8px 8px;padding:10px;">
+  <div class="mColBody" id="mCol_mPeriodBreak" style="display:none;border:1px solid rgba(0,229,255,.1);border-top:none;border-radius:0 0 10px 10px;padding:12px;">
     <div id="mPeriodCards" style="display:flex;flex-direction:column;gap:6px;"></div>
   </div>
 </div>
 
 <!-- CLOSED TRADES (collapsed) -->
 <div style="margin-bottom:8px;">
-  <div class="mCollapseHeader" data-mcol="mClosedTrades" style="display:flex;align-items:center;padding:9px 12px;background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:8px;cursor:pointer;">
-    <span style="display:flex;align-items:center;gap:6px;font-family:Orbitron,monospace;font-size:8px;font-weight:900;letter-spacing:1.5px;color:#00e5ff;">
-      <span class="mColChev" style="font-size:8px;color:rgba(74,106,138,1);display:inline-block;transition:transform .2s;">▶</span>
+  <div class="mCollapseHeader" data-mcol="mClosedTrades" style="display:flex;align-items:center;padding:14px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:10px;cursor:pointer;min-height:48px;">
+    <span style="display:flex;align-items:center;gap:8px;font-family:Orbitron,monospace;font-size:10px;font-weight:900;letter-spacing:1.5px;color:#00e5ff;">
+      <span class="mColChev" style="font-size:12px;color:rgba(0,229,255,.6);display:inline-block;transition:transform .2s;">▶</span>
       ALL TRADES
     </span>
   </div>
-  <div class="mColBody" id="mCol_mClosedTrades" style="display:none;border:1px solid rgba(0,229,255,.1);border-top:none;border-radius:0 0 8px 8px;padding:10px;">
+  <div class="mColBody" id="mCol_mClosedTrades" style="display:none;border:1px solid rgba(0,229,255,.1);border-top:none;border-radius:0 0 10px 10px;padding:12px;">
     <div id="mHistCards"></div>
   </div>
 </div>
@@ -10062,12 +10042,12 @@
       if (isOpen) {
         header.classList.remove('mColOpen');
         body.style.display = 'none';
-        header.style.borderRadius = '8px';
+        header.style.borderRadius = '10px';
         if (chev) chev.style.transform = '';
       } else {
         header.classList.add('mColOpen');
         body.style.display = 'block';
-        header.style.borderRadius = '8px 8px 0 0';
+        header.style.borderRadius = '10px 10px 0 0';
         if (chev) chev.style.transform = 'rotate(90deg)';
       }
     });
