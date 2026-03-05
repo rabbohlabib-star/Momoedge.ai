@@ -6042,20 +6042,9 @@
       if (e.target === this) this.style.display = 'none';
     });
 
-    // Helper: get share canvas as a File blob
-    function getShareCanvasFile(trade) {
-      return new Promise(function(resolve) {
-        var canvas = document.getElementById('shareCanvas');
-        canvas.toBlob(function(blob) {
-          var filename = 'oracle-' + trade.asset + '-' + (trade.result >= 0 ? 'win' : 'loss') + '.png';
-          resolve(new File([blob], filename, { type: 'image/png' }));
-        }, 'image/png');
-      });
-    }
-
     // Share action buttons
     document.querySelectorAll('.shareBtn[data-action]').forEach(function(btn) {
-      btn.addEventListener('click', async function() {
+      btn.addEventListener('click', function() {
         const action = this.dataset.action;
         const trade = window._currentShareTrade;
         if (!trade) return;
@@ -6064,31 +6053,27 @@
 
         switch(action) {
           case 'twitter':
-          case 'telegram':
-          case 'discord':
-          case 'instagram': {
-            const file = await getShareCanvasFile(trade);
-            const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
-            if (navigator.share && canShareFiles) {
-              try {
-                await navigator.share({ text: text, files: [file] });
-              } catch(e) { /* user cancelled or unsupported */ }
-            } else {
-              // Fallback: download image + open intent for twitter/telegram
-              downloadShareCanvas('oracle-' + trade.asset + '.png');
-              if (action === 'twitter') {
-                setTimeout(function() { window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank'); }, 500);
-              } else if (action === 'telegram') {
-                setTimeout(function() { window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text), '_blank'); }, 500);
-              } else if (action === 'discord') {
-                navigator.clipboard.writeText(text).then(function() {
-                  btn.textContent = 'COPIED!';
-                  setTimeout(function() { btn.textContent = 'DISCORD'; }, 2000);
-                });
-              }
-            }
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            setTimeout(function() {
+              window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+            }, 500);
             break;
-          }
+          case 'telegram':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            setTimeout(function() {
+              window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text), '_blank');
+            }, 500);
+            break;
+          case 'discord':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            navigator.clipboard.writeText(text).then(function() {
+              btn.textContent = 'COPIED!';
+              setTimeout(function() { btn.textContent = 'DISCORD'; }, 2000);
+            });
+            break;
+          case 'instagram':
+            downloadShareCanvas('oracle-' + trade.asset + '.png');
+            break;
           case 'copytext':
             navigator.clipboard.writeText(text).then(function() {
               btn.textContent = 'COPIED!';
