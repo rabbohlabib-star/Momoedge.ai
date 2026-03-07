@@ -4193,77 +4193,95 @@
 
   <!-- TAKE TRADE MODAL -->
   <div class="ttOverlay" id="ttOverlay">
-    <div class="ttModal">
-      <div class="ttTitle">◆ TAKE TRADE</div>
-      <div class="ttSubtitle" id="ttAssetLabel">—</div>
+    <div class="ttModal" style="max-width:480px;">
+      <div class="ttTitle" style="font-size:13px;">◆ TAKE TRADE</div>
+      <div class="ttSubtitle" id="ttAssetLabel" style="font-size:11px;">—</div>
 
-      <!-- STEP 1: Trade Type -->
-      <div class="ttGroup"><div class="ttLabel">TRADE TYPE</div>
+      <!-- LIVE PRICE HERO -->
+      <div id="ttLivePriceHero" style="text-align:center;padding:10px 0 14px;border-bottom:1px solid rgba(0,229,255,.08);margin-bottom:14px;">
+        <div style="font-family:var(--display);font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">LIVE PRICE</div>
+        <div id="ttLivePrice" style="font-family:var(--display);font-size:28px;font-weight:900;color:#fff;">—</div>
+        <div id="ttLivePnl" style="font-family:var(--display);font-size:12px;margin-top:2px;"></div>
+      </div>
+
+      <!-- ACCOUNT QUICK EDIT -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
+        <div style="flex:1;">
+          <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">ACCOUNT SIZE</div>
+          <input class="ttInput" id="ttAcctSize" type="number" step="100" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+        </div>
+        <div style="flex:1;">
+          <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">RISK %</div>
+          <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+        </div>
+      </div>
+
+      <!-- TRADE TYPE -->
+      <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">TRADE TYPE</div>
         <div class="ttVehicleToggle" style="margin-bottom:4px;">
-          <button class="ttVehicleBtn active" data-ttv="STOCK" onclick="selectTtVehicle('STOCK')">◆ STOCK</button>
-          <button class="ttVehicleBtn" data-ttv="OPTIONS" onclick="selectTtVehicle('OPTIONS')">◆ OPTIONS</button>
+          <button class="ttVehicleBtn active" data-ttv="STOCK" onclick="selectTtVehicle('STOCK')" style="font-size:11px;padding:10px 0;">◆ STOCK</button>
+          <button class="ttVehicleBtn" data-ttv="OPTIONS" onclick="selectTtVehicle('OPTIONS')" style="font-size:11px;padding:10px 0;">◆ OPTIONS</button>
         </div>
       </div>
 
       <!-- STOCK FIELDS -->
       <div id="ttStockFields">
-        <div class="ttGroup"><div class="ttLabel">SELECT TRANCHES TO ENTER</div>
+        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">SELECT TRANCHES TO ENTER</div>
           <div class="ttTrancheSelect" id="ttTrancheSelect">
-            <div class="ttTrancheOpt active" data-tranche="1" onclick="toggleTranche(this)"><div class="ttTrancheLbl">1/3</div><div class="ttTrancheSub">INITIAL</div></div>
-            <div class="ttTrancheOpt" data-tranche="2" onclick="toggleTranche(this)"><div class="ttTrancheLbl">2/3</div><div class="ttTrancheSub">TRIGGER</div></div>
-            <div class="ttTrancheOpt" data-tranche="3" onclick="toggleTranche(this)"><div class="ttTrancheLbl">3/3</div><div class="ttTrancheSub">CONVICTION</div></div>
+            <div class="ttTrancheOpt active" data-tranche="1" onclick="toggleTranche(this)"><div class="ttTrancheLbl" style="font-size:12px;">1/3</div><div class="ttTrancheSub">INITIAL</div></div>
+            <div class="ttTrancheOpt" data-tranche="2" onclick="toggleTranche(this)"><div class="ttTrancheLbl" style="font-size:12px;">2/3</div><div class="ttTrancheSub">TRIGGER</div></div>
+            <div class="ttTrancheOpt" data-tranche="3" onclick="toggleTranche(this)"><div class="ttTrancheLbl" style="font-size:12px;">3/3</div><div class="ttTrancheSub">CONVICTION</div></div>
           </div>
         </div>
-        <div id="ttCalcSummary" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 12px;margin-bottom:6px;">
-          <div id="ttCalcContent" style="font-family:var(--display);font-size:10px;color:var(--text);line-height:1.6;"></div>
+        <div id="ttCalcSummary" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+          <div id="ttCalcContent" style="font-family:var(--display);font-size:11px;color:var(--text);line-height:1.7;"></div>
         </div>
         <div class="ttRow">
-          <div class="ttGroup"><div class="ttLabel">ENTRY PRICE</div><input class="ttInput" id="ttEntryPrice" type="number" step="0.01"/></div>
-          <div class="ttGroup"><div class="ttLabel">SHARES</div><input class="ttInput" id="ttShares" type="number" step="1"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">ENTRY PRICE</div><input class="ttInput" id="ttEntryPrice" type="number" step="0.01" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">SHARES</div><input class="ttInput" id="ttShares" type="number" step="1" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
         </div>
-        <div class="ttGroup"><div class="ttLabel">RISK AMOUNT ($)</div><input class="ttInput" id="ttRiskAmt" type="number" step="0.01"/></div>
+        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttRiskAmt" type="number" step="0.01" style="font-size:14px;padding:10px 12px;"/></div>
       </div>
 
       <!-- OPTION FIELDS -->
       <div id="ttOptionFields" style="display:none;">
         <!-- Oracle Contract Cards -->
         <div id="ttContractCards" style="display:none;">
-          <div class="ttLabel" style="margin-bottom:8px;">SELECT CONTRACT</div>
+          <div class="ttLabel" style="margin-bottom:8px;font-size:9px;">SELECT CONTRACT</div>
           <div id="ttContractCardGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;"></div>
         </div>
         <!-- Manual entry fallback (no Oracle contracts) -->
         <div id="ttManualOption">
           <div class="ttRow">
-            <div class="ttGroup"><div class="ttLabel">STRIKE</div><input class="ttInput" id="ttOptStrike" type="text" placeholder="e.g. 150"/></div>
-            <div class="ttGroup"><div class="ttLabel">TYPE</div>
-              <select class="ttInput" id="ttOptType" style="padding:10px 12px;cursor:pointer;">
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">STRIKE</div><input class="ttInput" id="ttOptStrike" type="text" placeholder="e.g. 150" style="font-size:14px;padding:10px 12px;"/></div>
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">TYPE</div>
+              <select class="ttInput" id="ttOptType" style="padding:10px 12px;cursor:pointer;font-size:14px;">
                 <option value="CALL">CALL</option>
                 <option value="PUT">PUT</option>
               </select>
             </div>
           </div>
           <div class="ttRow">
-            <div class="ttGroup"><div class="ttLabel">EXPIRY</div><input class="ttInput" id="ttOptExpiry" type="date"/></div>
-            <div class="ttGroup"><div class="ttLabel">PREMIUM ($)</div><input class="ttInput" id="ttOptPremium" type="number" step="0.01"/></div>
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">EXPIRY</div><input class="ttInput" id="ttOptExpiry" type="date" style="font-size:14px;padding:10px 12px;"/></div>
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">PREMIUM ($)</div><input class="ttInput" id="ttOptPremium" type="number" step="0.01" style="font-size:14px;padding:10px 12px;"/></div>
           </div>
         </div>
         <div class="ttRow">
-          <div class="ttGroup"><div class="ttLabel">PREMIUM PAID ($)</div><input class="ttInput" id="ttOptFillPrice" type="number" step="0.01" placeholder="Your fill price"/></div>
-          <div class="ttGroup"><div class="ttLabel">CONTRACTS</div><input class="ttInput" id="ttOptContracts" type="number" step="1" min="1" placeholder="1"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">PREMIUM PAID ($)</div><input class="ttInput" id="ttOptFillPrice" type="number" step="0.01" placeholder="Your fill" style="font-size:14px;padding:10px 12px;"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">CONTRACTS</div><input class="ttInput" id="ttOptContracts" type="number" step="1" min="1" placeholder="1" style="font-size:14px;padding:10px 12px;"/></div>
         </div>
-        <div class="ttGroup"><div class="ttLabel">RISK AMOUNT ($)</div><input class="ttInput" id="ttOptRiskAmt" type="number" step="0.01" readonly style="opacity:.7;"/></div>
+        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttOptRiskAmt" type="number" step="0.01" readonly style="opacity:.7;font-size:14px;padding:10px 12px;"/></div>
       </div>
 
-      <!-- POSITION SIZING RECOMMENDATION -->
-      <div id="ttPosSizeInfo" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-        <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--core);margin-bottom:6px;">ORACLE POSITION SIZING</div>
-        <div id="ttPosSizeContent" style="font-family:var(--display);font-size:10px;color:var(--text);line-height:1.6;"></div>
+      <!-- POSITION SIZING RECOMMENDATION (hidden — integrated into calc summary) -->
+      <div id="ttPosSizeInfo" style="display:none;">
+        <div id="ttPosSizeContent"></div>
       </div>
 
-      <div class="ttGroup"><div class="ttLabel">NOTES (OPTIONAL)</div><input class="ttInput" id="ttNotes" type="text" placeholder="e.g. Entered on pullback to trigger"/></div>
-      <div class="ttActions">
-        <button class="ttConfirm" id="ttConfirmBtn" onclick="confirmTakeTrade()">◆ CONFIRM ENTRY</button>
-        <button class="ttCancel" onclick="closeTakeTradeModal()">CANCEL</button>
+      <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">NOTES (OPTIONAL)</div><input class="ttInput" id="ttNotes" type="text" placeholder="e.g. Entered on pullback to trigger" style="font-size:12px;padding:10px 12px;"/></div>
+      <div class="ttActions" style="margin-top:18px;">
+        <button class="ttConfirm" id="ttConfirmBtn" onclick="confirmTakeTrade()" style="font-size:12px;padding:14px;">◆ CONFIRM ENTRY</button>
+        <button class="ttCancel" onclick="closeTakeTradeModal()" style="font-size:11px;padding:12px 20px;">CANCEL</button>
       </div>
     </div>
   </div>
@@ -4607,8 +4625,8 @@
         </div>
       </div>
 
-      <!-- SECTION 3: ENHANCED ANALYTICS (collapsed) -->
-      <div style="margin-bottom:12px;">
+      <!-- SECTION 3: ENHANCED ANALYTICS (removed — kept hidden for JS compat) -->
+      <div style="display:none;">
         <div class="collapseHeader" data-collapse="enhancedAnalytics">
           <div class="collapseTitle"><span class="collapseChevron">▶</span> ANALYTICS</div>
         </div>
@@ -7068,6 +7086,28 @@
     }
     window.switchHistView = switchHistView;
 
+    // Sync account settings from Take Trade modal inline fields
+    function syncAcctFromTT() {
+      var size = parseFloat(document.getElementById('ttAcctSize').value);
+      var risk = parseFloat(document.getElementById('ttAcctRisk').value);
+      if (!size || size <= 0) return;
+      if (!risk || risk < 0.5 || risk > 10) return;
+      MEMBER_SETTINGS.account_size = size;
+      MEMBER_SETTINGS.risk_per_trade = risk;
+      _riskSettings.accountSize = size;
+      _riskSettings.riskPct = risk;
+      saveRiskSettings();
+      try { localStorage.setItem('oracle_member_settings', JSON.stringify(MEMBER_SETTINGS)); } catch(e) {}
+      // Sync other overlays
+      var asi = document.getElementById('acctSizeInput'); if(asi) asi.value = size;
+      var ari = document.getElementById('acctRiskInput'); if(ari) ari.value = risk;
+      var rsA = document.getElementById('rsAccountSize'); if(rsA) rsA.value = size;
+      var rsR = document.getElementById('rsRiskPct'); if(rsR) rsR.value = risk;
+      // Re-run auto-fill
+      autoFillTradeFields();
+    }
+    window.syncAcctFromTT = syncAcctFromTT;
+
     function renderMyTradeHistory() {
       var closedTrades = MEMBER_TRADES.filter(function(t) { return t.status === 'CLOSED'; });
       closedTrades.sort(function(a, b) { return new Date(b.exit_date || b.created_at) - new Date(a.exit_date || a.created_at); });
@@ -8310,11 +8350,13 @@
 
       // ── Timeline math ──
       const horizonDays = parseHorizonDays(sig.horizon);
+      const minDurationDays = parseMinDuration(sig.min_duration);
+      const timelineDays = minDurationDays || horizonDays; // Use min hold if set, otherwise full horizon
       const elapsed = sig.signal_date
         ? (Date.now() - new Date(sig.signal_date).getTime()) / 86400000
         : null;
-      const timelinePct = (elapsed !== null && horizonDays)
-        ? Math.min(99, (elapsed / horizonDays) * 100)
+      const timelinePct = (elapsed !== null && timelineDays)
+        ? Math.min(99, (elapsed / timelineDays) * 100)
         : null;
 
       // Dates for timeline strip
@@ -8322,12 +8364,12 @@
         ? new Date(sig.signal_date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'2-digit' })
         : '—';
       let horizonEndFmt = '—';
-      if (sig.signal_date && horizonDays) {
-        const endDate = new Date(new Date(sig.signal_date).getTime() + horizonDays * 86400000);
+      if (sig.signal_date && timelineDays) {
+        const endDate = new Date(new Date(sig.signal_date).getTime() + timelineDays * 86400000);
         horizonEndFmt = endDate.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'2-digit' });
       }
-      const daysLeft = (elapsed !== null && horizonDays)
-        ? Math.max(0, Math.round(horizonDays - elapsed))
+      const daysLeft = (elapsed !== null && timelineDays)
+        ? Math.max(0, Math.round(timelineDays - elapsed))
         : null;
 
       // ── Oracle Assessment narrative ──
@@ -8405,23 +8447,35 @@
 
       return `<div class="sigBrief">
 
-        <!-- HEAD -->
-        <div class="sbHead">
-          <div>
+        <!-- HERO HEADER -->
+        <div style="padding-bottom:16px;border-bottom:1px solid rgba(0,229,255,.08);">
+          <!-- Row 1: Ticker + Live Price -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px;">
             <div class="sbAsset">${sig.asset}</div>
-            ${getCompanyName(sig.asset) ? `<div class="sbCompanyName">${getCompanyName(sig.asset)}</div>` : ''}
-            ${getCompanyDescription(sig.asset) ? `<div class="sbCompanyDesc">${getCompanyDescription(sig.asset)}</div>` : ''}
-            <div class="sbLevel">${sig.level}</div>
+            ${livePrice ? `<div style="text-align:right;">
+              <div style="font-family:var(--display);font-size:32px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};line-height:1;">$${livePrice.toFixed(2)}</div>
+              <div style="font-family:var(--display);font-size:12px;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : 'var(--muted)'};margin-top:2px;">${liveChange !== null ? (liveChange >= 0 ? '▲ +' : '▼ ') + Math.abs(liveChange).toFixed(2) + '% today' : ''}</div>
+            </div>` : ''}
           </div>
-          <div class="sbBadges">
-            <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}">◆ ${sig.direction} SIGNAL</div>
-            ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:5px 14px;border-radius:6px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL CONVICTION':sig.oracle_tranche>=2?'TRIGGER CONFIRMED':'INITIAL'}</div>` : ''}
-            <div class="sbConfBadge" style="border-color:${zoneConf.color}33;color:${zoneConf.color}">
-              CONF ${confDisplay}${confDelta}
-            </div>
-            ${livePrice ? `<div style="font-family:var(--display);font-size:28px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};line-height:1;">$${livePrice.toFixed(2)} <span style="font-size:13px;opacity:.7;">${liveChange !== null ? (liveChange >= 0 ? '+' : '') + liveChange.toFixed(2) + '%' : ''}</span></div>` : ''}
-            ${bias ? `<div class="sbTypeBadge">${bias.replace(/_/g,' ')}</div>` : ''}
+          <!-- Row 2: Company info -->
+          ${getCompanyName(sig.asset) ? `<div style="font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.45);margin-bottom:2px;">${getCompanyName(sig.asset)}${getCompanyDescription(sig.asset) ? ' — ' + getCompanyDescription(sig.asset) : ''}</div>` : ''}
+          <!-- Row 3: Badge strip -->
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center;">
+            <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}" style="font-size:11px;padding:5px 14px;">◆ ${sig.direction}</div>
+            ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:999px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL':sig.oracle_tranche>=2?'TRIGGER':'INITIAL'}</div>` : ''}
+            <div style="font-family:var(--display);font-size:10px;letter-spacing:1px;padding:5px 12px;border-radius:999px;border:1px solid ${zoneConf.color}33;color:${zoneConf.color};background:rgba(0,229,255,.04);">CONF ${confDisplay}${confDelta}</div>
+            ${bias ? `<div style="font-family:var(--display);font-size:9px;letter-spacing:1px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.07);color:var(--muted);">${bias.replace(/_/g,' ')}</div>` : ''}
           </div>
+          <!-- Row 4: P&L from entry -->
+          ${livePrice && entryPrice ? (() => {
+            const rawGain = ((livePrice - entryPrice) / entryPrice) * 100;
+            const pnl = isBull ? rawGain : -rawGain;
+            const pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+            return `<div style="margin-top:12px;padding:10px 14px;background:${pnl >= 0 ? 'rgba(0,255,136,.04)' : 'rgba(255,59,59,.04)'};border:1px solid ${pnl >= 0 ? 'rgba(0,255,136,.12)' : 'rgba(255,59,59,.12)'};border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-family:var(--display);font-size:11px;color:var(--muted);">FROM ENTRY $${entryPrice.toFixed(2)}</span>
+              <span style="font-family:var(--display);font-size:20px;font-weight:900;color:${pnlColor};">${pnl >= 0 ? '▲ +' : '▼ '}${Math.abs(pnl).toFixed(2)}%</span>
+            </div>`;
+          })() : ''}
         </div>
 
         <!-- TRADE AT A GLANCE -->
@@ -8429,13 +8483,6 @@
           <div class="sbTradeCol">
             <div class="sbTradeLabel">ENTRY PRICE</div>
             <div class="sbTradeVal">${entryDisplay}</div>
-
-            ${livePrice && entryPrice ? (() => {
-              const rawGain = ((livePrice - entryPrice) / entryPrice) * 100;
-              const pnl = isBull ? rawGain : -rawGain;
-              const col = pnl > 0 ? 'green' : pnl < 0 ? 'red' : '';
-              return `<div class="sbTradeVal ${col}" style="font-size:16px;">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</div>`;
-            })() : ''}
           </div>
           <div class="sbTradeDivider"></div>
           <div class="sbTradeCol center-col">
@@ -10270,6 +10317,33 @@
       }
       document.getElementById('ttAssetLabel').textContent = sig.asset+' — '+sig.direction+' · '+sig.level;
 
+      // Live price hero
+      var asset = sig.asset.split(' ')[0].toUpperCase();
+      var cached = PRICE_CACHE[asset];
+      var lp = cached ? cached.price : null;
+      var lpEl = document.getElementById('ttLivePrice');
+      var lpPnl = document.getElementById('ttLivePnl');
+      if (lpEl) {
+        var chg = cached ? getLiveChangePercent(cached, getAssetClass(sig.asset)) : null;
+        var priceColor = chg !== null ? (chg >= 0 ? 'var(--green)' : 'var(--red)') : '#fff';
+        lpEl.textContent = lp ? '$' + lp.toFixed(2) : '—';
+        lpEl.style.color = priceColor;
+        if (lpPnl && sig.entry_price && lp) {
+          var isBull = sig.direction === 'BULL';
+          var rawP = ((lp - parseFloat(sig.entry_price)) / parseFloat(sig.entry_price)) * 100;
+          var pnl = isBull ? rawP : -rawP;
+          lpPnl.innerHTML = '<span style="color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + (pnl >= 0 ? '▲ +' : '▼ ') + pnl.toFixed(2) + '% from entry ($' + parseFloat(sig.entry_price).toFixed(2) + ')</span>';
+        } else if (lpPnl) { lpPnl.innerHTML = ''; }
+      }
+
+      // Account fields — populate from current settings
+      var ttAcctEl = document.getElementById('ttAcctSize');
+      var ttRiskEl = document.getElementById('ttAcctRisk');
+      var acctVal = MEMBER_SETTINGS.account_size || (_riskSettings.accountSize || '');
+      var riskVal = MEMBER_SETTINGS.risk_per_trade || (_riskSettings.riskPct || 2);
+      if (ttAcctEl) ttAcctEl.value = acctVal;
+      if (ttRiskEl) ttRiskEl.value = riskVal;
+
       // Reset vehicle to STOCK
       _ttVehicle = 'STOCK';
       document.querySelectorAll('.ttVehicleBtn').forEach(function(b){b.classList.toggle('active',b.dataset.ttv==='STOCK');});
@@ -10277,9 +10351,7 @@
       document.getElementById('ttOptionFields').style.display = 'none';
 
       // Stock fields — use live price or entry price
-      var asset = sig.asset.split(' ')[0].toUpperCase();
-      var cached = PRICE_CACHE[asset];
-      var ep = cached && cached.price ? cached.price : (sig.entry_price ? parseFloat(sig.entry_price) : '');
+      var ep = lp || (sig.entry_price ? parseFloat(sig.entry_price) : '');
       document.getElementById('ttEntryPrice').value = ep ? parseFloat(ep).toFixed(2) : '';
       document.getElementById('ttShares').value = '';
       document.getElementById('ttShares').style.color = '';
@@ -10616,7 +10688,8 @@
         ? sig.asset+' '+trade.option_strike+(trade.option_type||'C')+' × '+trade.shares+' ct'
         : sig.asset+' × '+trade.shares+' shares';
       showToast('✓ '+label+' logged');
-      updateTakeTradeBtn(sig); renderJournal();
+      updateTakeTradeBtn(sig); renderJournal(); renderList();
+      if (typeof window._renderMList === 'function') window._renderMList();
     }
 
     /* ── CLOSE TRADE ── */
@@ -10776,6 +10849,8 @@
         : '✓ Closed ' + selectedTrades[0].asset + ' — ' + (totalPnlD >= 0 ? '+' : '') + '$' + Math.abs(totalPnlD).toFixed(0);
       showToast(label);
       renderJournal();
+      renderList();
+      if (typeof window._renderMList === 'function') window._renderMList();
       if (SIGNALS.length && SIGNALS[activeIndex]) updateTakeTradeBtn(SIGNALS[activeIndex]);
     }
 
