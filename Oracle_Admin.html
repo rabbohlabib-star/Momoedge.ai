@@ -696,6 +696,14 @@
         <div class="fLabel">ENTRY PRICE AT SIGNAL</div>
         <input class="fInput" id="fEntryPrice" type="number" step="0.01" placeholder="e.g. 43.21"/>
       </div>
+      <div class="formGroup">
+        <div class="fLabel">ORACLE TRANCHE STATUS</div>
+        <select class="fSelect" id="fOracleTranche">
+          <option value="1">1/3 — INITIAL ENTRY</option>
+          <option value="2">2/3 — TRIGGER CONFIRMED</option>
+          <option value="3">3/3 — FULL CONVICTION</option>
+        </select>
+      </div>
       <div class="formGroup wide" id="optionContractsSection">
         <div class="fLabel">OPTION PLAYS <span style="opacity:.5;font-weight:400;">(up to 2 — leave blank if no options play)</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;" id="optionContractsGrid">
@@ -843,21 +851,21 @@
     </div>
     <!-- OPTIONS SECTION (hidden unless VEHICLE=OPTIONS) -->
     <div id="pfOptionsSection" style="display:none;border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;margin-top:10px;background:rgba(0,229,255,.02);">
-      <div style="font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--core);margin-bottom:10px;">OPTIONS CONTRACT DETAILS</div>
+      <div style="font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--core);margin-bottom:10px;">OPTIONS CONTRACT</div>
       <div class="formGrid" style="gap:10px;">
         <div class="formGroup">
           <div class="fLabel">STRIKE PRICE</div>
           <input class="fInput" id="pfOptStrike" type="number" step="0.5" placeholder="e.g. 150"/>
         </div>
         <div class="formGroup">
-          <div class="fLabel">OPTION TYPE</div>
+          <div class="fLabel">CALL / PUT</div>
           <select class="fSelect" id="pfOptType">
             <option value="CALL">CALL</option>
             <option value="PUT">PUT</option>
           </select>
         </div>
         <div class="formGroup">
-          <div class="fLabel">EXPIRATION</div>
+          <div class="fLabel">EXPIRATION DATE</div>
           <input class="fInput" id="pfOptExpiry" type="date"/>
         </div>
         <div class="formGroup">
@@ -865,20 +873,12 @@
           <input class="fInput" id="pfOptContracts" type="number" step="1" min="1" placeholder="e.g. 5"/>
         </div>
         <div class="formGroup">
-          <div class="fLabel">PREMIUM PAID (per contract)</div>
+          <div class="fLabel">PREMIUM PAID</div>
           <input class="fInput" id="pfOptPremEntry" type="number" step="0.01" placeholder="e.g. 3.20"/>
         </div>
         <div class="formGroup">
           <div class="fLabel">PREMIUM AT EXIT</div>
           <input class="fInput" id="pfOptPremExit" type="number" step="0.01" placeholder="e.g. 5.80"/>
-        </div>
-        <div class="formGroup">
-          <div class="fLabel">IV AT ENTRY %</div>
-          <input class="fInput" id="pfOptIV" type="number" step="0.1" placeholder="e.g. 42.5"/>
-        </div>
-        <div class="formGroup">
-          <div class="fLabel">DELTA AT ENTRY</div>
-          <input class="fInput" id="pfOptDelta" type="number" step="0.01" placeholder="e.g. 0.52"/>
         </div>
       </div>
     </div>
@@ -1094,21 +1094,21 @@
     </div>
     <!-- OPTIONS SECTION IN EDIT MODAL -->
     <div id="peOptionsSection" style="display:none;border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;margin-top:10px;background:rgba(0,229,255,.02);">
-      <div style="font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--core);margin-bottom:10px;">OPTIONS CONTRACT DETAILS</div>
+      <div style="font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--core);margin-bottom:10px;">OPTIONS CONTRACT</div>
       <div class="formGrid" style="gap:10px;">
         <div class="formGroup">
           <div class="fLabel">STRIKE PRICE</div>
           <input class="fInput" id="peOptStrike" type="number" step="0.5" placeholder="e.g. 150"/>
         </div>
         <div class="formGroup">
-          <div class="fLabel">OPTION TYPE</div>
+          <div class="fLabel">CALL / PUT</div>
           <select class="fSelect" id="peOptType">
             <option value="CALL">CALL</option>
             <option value="PUT">PUT</option>
           </select>
         </div>
         <div class="formGroup">
-          <div class="fLabel">EXPIRATION</div>
+          <div class="fLabel">EXPIRATION DATE</div>
           <input class="fInput" id="peOptExpiry" type="date"/>
         </div>
         <div class="formGroup">
@@ -1116,20 +1116,12 @@
           <input class="fInput" id="peOptContracts" type="number" step="1" min="1" placeholder="e.g. 5"/>
         </div>
         <div class="formGroup">
-          <div class="fLabel">PREMIUM PAID (per contract)</div>
+          <div class="fLabel">PREMIUM PAID</div>
           <input class="fInput" id="peOptPremEntry" type="number" step="0.01" placeholder="e.g. 3.20"/>
         </div>
         <div class="formGroup">
           <div class="fLabel">PREMIUM AT EXIT</div>
           <input class="fInput" id="peOptPremExit" type="number" step="0.01" placeholder="e.g. 5.80"/>
-        </div>
-        <div class="formGroup">
-          <div class="fLabel">IV AT ENTRY %</div>
-          <input class="fInput" id="peOptIV" type="number" step="0.1" placeholder="e.g. 42.5"/>
-        </div>
-        <div class="formGroup">
-          <div class="fLabel">DELTA AT ENTRY</div>
-          <input class="fInput" id="peOptDelta" type="number" step="0.01" placeholder="e.g. 0.52"/>
         </div>
       </div>
     </div>
@@ -1706,6 +1698,7 @@
     ["fAsset","fCompanyName","fLevel","fBias","fHorizon","fTriggerVal","fTargets","fInval","fVol","fDir2","fStream","fSort","fConf","fEntryPrice","fOcStrike1","fOcPremium1","fOcExpiry1","fOcStrike2","fOcPremium2","fOcExpiry2","fMinDuration","fThesis","fActionPlan","editId"]
       .forEach(id => document.getElementById(id).value = "");
     document.getElementById("fDir").value = "BULL";
+    document.getElementById("fOracleTranche").value = "1";
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     document.getElementById("fSignalDate").value = local;
@@ -1731,6 +1724,7 @@
     document.getElementById("fStream").value = s.stream_label || "";
     document.getElementById("fSort").value = s.sort_order || "";
     document.getElementById("fEntryPrice").value = s.entry_price || "";
+    document.getElementById("fOracleTranche").value = s.oracle_tranche || "1";
     // Load option contracts
     try {
       const ocs = typeof s.option_contracts === 'string' ? JSON.parse(s.option_contracts) : (s.option_contracts || []);
@@ -1786,6 +1780,7 @@
       stream_label: document.getElementById("fStream").value.trim(),
       sort_order: parseInt(document.getElementById("fSort").value) || 99,
       entry_price: parseFloat(document.getElementById("fEntryPrice").value) || null,
+      oracle_tranche: parseInt(document.getElementById("fOracleTranche").value) || 1,
       option_contracts: (() => {
         const contracts = [];
         const s1 = parseFloat(document.getElementById("fOcStrike1").value);
@@ -1829,6 +1824,18 @@
     if (!editId) {
       payload.signal_date = signalDateVal ? new Date(signalDateVal).toISOString() : new Date().toISOString();
     }
+    // 3/3 FULL CONVICTION WARNING
+    if (payload.oracle_tranche === 3) {
+      var prevTranche = 1;
+      if (editId) {
+        var existingSig = SIGNALS.find(function(x) { return x.id === editId; });
+        if (existingSig) prevTranche = existingSig.oracle_tranche || 1;
+      }
+      if (prevTranche < 3) {
+        if (!confirm('⚠ FULL CONVICTION (3/3)\n\nSetting ' + asset + ' to 3/3 will alert all members that Oracle has entered a full position.\n\nConfirm?')) return;
+      }
+    }
+
     let ok;
     if (editId) {
       ok = await sbPatch('signals', editId, payload);
@@ -2306,8 +2313,6 @@
       opt_contracts: vehicle === 'OPTIONS' && document.getElementById("pfOptContracts").value !== '' ? parseInt(document.getElementById("pfOptContracts").value) : null,
       opt_prem_entry: vehicle === 'OPTIONS' && document.getElementById("pfOptPremEntry").value !== '' ? parseFloat(document.getElementById("pfOptPremEntry").value) : null,
       opt_prem_exit: vehicle === 'OPTIONS' && document.getElementById("pfOptPremExit").value !== '' ? parseFloat(document.getElementById("pfOptPremExit").value) : null,
-      opt_iv: vehicle === 'OPTIONS' && document.getElementById("pfOptIV").value !== '' ? parseFloat(document.getElementById("pfOptIV").value) : null,
-      opt_delta: vehicle === 'OPTIONS' && document.getElementById("pfOptDelta").value !== '' ? parseFloat(document.getElementById("pfOptDelta").value) : null,
     };
     const ok = await sbPost('performance', payload);
     PERF.push(payload);
@@ -2603,8 +2608,6 @@
       document.getElementById('peOptContracts').value = row.opt_contracts || '';
       document.getElementById('peOptPremEntry').value = row.opt_prem_entry || '';
       document.getElementById('peOptPremExit').value = row.opt_prem_exit || '';
-      document.getElementById('peOptIV').value = row.opt_iv || '';
-      document.getElementById('peOptDelta').value = row.opt_delta || '';
       const el = document.getElementById('perfEditOverlay');
       el.style.display = 'flex';
     }
@@ -2673,8 +2676,6 @@
         opt_contracts: document.getElementById('peOptContracts').value !== '' ? parseInt(document.getElementById('peOptContracts').value) : null,
         opt_prem_entry: document.getElementById('peOptPremEntry').value !== '' ? parseFloat(document.getElementById('peOptPremEntry').value) : null,
         opt_prem_exit: document.getElementById('peOptPremExit').value !== '' ? parseFloat(document.getElementById('peOptPremExit').value) : null,
-        opt_iv:      document.getElementById('peOptIV').value !== '' ? parseFloat(document.getElementById('peOptIV').value) : null,
-        opt_delta:   document.getElementById('peOptDelta').value !== '' ? parseFloat(document.getElementById('peOptDelta').value) : null,
       };
       // Strip undefined keys
       Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
