@@ -1821,6 +1821,10 @@
     }
 
     /* ── PERFORMANCE HISTORY ── */
+    .histViewToggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid rgba(0,229,255,.15);margin-bottom:16px;}
+    .histViewBtn{flex:1;padding:10px 0;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:1.5px;text-align:center;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;}
+    .histViewBtn.active{background:rgba(0,229,255,.12);color:var(--core);}
+    .histViewPane{display:none;}.histViewPane.active{display:block;}
     .perfSection {
       margin-top: 32px;
       padding-bottom: 20px;
@@ -2661,6 +2665,13 @@
       padding: 8px 4px;
       text-align: center;
     }
+    .psTranche.taken {
+      background: rgba(0,255,136,.06);
+      border-color: rgba(0,255,136,.35);
+      box-shadow: 0 0 12px rgba(0,255,136,.12);
+    }
+    .psTranche.taken .ptVal { color: var(--green); }
+    .psTranche.taken .ptLabel { color: var(--green); }
     .psTranche .ptLabel {
       font-family: var(--display);
       font-size: 9px;
@@ -4252,6 +4263,11 @@
     <div class="ttModal">
       <div class="ttTitle" style="color:var(--red);">◆ CLOSE POSITION</div>
       <div class="ttSubtitle" id="ctAssetLabel">—</div>
+      <!-- Tranche selector -->
+      <div id="ctTrancheSelector" style="margin-bottom:12px;">
+        <div class="ttLabel" style="margin-bottom:6px;">SELECT TRANCHES TO CLOSE</div>
+        <div id="ctTrancheGrid" style="display:flex;gap:6px;"></div>
+      </div>
       <div class="ttGroup"><div class="ttLabel">EXIT PRICE</div><input class="ttInput" id="ctExitPrice" type="number" step="0.01"/></div>
       <!-- Live P&L Preview -->
       <div id="ctPnlPreview" style="display:none;margin:12px 0;padding:12px;border-radius:8px;text-align:center;">
@@ -4259,9 +4275,9 @@
         <div id="ctPnlValue" style="font-family:var(--display);font-size:24px;font-weight:900;">—</div>
         <div id="ctPnlDollar" style="font-family:var(--display);font-size:11px;margin-top:2px;">—</div>
       </div>
-      <div class="ttGroup"><div class="ttLabel">NOTES</div><input class="ttInput" id="ctNotes" type="text" placeholder="e.g. Closed at T1"/></div>
+      <div class="ttGroup"><div class="ttLabel">NOTES</div><input class="ttInput" id="ctNotes" type="text" placeholder="e.g. Trimming at T1"/></div>
       <div class="ttActions">
-        <button class="ttConfirm" style="border-color:rgba(255,59,59,.4);color:var(--red);background:rgba(255,59,59,.1);" onclick="confirmCloseTrade()">◆ CLOSE POSITION</button>
+        <button class="ttConfirm" style="border-color:rgba(255,59,59,.4);color:var(--red);background:rgba(255,59,59,.1);" onclick="confirmCloseTrade()">◆ CLOSE SELECTED</button>
         <button class="ttCancel" onclick="document.getElementById('ctOverlay').classList.remove('open')">CANCEL</button>
       </div>
     </div>
@@ -4508,6 +4524,13 @@
 
   <!-- HISTORY PANE -->
   <div class="centerPane" id="centerHistory">
+    <!-- VIEW TOGGLE -->
+    <div class="histViewToggle">
+      <button class="histViewBtn active" onclick="switchHistView('oracle',this)">◆ ORACLE PERFORMANCE</button>
+      <button class="histViewBtn" onclick="switchHistView('my',this)">◆ MY TRADE HISTORY</button>
+    </div>
+
+    <div class="histViewPane active" id="histViewOracle">
     <div class="perfSection">
       <div class="perfHeader">
         <div class="perfTitle">ALERT PERFORMANCE HISTORY</div>
@@ -4515,6 +4538,9 @@
           <button type="button" class="exportBtn" id="exportCsv">↓ EXPORT CSV</button>
         </div>
       </div>
+
+      <!-- ACTIVE SIGNALS SCOREBOARD -->
+      <div id="activeSignalsBoard" style="margin-bottom:16px;"></div>
 
       <!-- SECTION 1: STATS + EQUITY (open) -->
       <div style="margin-bottom:12px;">
@@ -4604,6 +4630,29 @@
       </div>
 
     </div>
+  </div><!-- end histViewOracle -->
+
+  <!-- MY TRADE HISTORY VIEW -->
+  <div class="histViewPane" id="histViewMy">
+    <div class="perfSection">
+      <div class="perfHeader">
+        <div class="perfTitle">MY TRADE HISTORY</div>
+      </div>
+      <div id="myTradeStats" style="margin-bottom:16px;"></div>
+      <div class="dataPanel" style="margin-top:0;">
+        <div class="tableWrap">
+          <table class="perfTable">
+            <thead><tr>
+              <th>ASSET</th><th>DIR</th><th>VEHICLE</th><th>ENTRY</th>
+              <th>EXIT</th><th>P&L %</th><th>P&L $</th><th>DATE</th>
+            </tr></thead>
+            <tbody id="myTradeBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- end histViewMy -->
+
   </div>
 
   <!-- FLOW PANE -->
@@ -4694,9 +4743,9 @@
     <h3>EXECUTION SNAPSHOT</h3>
     <div class="kv"><div class="k">ASSET</div><div class="v" id="xAsset">—</div></div>
     <div class="kv"><div class="k">SIGNAL DATE</div><div class="v" id="xSignalDate" style="font-family:var(--display);font-size:10px;color:var(--muted);">—</div></div>
-    <div class="kv"><div class="k">ENTRY PRICE</div><div class="v" id="xEntry" style="font-family:var(--display);font-weight:900;color:var(--core);">—</div></div>
-    <div class="kv"><div class="k">LIVE PRICE</div><div class="v" id="livePrice" style="font-family:var(--display);font-weight:900;font-size:13px;">—</div></div>
-    <div class="kv"><div class="k">P&amp;L FROM ENTRY</div><div class="v" id="xPnl" style="font-family:var(--display);font-weight:900;font-size:13px;">—</div></div>
+    <div class="kv"><div class="k">ENTRY PRICE</div><div class="v" id="xEntry" style="font-family:var(--display);font-weight:900;font-size:15px;color:var(--core);">—</div></div>
+    <div class="kv"><div class="k">LIVE PRICE</div><div class="v" id="livePrice" style="font-family:var(--display);font-weight:900;font-size:18px;color:#fff;">—</div></div>
+    <div class="kv"><div class="k">P&amp;L FROM ENTRY</div><div class="v" id="xPnl" style="font-family:var(--display);font-weight:900;font-size:16px;">—</div></div>
     <div class="kv"><div class="k">TIME HORIZON</div><div class="v" id="xHorizon">—</div></div>
     <div id="xDurationWidget"></div>
   </div>
@@ -7001,6 +7050,115 @@
 
 
     /* ─────────────── TRADE DETAIL MODAL ─────────────── */
+    /* ── HISTORY VIEW TOGGLE (Oracle vs My Trades) ── */
+    function switchHistView(view, btn) {
+      // Toggle buttons in same parent
+      if (btn) {
+        btn.parentElement.querySelectorAll('.histViewBtn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+      }
+      // Desktop
+      var dOracle = document.getElementById('histViewOracle');
+      var dMy = document.getElementById('histViewMy');
+      if (dOracle) { dOracle.classList.toggle('active', view === 'oracle'); }
+      if (dMy) { dMy.classList.toggle('active', view === 'my'); }
+      // Mobile
+      var mOracle = document.getElementById('mHistViewOracle');
+      var mMy = document.getElementById('mHistViewMy');
+      if (mOracle) { mOracle.classList.toggle('active', view === 'oracle'); }
+      if (mMy) { mMy.classList.toggle('active', view === 'my'); }
+      // Sync the other toggle (desktop <-> mobile)
+      document.querySelectorAll('.histViewToggle').forEach(function(toggle) {
+        if (btn && toggle.contains(btn)) return;
+        toggle.querySelectorAll('.histViewBtn').forEach(function(b) {
+          b.classList.toggle('active', b.textContent.indexOf(view === 'oracle' ? 'ORACLE' : 'MY') >= 0);
+        });
+      });
+      if (view === 'my') renderMyTradeHistory();
+    }
+    window.switchHistView = switchHistView;
+
+    function renderMyTradeHistory() {
+      var closedTrades = MEMBER_TRADES.filter(function(t) { return t.status === 'CLOSED'; });
+      closedTrades.sort(function(a, b) { return new Date(b.exit_date || b.created_at) - new Date(a.exit_date || a.created_at); });
+
+      // Stats
+      var wins = closedTrades.filter(function(t) { return (t.realized_pnl_pct || 0) > 0; });
+      var winRate = closedTrades.length > 0 ? (wins.length / closedTrades.length * 100).toFixed(0) : '—';
+      var totalPnl = closedTrades.reduce(function(s, t) { return s + (t.realized_pnl || 0); }, 0);
+      var avgPnl = closedTrades.length > 0 ? (closedTrades.reduce(function(s, t) { return s + (t.realized_pnl_pct || 0); }, 0) / closedTrades.length).toFixed(1) : '—';
+
+      var statsHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">' +
+        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">TRADES</div>' +
+          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:#fff;">' + closedTrades.length + '</div>' +
+        '</div>' +
+        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">WIN RATE</div>' +
+          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + (winRate !== '—' && parseFloat(winRate) >= 50 ? 'var(--green)' : winRate !== '—' ? 'var(--red)' : '#fff') + ';">' + winRate + (winRate !== '—' ? '%' : '') + '</div>' +
+        '</div>' +
+        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">TOTAL P&L</div>' +
+          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + (totalPnl >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + (totalPnl >= 0 ? '+' : '') + '$' + Math.abs(totalPnl).toFixed(0) + '</div>' +
+        '</div>' +
+        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">AVG RETURN</div>' +
+          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + (avgPnl !== '—' && parseFloat(avgPnl) >= 0 ? 'var(--green)' : avgPnl !== '—' ? 'var(--red)' : '#fff') + ';">' + (avgPnl !== '—' ? (parseFloat(avgPnl) >= 0 ? '+' : '') + avgPnl + '%' : '—') + '</div>' +
+        '</div>' +
+      '</div>';
+
+      // Desktop table
+      var tbody = document.getElementById('myTradeBody');
+      if (tbody) {
+        if (!closedTrades.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;">No closed trades yet. Take a trade and close it to see your history here.</td></tr>';
+        } else {
+          tbody.innerHTML = closedTrades.map(function(t) {
+            var pnlColor = (t.realized_pnl_pct || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+            var dateStr = t.exit_date ? new Date(t.exit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+            return '<tr>' +
+              '<td style="font-family:var(--display);font-weight:900;">' + t.asset + '</td>' +
+              '<td class="' + (t.direction === 'BULL' ? 'dBull' : 'dBear') + '">' + t.direction + '</td>' +
+              '<td style="color:var(--muted);">' + (t.vehicle || 'STOCK') + '</td>' +
+              '<td style="color:var(--core);">$' + parseFloat(t.entry_price).toFixed(2) + '</td>' +
+              '<td>$' + (t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '—') + '</td>' +
+              '<td style="font-family:var(--display);font-weight:900;color:' + pnlColor + ';">' + (t.realized_pnl_pct != null ? (t.realized_pnl_pct >= 0 ? '+' : '') + t.realized_pnl_pct.toFixed(2) + '%' : '—') + '</td>' +
+              '<td style="color:' + pnlColor + ';">' + (t.realized_pnl != null ? (t.realized_pnl >= 0 ? '+' : '') + '$' + Math.abs(t.realized_pnl).toFixed(0) : '—') + '</td>' +
+              '<td style="color:var(--muted);">' + dateStr + '</td>' +
+            '</tr>';
+          }).join('');
+        }
+      }
+      var dStats = document.getElementById('myTradeStats');
+      if (dStats) dStats.innerHTML = statsHtml;
+
+      // Mobile — card-style
+      var mStats = document.getElementById('mMyTradeStats');
+      if (mStats) mStats.innerHTML = statsHtml.replace(/repeat\(4,1fr\)/g, 'repeat(2,1fr)');
+
+      var mBody = document.getElementById('mMyTradeBody');
+      if (mBody) {
+        if (!closedTrades.length) {
+          mBody.innerHTML = '<div style="text-align:center;padding:30px;font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;">No closed trades yet.</div>';
+        } else {
+          mBody.innerHTML = closedTrades.map(function(t) {
+            var pnlColor = (t.realized_pnl_pct || 0) >= 0 ? '#00ff88' : '#ff4466';
+            var dateStr = t.exit_date ? new Date(t.exit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+            return '<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;margin-bottom:8px;">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                '<div style="font-family:Orbitron,monospace;font-size:14px;font-weight:900;">' + t.asset + ' <span style="font-size:9px;color:var(--muted);">' + (t.vehicle || 'STOCK') + ' · ' + t.direction + '</span></div>' +
+                '<div style="font-family:Orbitron,monospace;font-size:16px;font-weight:900;color:' + pnlColor + ';">' + (t.realized_pnl_pct != null ? (t.realized_pnl_pct >= 0 ? '+' : '') + t.realized_pnl_pct.toFixed(1) + '%' : '—') + '</div>' +
+              '</div>' +
+              '<div style="display:flex;justify-content:space-between;font-family:Orbitron,monospace;font-size:9px;color:var(--muted);">' +
+                '<span>$' + parseFloat(t.entry_price).toFixed(2) + ' → $' + (t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '—') + '</span>' +
+                '<span>' + (t.realized_pnl != null ? (t.realized_pnl >= 0 ? '+' : '') + '$' + Math.abs(t.realized_pnl).toFixed(0) : '') + ' · ' + dateStr + '</span>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+      }
+    }
+
     function openTradeDetail(id) {
       const r = PERF_DATA.find(x => x.id === id);
       if (!r) return;
@@ -7502,6 +7660,61 @@
       try { drawEquityCurve(); } catch(e) { console.error('[refreshAll] drawEquityCurve:', e); }
       try { renderEnhancedAnalytics(); } catch(e) { console.error('[refreshAll] renderEnhancedAnalytics:', e); }
       try { renderPeriodBreakdown(); } catch(e) { console.error('[refreshAll] renderPeriodBreakdown:', e); }
+      try { renderActiveSignalsBoard(); } catch(e) { console.error('[refreshAll] activeSignals:', e); }
+    }
+
+    function renderActiveSignalsBoard() {
+      var activePerf = PERF_DATA.filter(function(r) { return r.status === 'ACTIVE'; });
+      if (!activePerf.length) {
+        ['activeSignalsBoard','mActiveSignalsBoard'].forEach(function(id) {
+          var el = document.getElementById(id); if (el) el.innerHTML = '';
+        });
+        return;
+      }
+
+      var cards = activePerf.map(function(r) {
+        var assetKey = (r.asset || '').split(' ')[0].toUpperCase();
+        var cached = PRICE_CACHE[assetKey];
+        var liveP = cached ? cached.price : null;
+        var entry = r.entry_price ? parseFloat(r.entry_price) : null;
+        var isBull = r.direction === 'BULL';
+        var pnl = null, pnlColor = 'var(--muted)';
+        if (entry && liveP) {
+          pnl = isBull ? ((liveP - entry) / entry * 100) : ((entry - liveP) / entry * 100);
+          pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+        }
+        var chg = cached ? getLiveChangePercent(cached, getAssetClass(r.asset)) : null;
+        var priceColor = chg !== null ? (chg >= 0 ? 'var(--green)' : 'var(--red)') : '#fff';
+
+        // Find oracle tranche from SIGNALS
+        var sig = SIGNALS.find(function(s) { return s.asset === r.asset; });
+        var oTr = sig ? (sig.oracle_tranche || 1) : 1;
+        var trDots = [1,2,3].map(function(n) {
+          return '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:2px;background:' + (n <= oTr ? 'var(--green)' : 'rgba(255,255,255,.1)') + ';"></span>';
+        }).join('');
+
+        return '<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;min-width:180px;flex-shrink:0;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+            '<span style="font-family:var(--display);font-size:13px;font-weight:900;">' + r.asset + '</span>' +
+            '<span style="font-family:var(--display);font-size:8px;letter-spacing:1px;color:' + (isBull ? 'var(--green)' : 'var(--red)') + ';">' + r.direction + '</span>' +
+          '</div>' +
+          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + priceColor + ';">' + (liveP ? '$' + liveP.toFixed(2) : '—') + '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">' +
+            '<span style="font-family:var(--display);font-size:12px;font-weight:900;color:' + pnlColor + ';">' + (pnl !== null ? (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%' : '—') + '</span>' +
+            '<span style="display:flex;align-items:center;gap:1px;">' + trDots + '</span>' +
+          '</div>' +
+          (entry ? '<div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:2px;">Entry: $' + entry.toFixed(2) + '</div>' : '') +
+        '</div>';
+      }).join('');
+
+      var html = '<div style="background:rgba(0,229,255,.02);border:1px solid rgba(0,229,255,.1);border-radius:10px;padding:12px;">' +
+        '<div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--core);margin-bottom:10px;font-weight:700;">⚡ ACTIVE SIGNALS — LIVE</div>' +
+        '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;">' + cards + '</div>' +
+      '</div>';
+
+      ['activeSignalsBoard','mActiveSignalsBoard'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.innerHTML = html;
+      });
     }
 
     // Collapsible section toggles
@@ -8049,6 +8262,7 @@
       const asset = sig.asset.split(' ')[0].toUpperCase();
       const cached = PRICE_CACHE[asset];
       const livePrice = cached?.price || null;
+      const liveChange = cached ? getLiveChangePercent(cached, getAssetClass(sig.asset)) : null;
 
       // ── Timeline math ──
       const horizonDays = parseHorizonDays(sig.horizon);
@@ -8159,8 +8373,9 @@
             <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}">◆ ${sig.direction} SIGNAL</div>
             ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:8px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:5px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL CONVICTION':sig.oracle_tranche>=2?'TRIGGER CONFIRMED':'INITIAL'}</div>` : ''}
             <div class="sbConfBadge" style="border-color:${zoneConf.color}33;color:${zoneConf.color}">
-              CONF ${confDisplay}${confDelta}${livePrice ? ` &nbsp;·&nbsp; <span style="color:var(--core);font-weight:700;">$${livePrice.toFixed(2)}</span>` : ''}
+              CONF ${confDisplay}${confDelta}
             </div>
+            ${livePrice ? `<div style="font-family:var(--display);font-size:22px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};">$${livePrice.toFixed(2)} <span style="font-size:11px;opacity:.7;">${liveChange !== null ? (liveChange >= 0 ? '+' : '') + liveChange.toFixed(2) + '%' : ''}</span></div>` : ''}
             ${bias ? `<div class="sbTypeBadge">${bias.replace(/_/g,' ')}</div>` : ''}
           </div>
         </div>
@@ -8976,10 +9191,11 @@
       const positionValue = totalShares * entry;
       const positionPctOfAcct = (positionValue / acct) * 100;
 
-      // Tranche breakdown (thirds)
-      const t1Shares = Math.floor(totalShares / 3);
-      const t2Shares = Math.floor((totalShares * 2) / 3) - t1Shares;
-      const t3Shares = totalShares - t1Shares - t2Shares;
+      // Tranche breakdown — each tranche is equal (1/3 of max)
+      const perTranche = Math.max(1, Math.floor(totalShares / 3));
+      const t1Shares = perTranche;
+      const t2Shares = perTranche;
+      const t3Shares = perTranche;
 
       // Options calculation — prefer option_contracts, fall back to option_price
       let optionsData = null;
@@ -8996,10 +9212,11 @@
         const optionMaxLoss = totalContracts * costPerContract;
         const optionRiskPct = (optionMaxLoss / acct) * 100;
 
-        // Tranche breakdown for options
-        const ot1 = Math.max(totalContracts >= 3 ? Math.floor(totalContracts / 3) : 0, 0);
-        const ot2 = Math.max(totalContracts >= 3 ? Math.floor((totalContracts * 2) / 3) - ot1 : (totalContracts >= 2 ? 1 : 0), 0);
-        const ot3 = Math.max(totalContracts - ot1 - ot2, 0);
+        // Tranche breakdown for options — equal per tranche
+        const optPerTranche = Math.max(1, Math.floor(totalContracts / 3));
+        const ot1 = optPerTranche;
+        const ot2 = optPerTranche;
+        const ot3 = optPerTranche;
 
         optionsData = {
           premium: optionPrice,
@@ -9067,9 +9284,9 @@
         bodyHtml = `
           <div class="psGrid">
             <div class="psCell">
-              <div class="psCellLabel">SHARES</div>
-              <div class="psCellVal">${calc.shares}</div>
-              <div class="psCellSub">$${calc.positionValue.toLocaleString('en-US', {maximumFractionDigits:0})} total</div>
+              <div class="psCellLabel">PER TRANCHE</div>
+              <div class="psCellVal">${calc.trancheShares[0]} sh</div>
+              <div class="psCellSub">${calc.shares} sh full position</div>
             </div>
             <div class="psCell">
               <div class="psCellLabel">RISK</div>
@@ -9078,27 +9295,40 @@
             </div>
           </div>
           <div class="psTrancheSec">
-            <div class="psTrancheLabel">TRANCHE BREAKDOWN</div>
+            <div class="psTrancheLabel">ORACLE TRANCHE STATUS</div>
             <div class="psTrancheGrid">
-              <div class="psTranche">
-                <div class="ptLabel">1/3 INITIAL ENTRY</div>
-                <div class="ptVal">${calc.trancheShares[0]} sh</div>
-                <div class="ptSub">$${calc.trancheValues[0].toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+              <div class="psTranche${(sig.oracle_tranche||0) >= 1 ? ' taken' : ''}">
+                <div class="ptLabel">1/3</div>
+                <div class="ptVal">INITIAL</div>
               </div>
-              <div class="psTranche">
-                <div class="ptLabel">2/3 TRIGGER</div>
-                <div class="ptVal">${calc.tranches[1]} sh</div>
-                <div class="ptSub">$${calc.trancheValues[1].toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+              <div class="psTranche${(sig.oracle_tranche||0) >= 2 ? ' taken' : ''}">
+                <div class="ptLabel">2/3</div>
+                <div class="ptVal">TRIGGER</div>
               </div>
-              <div class="psTranche">
-                <div class="ptLabel">3/3 CONVICTION</div>
-                <div class="ptVal">${calc.shares} sh</div>
-                <div class="ptSub">$${calc.trancheValues[2].toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+              <div class="psTranche${(sig.oracle_tranche||0) >= 3 ? ' taken' : ''}">
+                <div class="ptLabel">3/3</div>
+                <div class="ptVal">CONVICTION</div>
               </div>
             </div>
+            ${(function() {
+              var tl = '';
+              if (sig.tranche_1_date || sig.signal_date) {
+                var d1 = new Date(sig.tranche_1_date || sig.signal_date);
+                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 1/3 INITIAL</span><span>' + d1.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
+              }
+              if (sig.tranche_2_date) {
+                var d2 = new Date(sig.tranche_2_date);
+                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 2/3 TRIGGER</span><span>' + d2.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
+              }
+              if (sig.tranche_3_date) {
+                var d3 = new Date(sig.tranche_3_date);
+                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 3/3 FULL</span><span>' + d3.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
+              }
+              return tl ? '<div style="font-family:var(--display);font-size:9px;color:var(--muted);margin-top:8px;border-top:1px solid rgba(0,229,255,.06);padding-top:8px;">' + tl + '</div>' : '';
+            })()}
           </div>
-          <div style="font-family:var(--display);font-size:7.5px;letter-spacing:.5px;color:var(--muted);margin-top:8px;text-align:center;">
-            RISK/SHARE: $${calc.riskPerShare.toFixed(2)} · ${calc.positionPctOfAcct.toFixed(1)}% of account deployed
+          <div style="font-family:var(--display);font-size:9px;letter-spacing:.5px;color:var(--muted);margin-top:8px;text-align:center;">
+            RISK/SHARE: $${calc.riskPerShare.toFixed(2)} · ${calc.trancheShares[0]} sh × 3 tranches = ${calc.shares} sh max
           </div>`;
       } else {
         const opt = calc.options;
@@ -9115,29 +9345,26 @@
               <div class="psCellSub">${opt.riskPct.toFixed(1)}% of account</div>
             </div>
           </div>
-          ${opt.minContracts ? `<div style="font-family:var(--display);font-size:8px;color:var(--amber);text-align:center;margin-top:8px;letter-spacing:.5px;">⚠ MINIMUM 1 CONTRACT — TRANCHE SIZING LIMITED AT THIS PREMIUM</div>` : ''}
+          ${opt.minContracts ? `<div style="font-family:var(--display);font-size:9px;color:var(--amber);text-align:center;margin-top:8px;letter-spacing:.5px;">⚠ MINIMUM 1 CONTRACT — TRANCHE SIZING LIMITED AT THIS PREMIUM</div>` : ''}
           <div class="psTrancheSec">
-            <div class="psTrancheLabel">TRANCHE BREAKDOWN</div>
+            <div class="psTrancheLabel">ORACLE TRANCHE STATUS</div>
             <div class="psTrancheGrid">
-              <div class="psTranche">
-                <div class="ptLabel">1/3 INITIAL ENTRY</div>
-                <div class="ptVal">${opt.tranches[0]} ct</div>
-                <div class="ptSub">${opt.tranches[0] === 0 ? '—' : '$'+(opt.tranches[0]*opt.premium*100).toFixed(0)}</div>
+              <div class="psTranche${(sig.oracle_tranche||0) >= 1 ? ' taken' : ''}">
+                <div class="ptLabel">1/3</div>
+                <div class="ptVal">INITIAL</div>
               </div>
-              <div class="psTranche">
-                <div class="ptLabel">2/3 TRIGGER</div>
-                <div class="ptVal">${opt.tranches[0]+opt.tranches[1]} ct</div>
-                <div class="ptSub">$${((opt.tranches[0]+opt.tranches[1])*opt.premium*100).toFixed(0)}</div>
+              <div class="psTranche${(sig.oracle_tranche||0) >= 2 ? ' taken' : ''}">
+                <div class="ptLabel">2/3</div>
+                <div class="ptVal">TRIGGER</div>
               </div>
-              <div class="psTranche">
-                <div class="ptLabel">3/3 CONVICTION</div>
-                <div class="ptVal">${opt.contracts} ct</div>
-                <div class="ptSub">$${opt.maxLoss.toFixed(0)}</div>
+              <div class="psTranche${(sig.oracle_tranche||0) >= 3 ? ' taken' : ''}">
+                <div class="ptLabel">3/3</div>
+                <div class="ptVal">CONVICTION</div>
               </div>
             </div>
           </div>
-          <div style="font-family:var(--display);font-size:7.5px;letter-spacing:.5px;color:var(--muted);margin-top:8px;text-align:center;">
-            OPTIONS RISK IS CAPPED AT PREMIUM PAID · NO STOP LOSS NEEDED
+          <div style="font-family:var(--display);font-size:9px;letter-spacing:.5px;color:var(--muted);margin-top:8px;text-align:center;">
+            ${opt.tranches[0]} ct per tranche · ${opt.contracts} ct max · RISK CAPPED AT PREMIUM
           </div>`;
       }
 
@@ -9906,8 +10133,14 @@
           var pnl = isBull ? rawPnl : -rawPnl;
           pnlHtml = '<div class="positionStatus" style="color:'+(pnl>=0?'var(--green)':'var(--red)')+'">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'%</div>';
         }
+        var takenArr = myTrades.map(function(t){return t.tranche||1;});
+        var isFull = takenArr.indexOf(1)>=0 && takenArr.indexOf(2)>=0 && takenArr.indexOf(3)>=0;
         btn.className = 'takeTradeBtn has-position';
-        btn.innerHTML = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml;
+        if (isFull) {
+          btn.innerHTML = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml;
+        } else {
+          btn.innerHTML = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml;
+        }
       } else { btn.className = 'takeTradeBtn'; btn.innerHTML = '◆ TAKE THIS TRADE'; }
     }
 
@@ -9930,7 +10163,13 @@
           pnlStr = ' · '+(pnl>=0?'+':'')+pnl.toFixed(2)+'%';
         }
         sticky.className = 'mTakeTradeSticky has-position';
-        btn.textContent = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr;
+        var takenMob = myTrades.map(function(t){return t.tranche||1;});
+        var isFullMob = takenMob.indexOf(1)>=0 && takenMob.indexOf(2)>=0 && takenMob.indexOf(3)>=0;
+        if (isFullMob) {
+          btn.textContent = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr;
+        } else {
+          btn.textContent = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr;
+        }
       } else {
         sticky.className = 'mTakeTradeSticky';
         btn.textContent = '◆ TAKE THIS TRADE';
@@ -9979,6 +10218,12 @@
       var sig = SIGNALS[activeIndex]; _ttSignal = sig;
       var myTrades = MEMBER_TRADES.filter(function(t){ return (t.signal_id===sig.id||t.asset===sig.asset)&&t.status==='OPEN'; });
       var taken = myTrades.map(function(t){return t.tranche||1;});
+
+      // Hard block: all 3 tranches filled
+      if (taken.indexOf(1) >= 0 && taken.indexOf(2) >= 0 && taken.indexOf(3) >= 0) {
+        showToast('You already hold a full 3/3 position in ' + sig.asset);
+        return;
+      }
       document.getElementById('ttAssetLabel').textContent = sig.asset+' — '+sig.direction+' · '+sig.level;
 
       // Reset vehicle to STOCK
@@ -10240,6 +10485,18 @@
     async function confirmTakeTrade() {
       if(!_ttSignal) return; var sig=_ttSignal;
 
+      // Safety: check for duplicate or full position
+      var existingTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
+      var takenTranches = existingTrades.map(function(t) { return t.tranche || 1; });
+      if (takenTranches.indexOf(1) >= 0 && takenTranches.indexOf(2) >= 0 && takenTranches.indexOf(3) >= 0) {
+        showToast('Full 3/3 position already held'); return;
+      }
+      // Check if selected tranches overlap with existing
+      var overlap = _ttSelectedTranches.filter(function(t) { return takenTranches.indexOf(t) >= 0; });
+      if (overlap.length > 0) {
+        showToast('Tranche ' + overlap.join(', ') + ' already held'); return;
+      }
+
       var trade = {
         id: crypto.randomUUID ? crypto.randomUUID() : 't_'+Date.now()+'_'+Math.random().toString(36).substr(2,6),
         user_id: CURRENT_USER ? CURRENT_USER.id : 'local',
@@ -10320,14 +10577,63 @@
 
     /* ── CLOSE TRADE ── */
     var _ctTradeId = null;
-    function openCloseTradeModal(tradeId) {
-      var trade = MEMBER_TRADES.find(function(t){return t.id===tradeId;}); if(!trade) return; _ctTradeId=tradeId;
-      document.getElementById('ctAssetLabel').textContent = trade.asset+' — '+trade.vehicle+' · Tranche '+trade.tranche+'/3';
-      var cached=PRICE_CACHE[trade.asset.split(' ')[0].toUpperCase()];
-      document.getElementById('ctExitPrice').value = cached&&cached.price ? cached.price.toFixed(2) : '';
-      document.getElementById('ctNotes').value='';
+    var _ctTrades = []; // all open trades for the position
+    var _ctSelectedIds = new Set(); // trade IDs selected for closing
+
+    function openClosePosition(signalId, asset) {
+      // Find all open trades for this signal
+      _ctTrades = MEMBER_TRADES.filter(function(t) {
+        return (t.signal_id === signalId || t.asset === asset) && t.status === 'OPEN';
+      });
+      if (!_ctTrades.length) { showToast('No open trades found'); return; }
+
+      // Pre-select all tranches
+      _ctSelectedIds = new Set(_ctTrades.map(function(t) { return t.id; }));
+
+      var first = _ctTrades[0];
+      document.getElementById('ctAssetLabel').textContent = first.asset + ' — ' + first.vehicle + ' · ' + _ctTrades.length + ' tranche(s)';
+
+      // Build tranche checkboxes
+      var grid = document.getElementById('ctTrancheGrid');
+      grid.innerHTML = _ctTrades.map(function(t) {
+        var sh = parseFloat(t.shares) || 0;
+        var unit = t.vehicle === 'OPTIONS' ? 'ct' : 'sh';
+        return '<div class="ttTrancheOpt active" data-ctid="' + t.id + '" onclick="toggleCtTranche(this)" style="flex:1;padding:8px 4px;text-align:center;cursor:pointer;border:1px solid rgba(255,59,59,.3);border-radius:6px;background:rgba(255,59,59,.06);position:relative;">' +
+          '<div style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--red);">' + (t.tranche || 1) + '/3</div>' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:2px;">' + sh + ' ' + unit + '</div>' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);">$' + parseFloat(t.entry_price).toFixed(2) + '</div>' +
+        '</div>';
+      }).join('');
+
+      // Fill exit price from live
+      var cached = PRICE_CACHE[first.asset.split(' ')[0].toUpperCase()];
+      document.getElementById('ctExitPrice').value = cached && cached.price ? cached.price.toFixed(2) : '';
+      document.getElementById('ctNotes').value = '';
       document.getElementById('ctOverlay').classList.add('open');
-      // Trigger initial preview
+      updateCtPnlPreview();
+    }
+
+    // Legacy single-trade close (from old code paths)
+    function openCloseTradeModal(tradeId) {
+      var trade = MEMBER_TRADES.find(function(t) { return t.id === tradeId; });
+      if (!trade) return;
+      openClosePosition(trade.signal_id || '', trade.asset);
+    }
+
+    function toggleCtTranche(el) {
+      var id = el.dataset.ctid;
+      if (_ctSelectedIds.has(id)) {
+        if (_ctSelectedIds.size <= 1) return; // must close at least 1
+        _ctSelectedIds.delete(id);
+        el.style.borderColor = 'rgba(255,255,255,.1)';
+        el.style.background = 'rgba(255,255,255,.02)';
+        el.classList.remove('active');
+      } else {
+        _ctSelectedIds.add(id);
+        el.style.borderColor = 'rgba(255,59,59,.3)';
+        el.style.background = 'rgba(255,59,59,.06)';
+        el.classList.add('active');
+      }
       updateCtPnlPreview();
     }
 
@@ -10335,33 +10641,40 @@
       var previewEl = document.getElementById('ctPnlPreview');
       var valEl = document.getElementById('ctPnlValue');
       var dolEl = document.getElementById('ctPnlDollar');
-      if (!_ctTradeId) { previewEl.style.display = 'none'; return; }
-      var trade = MEMBER_TRADES.find(function(t){return t.id===_ctTradeId;});
       var exitP = parseFloat(document.getElementById('ctExitPrice').value);
-      if (!trade || !exitP) { previewEl.style.display = 'none'; return; }
+      if (!_ctSelectedIds.size || !exitP) { previewEl.style.display = 'none'; return; }
 
-      var isBull = trade.direction === 'BULL', entP = parseFloat(trade.entry_price);
-      var pnlPct, pnlD;
-      if (trade.vehicle === 'OPTIONS' && trade.option_premium) {
-        var prem = parseFloat(trade.option_premium);
-        pnlPct = ((exitP - prem) / prem) * 100;
-        pnlD = (exitP - prem) * 100 * parseFloat(trade.shares);
-      } else {
-        var raw = ((exitP - entP) / entP) * 100;
-        pnlPct = isBull ? raw : -raw;
-        pnlD = isBull ? (exitP - entP) * parseFloat(trade.shares) : (entP - exitP) * parseFloat(trade.shares);
-      }
+      var totalPnlD = 0, totalShares = 0;
+      var pnlPcts = [];
+      _ctTrades.filter(function(t) { return _ctSelectedIds.has(t.id); }).forEach(function(trade) {
+        var isBull = trade.direction === 'BULL', entP = parseFloat(trade.entry_price), sh = parseFloat(trade.shares);
+        var pnlPct, pnlD;
+        if (trade.vehicle === 'OPTIONS' && trade.option_premium) {
+          var prem = parseFloat(trade.option_premium);
+          pnlPct = ((exitP - prem) / prem) * 100;
+          pnlD = (exitP - prem) * 100 * sh;
+        } else {
+          var raw = ((exitP - entP) / entP) * 100;
+          pnlPct = isBull ? raw : -raw;
+          pnlD = isBull ? (exitP - entP) * sh : (entP - exitP) * sh;
+        }
+        totalPnlD += pnlD;
+        totalShares += sh;
+        pnlPcts.push(pnlPct);
+      });
 
-      var color = pnlPct >= 0 ? 'var(--green)' : 'var(--red)';
-      var bgColor = pnlPct >= 0 ? 'rgba(0,255,136,.06)' : 'rgba(255,59,59,.06)';
-      var borderColor = pnlPct >= 0 ? 'rgba(0,255,136,.15)' : 'rgba(255,59,59,.15)';
+      var avgPnlPct = pnlPcts.length ? pnlPcts.reduce(function(s, p) { return s + p; }, 0) / pnlPcts.length : 0;
+      var color = avgPnlPct >= 0 ? 'var(--green)' : 'var(--red)';
+      var bgColor = avgPnlPct >= 0 ? 'rgba(0,255,136,.06)' : 'rgba(255,59,59,.06)';
+      var borderColor = avgPnlPct >= 0 ? 'rgba(0,255,136,.15)' : 'rgba(255,59,59,.15)';
+      var unit = _ctTrades[0] && _ctTrades[0].vehicle === 'OPTIONS' ? 'ct' : 'sh';
 
       previewEl.style.display = '';
       previewEl.style.background = bgColor;
       previewEl.style.border = '1px solid ' + borderColor;
-      valEl.textContent = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%';
+      valEl.textContent = (avgPnlPct >= 0 ? '+' : '') + avgPnlPct.toFixed(2) + '%';
       valEl.style.color = color;
-      dolEl.textContent = (pnlD >= 0 ? '+' : '-') + '$' + Math.abs(pnlD).toFixed(0) + ' · ' + parseFloat(trade.shares) + ' ' + (trade.vehicle === 'OPTIONS' ? 'ct' : 'sh');
+      dolEl.textContent = (totalPnlD >= 0 ? '+' : '-') + '$' + Math.abs(totalPnlD).toFixed(0) + ' · ' + totalShares + ' ' + unit + ' · ' + _ctSelectedIds.size + ' tranche(s)';
       dolEl.style.color = color;
     }
 
@@ -10369,28 +10682,57 @@
     document.getElementById('ctExitPrice').addEventListener('change', updateCtPnlPreview);
 
     async function confirmCloseTrade() {
-      if(!_ctTradeId) return; var trade=MEMBER_TRADES.find(function(t){return t.id===_ctTradeId;}); if(!trade) return;
-      var exitP=parseFloat(document.getElementById('ctExitPrice').value); if(!exitP){showToast('Enter exit price');return;}
+      if (!_ctSelectedIds.size) return;
+      var exitP = parseFloat(document.getElementById('ctExitPrice').value);
+      if (!exitP) { showToast('Enter exit price'); return; }
 
-      // Confirmation dialog
-      var isBull=trade.direction==='BULL', entP=parseFloat(trade.entry_price);
-      var pnlPct,pnlD;
-      if(trade.vehicle==='OPTIONS'&&trade.option_premium){var prem=parseFloat(trade.option_premium);pnlPct=((exitP-prem)/prem)*100;pnlD=(exitP-prem)*100*parseFloat(trade.shares);}
-      else{var raw=((exitP-entP)/entP)*100;pnlPct=isBull?raw:-raw;pnlD=isBull?(exitP-entP)*parseFloat(trade.shares):(entP-exitP)*parseFloat(trade.shares);}
+      var selectedTrades = _ctTrades.filter(function(t) { return _ctSelectedIds.has(t.id); });
+      var totalTranches = _ctTrades.length;
+      var closingCount = selectedTrades.length;
 
-      var confirmMsg = 'Close ' + trade.asset + ' ' + trade.vehicle + '?\n\n' +
-        'Entry: $' + entP.toFixed(2) + '\n' +
-        'Exit: $' + exitP.toFixed(2) + '\n' +
-        'P&L: ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '% ($' + (pnlD >= 0 ? '+' : '') + pnlD.toFixed(0) + ')\n\n' +
-        'This action cannot be undone.';
+      // Build confirmation message
+      var trancheList = selectedTrades.map(function(t) { return (t.tranche || 1) + '/3'; }).join(', ');
+      var confirmMsg = closingCount < totalTranches
+        ? 'Close tranche(s) ' + trancheList + ' of ' + selectedTrades[0].asset + '?\n\nKeeping ' + (totalTranches - closingCount) + ' tranche(s) open.\n\nExit: $' + exitP.toFixed(2) + '\nThis action cannot be undone.'
+        : 'Close entire ' + selectedTrades[0].asset + ' position (' + closingCount + ' tranches)?\n\nExit: $' + exitP.toFixed(2) + '\nThis action cannot be undone.';
       if (!confirm(confirmMsg)) return;
 
-      trade.status='CLOSED';trade.exit_price=exitP;trade.exit_date=new Date().toISOString();trade.realized_pnl=parseFloat(pnlD.toFixed(2));trade.realized_pnl_pct=parseFloat(pnlPct.toFixed(2));
-      var noteAdd=document.getElementById('ctNotes').value.trim(); if(noteAdd) trade.notes=(trade.notes||'')+' | '+noteAdd;
-      if(CURRENT_USER){try{await SB_AUTH.from('member_trades').update({status:'CLOSED',exit_price:exitP,exit_date:trade.exit_date,realized_pnl:trade.realized_pnl,realized_pnl_pct:trade.realized_pnl_pct,notes:trade.notes}).eq('id',_ctTradeId);}catch(e){}}
-      saveMemberTradesLocal(); document.getElementById('ctOverlay').classList.remove('open');
-      showToast('✓ Closed '+trade.asset+' — '+(pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'%');
-      renderJournal(); if(SIGNALS.length&&SIGNALS[activeIndex]) updateTakeTradeBtn(SIGNALS[activeIndex]);
+      var noteAdd = document.getElementById('ctNotes').value.trim();
+      var totalPnlD = 0;
+
+      for (var i = 0; i < selectedTrades.length; i++) {
+        var trade = selectedTrades[i];
+        var isBull = trade.direction === 'BULL', entP = parseFloat(trade.entry_price);
+        var pnlPct, pnlD;
+        if (trade.vehicle === 'OPTIONS' && trade.option_premium) {
+          var prem = parseFloat(trade.option_premium);
+          pnlPct = ((exitP - prem) / prem) * 100;
+          pnlD = (exitP - prem) * 100 * parseFloat(trade.shares);
+        } else {
+          var raw = ((exitP - entP) / entP) * 100;
+          pnlPct = isBull ? raw : -raw;
+          pnlD = isBull ? (exitP - entP) * parseFloat(trade.shares) : (entP - exitP) * parseFloat(trade.shares);
+        }
+        trade.status = 'CLOSED';
+        trade.exit_price = exitP;
+        trade.exit_date = new Date().toISOString();
+        trade.realized_pnl = parseFloat(pnlD.toFixed(2));
+        trade.realized_pnl_pct = parseFloat(pnlPct.toFixed(2));
+        if (noteAdd) trade.notes = (trade.notes || '') + ' | ' + noteAdd;
+        totalPnlD += pnlD;
+        if (CURRENT_USER) {
+          try { await SB_AUTH.from('member_trades').update({ status: 'CLOSED', exit_price: exitP, exit_date: trade.exit_date, realized_pnl: trade.realized_pnl, realized_pnl_pct: trade.realized_pnl_pct, notes: trade.notes }).eq('id', trade.id); } catch(e) {}
+        }
+      }
+
+      saveMemberTradesLocal();
+      document.getElementById('ctOverlay').classList.remove('open');
+      var label = closingCount < totalTranches
+        ? '✓ Closed ' + closingCount + ' tranche(s) of ' + selectedTrades[0].asset
+        : '✓ Closed ' + selectedTrades[0].asset + ' — ' + (totalPnlD >= 0 ? '+' : '') + '$' + Math.abs(totalPnlD).toFixed(0);
+      showToast(label);
+      renderJournal();
+      if (SIGNALS.length && SIGNALS[activeIndex]) updateTakeTradeBtn(SIGNALS[activeIndex]);
     }
 
     /* ── JOURNAL RENDERING ── */
@@ -10429,12 +10771,103 @@
             '<div style="color:var(--muted);margin-top:4px;">Or tap <b style="color:var(--green);">+ ADD TRADE</b> above to pick a signal</div>') +
       '</div>';
 
-      var oH = openT.length ? openT.map(function(t){return renderTradeCard(t,true);}).join('') : emptyOpen;
+      // Group open trades by signal for aggregate display
+      var positionMap = {};
+      openT.forEach(function(t) {
+        var key = t.signal_id || t.asset;
+        if (!positionMap[key]) positionMap[key] = [];
+        positionMap[key].push(t);
+      });
+      var positionCards = Object.keys(positionMap).map(function(key) {
+        var trades = positionMap[key];
+        return renderPositionCard(trades);
+      }).join('');
+      var oH = openT.length ? positionCards : emptyOpen;
       ['journalOpenTrades','mJournalOpenTrades'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=oH;});
       var cH=closedT.length?closedT.map(function(t){return renderTradeCard(t,false);}).join(''):'<div class="jEmpty">No closed trades yet.</div>';
       ['journalClosedTrades','mJournalClosedTrades'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=cH;});
       // Render portfolio risk monitor
       renderRiskMonitor();
+    }
+
+    function renderPositionCard(trades) {
+      var first = trades[0];
+      var asset = first.asset.split(' ')[0].toUpperCase();
+      var cached = PRICE_CACHE[asset];
+      var isBull = first.direction === 'BULL';
+      var vehicle = first.vehicle;
+      var unit = vehicle === 'OPTIONS' ? 'ct' : 'sh';
+
+      // Aggregate: total shares, weighted avg entry, total risk
+      var totalSh = 0, totalCost = 0, totalRisk = 0;
+      var trancheNums = [];
+      trades.forEach(function(t) {
+        var sh = parseFloat(t.shares) || 0;
+        var ep = parseFloat(t.entry_price) || 0;
+        totalSh += sh;
+        totalCost += sh * ep;
+        totalRisk += parseFloat(t.risk_amount) || 0;
+        trancheNums.push(t.tranche || 1);
+      });
+      var avgEntry = totalSh > 0 ? totalCost / totalSh : 0;
+
+      // Live P&L on aggregate position
+      var livePnl = '';
+      if (cached && cached.price && avgEntry > 0) {
+        var raw = ((cached.price - avgEntry) / avgEntry) * 100;
+        var pct = isBull ? raw : -raw;
+        var dollarPnl = isBull ? (cached.price - avgEntry) * totalSh : (avgEntry - cached.price) * totalSh;
+        livePnl = '<div class="jTradeRow"><span class="jTradeK">LIVE P&L</span><span class="jTradeV" style="color:'+(pct>=0?'var(--green)':'var(--red)')+';font-size:14px;font-weight:900;">'+(pct>=0?'+':'')+pct.toFixed(2)+'% <span style="font-size:10px;opacity:.7;">($'+(dollarPnl>=0?'+':'')+dollarPnl.toFixed(0)+')</span></span></div>';
+      }
+
+      // Tranche dots — green for held tranches
+      var dots = [1,2,3].map(function(n) {
+        var held = trancheNums.indexOf(n) >= 0;
+        return '<span class="jTrancheDot'+(held?' filled':'')+'"></span>';
+      }).join('');
+
+      // Tranche detail lines
+      var trancheLines = trades.map(function(t) {
+        var d = t.created_at ? new Date(t.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+        return '<div style="display:flex;justify-content:space-between;padding:2px 0;font-family:var(--display);font-size:9px;color:var(--muted);">' +
+          '<span style="color:var(--green);">◆ '+( t.tranche||1)+'/3</span>' +
+          '<span>$'+parseFloat(t.entry_price).toFixed(2)+' · '+(parseFloat(t.shares))+' '+unit+'</span>' +
+          '<span>'+d+'</span></div>';
+      }).join('');
+
+      // Contract info for options
+      var optInfo = '';
+      if (vehicle === 'OPTIONS' && first.option_strike) {
+        var parts = [];
+        if (first.option_strike) parts.push('$'+first.option_strike);
+        if (first.option_type) parts.push(first.option_type);
+        if (first.option_expiry) {
+          try { parts.push(new Date(first.option_expiry+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})); } catch(e) {}
+        }
+        if (parts.length) optInfo = '<div class="jTradeRow"><span class="jTradeK">CONTRACT</span><span class="jTradeV" style="font-size:10px;color:var(--core);">'+asset+' '+parts.join(' ')+'</span></div>';
+      }
+
+      var maxTr = Math.max.apply(null, trancheNums);
+      var signalId = (first.signal_id||'').replace(/'/g,"\\'");
+      var assetEsc = first.asset.replace(/'/g,"\\'");
+
+      return '<div class="jTradeCard">' +
+        '<div class="jTradeTop">' +
+          '<div><span class="jTradeAsset">'+first.asset+'</span><span style="font-family:var(--display);font-size:8px;letter-spacing:1px;color:var(--muted);margin-left:6px;">'+vehicle+' · '+first.direction+'</span></div>' +
+          '<div class="jTradeBadge open">'+maxTr+'/3 OPEN</div>' +
+        '</div>' +
+        optInfo +
+        '<div class="jTradeRow"><span class="jTradeK">AVG ENTRY</span><span class="jTradeV" style="font-size:13px;font-weight:900;color:var(--core);">$'+avgEntry.toFixed(2)+'</span></div>' +
+        '<div class="jTradeRow"><span class="jTradeK">TOTAL SIZE</span><span class="jTradeV">'+totalSh+' '+unit+'</span></div>' +
+        '<div class="jTradeRow"><span class="jTradeK">TOTAL RISK</span><span class="jTradeV" style="color:var(--amber);">$'+totalRisk.toFixed(0)+'</span></div>' +
+        livePnl +
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">'+trancheLines+'</div>' +
+        '<div style="margin-top:6px;">'+dots+'</div>' +
+        '<div style="display:flex;gap:6px;margin-top:8px;">' +
+          (maxTr < 3 ? '<button class="jAddTranche" onclick="openTakeTradeFromJournal(\''+signalId+'\',\''+assetEsc+'\')">+ ADD TRANCHE</button>' : '') +
+          '<button class="jCloseBtn" onclick="openClosePosition(\''+signalId+'\',\''+assetEsc+'\')">CLOSE</button>' +
+        '</div>' +
+      '</div>';
     }
 
     function renderTradeCard(trade, isOpen) {
@@ -10950,6 +11383,17 @@
   </div>
   <div style="padding:10px 12px 0;">
 
+<!-- VIEW TOGGLE (MOBILE) -->
+<div class="histViewToggle" style="margin-bottom:10px;">
+  <button class="histViewBtn active" onclick="switchHistView('oracle',this)">◆ ORACLE</button>
+  <button class="histViewBtn" onclick="switchHistView('my',this)">◆ MY TRADES</button>
+</div>
+
+<div class="histViewPane active" id="mHistViewOracle">
+
+<!-- ACTIVE SIGNALS SCOREBOARD (MOBILE) -->
+<div id="mActiveSignalsBoard" style="margin-bottom:10px;"></div>
+
 <!-- STATS + EQUITY (open by default) -->
 <div style="margin-bottom:8px;">
   <div class="mCollapseHeader mColOpen" data-mcol="mStatsEquity" style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:10px 10px 0 0;cursor:pointer;min-height:48px;">
@@ -11069,6 +11513,14 @@
     }
     </script>
   </div>
+</div>
+
+</div><!-- end mHistViewOracle -->
+
+<!-- MY TRADE HISTORY (MOBILE) -->
+<div class="histViewPane" id="mHistViewMy">
+  <div id="mMyTradeStats" style="margin-bottom:10px;"></div>
+  <div id="mMyTradeBody" style="font-family:var(--display);font-size:10px;"></div>
 </div>
 
   </div>
@@ -11776,7 +12228,7 @@
         '</div>'+
         '<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:10px;">'+
           '<div style="font-family:Orbitron,monospace;font-size:10px;color:rgba(180,210,240,.75);margin-bottom:4px;">LIVE PRICE</div>'+
-          '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:'+(liveChg!==null?(liveChg>=0?'#00ff88':'#ff4466'):'#fff')+'">'+(liveP?'$'+liveP.toFixed(2):'—')+'</div>'+
+          '<div style="font-family:Orbitron,monospace;font-size:22px;font-weight:900;color:'+(liveChg!==null?(liveChg>=0?'#00ff88':'#ff4466'):'#fff')+'">'+(liveP?'$'+liveP.toFixed(2):'—')+'</div>'+
           (liveChg!==null?'<div style="font-family:Orbitron,monospace;font-size:10px;color:'+(liveChg>=0?'#00ff88':'#ff4466')+'">'+(liveChg>=0?'+':'')+liveChg.toFixed(2)+'% today</div>':'')+
         '</div>'+
         '<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:10px;">'+
@@ -11872,33 +12324,58 @@
           '<span style="color:var(--core);cursor:pointer;border-bottom:1px dashed rgba(0,229,255,.3);" onclick="openRiskSettings()">Set up risk calculator</span></div></div>';
       }
       var hasOpts = calc.options;
+      var perTranche = calc.trancheShares[0];
+      var oTr = sig.oracle_tranche || 0;
+      var t1Cls = oTr >= 1 ? 'background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.35);box-shadow:0 0 10px rgba(0,255,136,.12);' : '';
+      var t2Cls = oTr >= 2 ? 'background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.35);box-shadow:0 0 10px rgba(0,255,136,.12);' : '';
+      var t3Cls = oTr >= 3 ? 'background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.35);box-shadow:0 0 10px rgba(0,255,136,.12);' : '';
+      var t1Clr = oTr >= 1 ? 'color:#00ff88;' : '';
+      var t2Clr = oTr >= 2 ? 'color:#00ff88;' : '';
+      var t3Clr = oTr >= 3 ? 'color:#00ff88;' : '';
+      var trancheBoxes =
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;">'+
+          '<div style="'+t1Cls+'border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px;text-align:center;">'+
+            '<div style="font-family:Orbitron,monospace;font-size:8px;'+t1Clr+'">1/3</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:10px;font-weight:900;'+t1Clr+'">INITIAL</div>'+
+          '</div>'+
+          '<div style="'+t2Cls+'border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px;text-align:center;">'+
+            '<div style="font-family:Orbitron,monospace;font-size:8px;'+t2Clr+'">2/3</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:10px;font-weight:900;'+t2Clr+'">TRIGGER</div>'+
+          '</div>'+
+          '<div style="'+t3Cls+'border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px;text-align:center;">'+
+            '<div style="font-family:Orbitron,monospace;font-size:8px;'+t3Clr+'">3/3</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:10px;font-weight:900;'+t3Clr+'">CONVICTION</div>'+
+          '</div>'+
+        '</div>';
+      // Tranche timeline
+      var trTimeline = '';
+      if (sig.tranche_1_date || sig.signal_date) {
+        var dd1 = new Date(sig.tranche_1_date || sig.signal_date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        trTimeline += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:#00ff88;">◆ 1/3 INITIAL</span><span>'+dd1+'</span></div>';
+      }
+      if (sig.tranche_2_date) {
+        var dd2 = new Date(sig.tranche_2_date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        trTimeline += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:#00ff88;">◆ 2/3 TRIGGER</span><span>'+dd2+'</span></div>';
+      }
+      if (sig.tranche_3_date) {
+        var dd3 = new Date(sig.tranche_3_date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        trTimeline += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:#00ff88;">◆ 3/3 FULL</span><span>'+dd3+'</span></div>';
+      }
+      if (trTimeline) trTimeline = '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-top:8px;border-top:1px solid rgba(0,229,255,.06);padding-top:8px;">'+trTimeline+'</div>';
+
       var stockHtml =
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
           '<div style="background:rgba(0,10,30,.5);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">SHARES</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:#fff;">'+calc.shares+'</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">$'+calc.positionValue.toLocaleString('en-US',{maximumFractionDigits:0})+'</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-bottom:3px;">PER TRANCHE</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:#fff;">'+perTranche+' sh</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">'+calc.shares+' sh full</div>'+
           '</div>'+
           '<div style="background:rgba(0,10,30,.5);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">RISK</div>'+
+            '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-bottom:3px;">RISK</div>'+
             '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:var(--amber);">$'+calc.riskDollars.toFixed(0)+'</div>'+
             '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">'+calc.riskPct+'% of acct</div>'+
           '</div>'+
-        '</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;">'+
-          '<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:6px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:7px;color:var(--muted);">1/3</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:11px;font-weight:900;">'+calc.trancheShares[0]+' sh</div>'+
-          '</div>'+
-          '<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:6px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:7px;color:var(--muted);">2/3</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:11px;font-weight:900;">'+calc.tranches[1]+' sh</div>'+
-          '</div>'+
-          '<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:6px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:7px;color:var(--muted);">3/3</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:11px;font-weight:900;">'+calc.shares+' sh</div>'+
-          '</div>'+
-        '</div>';
+        '</div>' + trancheBoxes + trTimeline;
       var optsHtml = '';
       if (hasOpts) {
         var o = calc.options;
@@ -11928,7 +12405,7 @@
           '</div>' : '') +
         '<div id="mPsBody_'+sig.id+'">'+stockHtml+'</div>'+
         (hasOpts ? '<div id="_mPsStockData_'+sig.id+'" style="display:none;">'+stockHtml+'</div><div id="_mPsOptsData_'+sig.id+'" style="display:none;">'+optsHtml+'</div>' : '') +
-        '<div style="font-family:Orbitron,monospace;font-size:7px;color:var(--muted);text-align:center;margin-top:6px;letter-spacing:.5px;">$'+calc.accountSize.toLocaleString('en-US',{maximumFractionDigits:0})+' ACCT · '+calc.riskPct+'% RISK · $'+calc.riskPerShare.toFixed(2)+'/SH RISK</div>'+
+        '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);text-align:center;margin-top:6px;letter-spacing:.5px;">$'+calc.accountSize.toLocaleString('en-US',{maximumFractionDigits:0})+' ACCT · '+calc.riskPct+'% RISK · '+perTranche+' sh × 3 = '+calc.shares+' sh max</div>'+
       '</div>';
     })()+
 
