@@ -75,12 +75,13 @@
     .sigField .fAnnot{display:none;font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7;padding:8px 0 4px;grid-column:1/-1}
     .sigField.open{display:grid;grid-template-columns:1fr auto;background:rgba(0,229,255,.02);margin:0 -16px;padding:12px 16px;border-radius:8px}.sigField.open .fAnnot{display:block}
     .sigFieldHint{font-family:var(--mono);font-size:9px;color:rgba(0,229,255,.3);text-align:center;margin-top:12px}
-    .streamDemo{max-width:380px;margin:0 auto;background:rgba(0,5,12,.8);border:1px solid rgba(0,229,255,.1);border-radius:16px;overflow:hidden}
+    .streamAnalysisWrap{display:flex;gap:20px;max-width:820px;margin:0 auto;align-items:flex-start}
+    .streamDemo{max-width:380px;min-width:280px;flex-shrink:0;background:rgba(0,5,12,.8);border:1px solid rgba(0,229,255,.1);border-radius:16px;overflow:hidden}
     .streamHeader{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:rgba(0,229,255,.03);border-bottom:1px solid rgba(0,229,255,.08)}
     .streamHeaderLabel{font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--text)}.streamHeaderCount{font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--core);display:flex;align-items:center;gap:6px}
     .streamPulse{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
     .streamCards{padding:12px;display:flex;flex-direction:column;gap:8px}
-    .streamCard{background:rgba(0,10,20,.6);border:1px solid rgba(0,229,255,.08);border-radius:10px;padding:14px 16px;transition:all .4s;cursor:pointer;position:relative;overflow:hidden}.streamCard:hover{border-color:rgba(0,229,255,.25);transform:translateX(4px);box-shadow:0 4px 20px rgba(0,0,0,.3),0 0 15px rgba(0,229,255,.05)}
+    .streamCard{background:rgba(0,10,20,.6);border:1px solid rgba(0,229,255,.08);border-radius:10px;padding:14px 16px;transition:all .4s;cursor:pointer;position:relative;overflow:hidden}.streamCard:hover{border-color:rgba(0,229,255,.25);box-shadow:0 4px 20px rgba(0,0,0,.3),0 0 15px rgba(0,229,255,.05)}
     .streamCard.sc-featured{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.03)}.streamCard.sc-featured::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--core);box-shadow:0 0 8px var(--core)}
     .scTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.scTicker{font-family:var(--display);font-size:16px;font-weight:900;color:#fff}
     .scDirBadge{font-family:var(--display);font-size:7px;letter-spacing:1px;padding:3px 8px;border-radius:4px;font-weight:700}.scDirBadge.scBull{background:rgba(0,255,163,.1);color:var(--green);border:1px solid rgba(0,255,163,.2)}
@@ -88,6 +89,42 @@
     .scMeta{display:flex;gap:16px}.scMetaItem{display:flex;flex-direction:column;gap:2px}.scMk{font-family:var(--display);font-size:6px;letter-spacing:1px;color:rgba(74,106,138,1)}.scMv{font-family:var(--display);font-size:11px;font-weight:700}
     .scNewBadge{font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--amber);margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,229,255,.06)}
     .streamNote{font-family:var(--mono);font-size:10px;color:var(--text2);text-align:center;padding:10px 16px 14px;line-height:1.6;border-top:1px solid rgba(0,229,255,.05)}
+    .scSelectHint{font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,229,255,.06);transition:all .3s}
+    .sc-interactive{cursor:pointer}
+    .sc-interactive.active{border-color:rgba(0,229,255,.35) !important;background:rgba(0,229,255,.04) !important}
+    .sc-interactive.active .scSelectHint{color:var(--core)}
+    .sc-interactive:not(.active) .scSelectHint{opacity:.4}
+    .analysisPanel{flex:1;background:rgba(0,5,12,.8);border:1px solid rgba(0,229,255,.12);border-radius:16px;overflow:hidden;transition:all .4s;min-width:0}
+    .apHeader{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:rgba(0,229,255,.04);border-bottom:1px solid rgba(0,229,255,.08)}
+    .apLabel{font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--core)}
+    .apTicker{font-family:var(--display);font-size:16px;font-weight:900;color:#fff}
+    .apSection{padding:16px 18px;border-bottom:1px solid rgba(0,229,255,.05)}
+    .apSectionLabel{font-family:var(--display);font-size:7px;letter-spacing:2px;color:var(--text2);margin-bottom:10px}
+    .apArcWrap{text-align:center}
+    .apArcSvg{width:140px;height:80px}
+    .apKV{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-family:var(--display);font-size:10px}
+    .apK{letter-spacing:1.5px;color:var(--text2);font-size:8px}.apV{color:#fff;font-weight:700}
+    .apRR{text-align:center}.apRRRatio{font-family:var(--display);margin-bottom:8px}
+    .apRRRatio #apRRNum{font-size:28px;font-weight:900;color:var(--green)}.apRRDenom{font-size:14px;color:var(--text2)}
+    .apRRBar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin-bottom:6px}
+    .apRRRisk{background:linear-gradient(90deg,var(--red),rgba(255,59,59,.4));border-radius:4px;transition:flex .6s ease}
+    .apRRReward{background:linear-gradient(90deg,rgba(0,255,163,.4),var(--green));border-radius:4px;transition:flex .6s ease}
+    .apRRLabels{display:flex;justify-content:space-between;font-family:var(--display);font-size:7px;letter-spacing:1px}
+    .apStep{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+    .apStepN{font-family:var(--display);font-size:10px;font-weight:900;color:var(--core);min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,255,.08);border-radius:4px;flex-shrink:0;margin-top:1px}
+    .apStepT{font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.6}.apStepT strong{color:#fff;font-weight:600}
+    .apThesis{font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.8}
+    .mobileNavDemo{max-width:320px;margin:0 auto;border:2px solid rgba(255,255,255,.08);border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 60px rgba(0,229,255,.03);background:var(--bg);position:relative}
+    .mobileNavDemo::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80px;height:4px;background:rgba(255,255,255,.1);border-radius:0 0 4px 4px}
+    .mndScreen{padding:20px 16px;min-height:260px;position:relative;overflow:hidden}
+    .mndPane{display:none;animation:fadeIn .3s ease}.mndPane.active{display:block}
+    .mndSwipeHint{text-align:center;font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:rgba(0,229,255,.3);margin-top:16px;animation:swipeHintPulse 2s ease-in-out infinite}
+    @keyframes swipeHintPulse{0%,100%{opacity:.3}50%{opacity:.7}}
+    .mndTabBar{display:flex;justify-content:space-around;padding:8px 4px 12px;background:rgba(2,8,18,.95);border-top:1px solid rgba(0,229,255,.08)}
+    .mndTab{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;position:relative}
+    .mndTab::after{content:'';position:absolute;top:-1px;left:25%;right:25%;height:2px;background:var(--core);opacity:0;transition:opacity .3s;border-radius:1px}.mndTab.active::after{opacity:1}
+    .mndTabIcon{font-size:16px;line-height:1}
+    .mndTabLabel{font-family:var(--display);font-size:6px;letter-spacing:1px;color:var(--text2);transition:color .3s}.mndTab.active .mndTabLabel{color:var(--core)}
     .statusGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:32px 0}
     .statusBadge{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;border:1px solid;transition:all .4s}.statusBadge:hover{transform:translateY(-2px)}
     .statusBadge .sbDot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.statusBadge .sbName{font-family:var(--display);font-size:9px;letter-spacing:1.5px}.statusBadge .sbDesc{font-family:var(--body);font-size:11px;color:var(--text2);margin-top:2px}
@@ -122,8 +159,9 @@
     .lcNode .lcTitle{font-family:var(--display);font-size:10px;letter-spacing:2px;color:#fff;margin-bottom:6px}.lcNode .lcDesc{font-family:var(--body);font-size:13px;color:var(--text2);line-height:1.7}
     .lcNode:nth-child(2)::before{border-color:var(--amber)}.lcNode:nth-child(2):hover::before{background:var(--amber);box-shadow:0 0 14px rgba(255,179,0,.5)}
     .lcNode:nth-child(3)::before{border-color:var(--green)}.lcNode:nth-child(3):hover::before{background:var(--green);box-shadow:0 0 14px rgba(0,255,163,.5)}
-    .lcNode:nth-child(4)::before{border-color:var(--green)}.lcNode:nth-child(4):hover::before{background:var(--green);box-shadow:0 0 14px rgba(0,255,163,.5)}
-    .lcNode:nth-child(5)::before{border-color:var(--gold)}.lcNode:nth-child(5):hover::before{background:var(--gold);box-shadow:0 0 14px rgba(201,168,76,.5)}
+    .lcNode:nth-child(4)::before{border-color:var(--amber)}.lcNode:nth-child(4):hover::before{background:var(--amber);box-shadow:0 0 14px rgba(255,179,0,.5)}
+    .lcNode:nth-child(5)::before{border-color:var(--core)}.lcNode:nth-child(5):hover::before{background:var(--core);box-shadow:0 0 14px rgba(0,229,255,.5)}
+    .lcNode:nth-child(6)::before{border-color:var(--gold)}.lcNode:nth-child(6):hover::before{background:var(--gold);box-shadow:0 0 14px rgba(201,168,76,.5)}
     .flowDemo{background:rgba(0,10,20,.6);border:1px solid rgba(139,92,246,.12);border-radius:16px;padding:28px;max-width:600px;margin:0 auto 48px;overflow:hidden}
     .flowDemoHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(139,92,246,.08)}
     .flowDemoHead .fdLabel{font-family:var(--display);font-size:10px;letter-spacing:2px;color:rgba(245,166,35,.8)}
@@ -142,7 +180,7 @@
     .principle{text-align:center}.principle .prIcon{font-size:24px;margin-bottom:10px;opacity:.8}.principle .prTitle{font-family:var(--display);font-size:10px;letter-spacing:3px;color:var(--core);margin-bottom:6px}.principle .prDesc{font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7}
     .pbFooter{text-align:center;padding:80px 28px 48px;border-top:1px solid rgba(0,229,255,.04)}
     .pbFooter .fLogo{font-family:var(--display);font-size:12px;font-weight:800;letter-spacing:4px;color:#fff;margin-bottom:12px}.pbFooter .fSub{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:24px}.pbFooter .fCopy{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.2)}
-    @media(max-width:768px){.nav{padding:0 16px}.pbSection{padding:60px 20px}.cardGrid{grid-template-columns:1fr}.statRow{grid-template-columns:1fr 1fr}.transGrid{grid-template-columns:1fr}.principlesBar{grid-template-columns:1fr;gap:28px}.toc{justify-content:flex-start}.tocItem{padding:12px 10px;font-size:7px}.sigAnatomy{padding:20px}.flowDemo{padding:20px}.flowRow{grid-template-columns:50px 50px 1fr 70px;gap:8px}.secNum{font-size:44px}.histDemo{overflow-x:auto}.statusGrid{grid-template-columns:1fr 1fr}.dfArrows{gap:40px}.streamDemo{max-width:100%}}
+    @media(max-width:768px){.nav{padding:0 16px}.pbSection{padding:60px 20px}.cardGrid{grid-template-columns:1fr}.statRow{grid-template-columns:1fr 1fr}.transGrid{grid-template-columns:1fr}.principlesBar{grid-template-columns:1fr;gap:28px}.toc{justify-content:flex-start}.tocItem{padding:12px 10px;font-size:7px}.sigAnatomy{padding:20px}.flowDemo{padding:20px}.flowRow{grid-template-columns:50px 50px 1fr 70px;gap:8px}.secNum{font-size:44px}.histDemo{overflow-x:auto}.statusGrid{grid-template-columns:1fr 1fr}.dfArrows{gap:40px}.streamAnalysisWrap{flex-direction:column}.streamDemo{max-width:100%;min-width:0}.analysisPanel{width:100%}}
     @media(max-width:480px){.statRow{grid-template-columns:1fr}.statusGrid{grid-template-columns:1fr}.flowRow{grid-template-columns:1fr 1fr;gap:6px}.flowRow .frDetail{grid-column:1/-1}}
   </style>
 </head>
@@ -160,7 +198,7 @@
 <!-- S1 -->
 <section class="pbSection" id="s1"><div class="reveal"><div class="secLabel">SECTION 01</div><div class="secNum">01</div><h2 class="secTitle">What <span class="ac">Oracle</span> Is</h2><p class="secDesc">Oracle is a decision-support terminal that combines structured technical analysis with AI-assisted probability assessment to produce fully defined trade setups.</p></div>
 <div class="cardGrid"><div class="card reveal d1"><div class="icon">🔍</div><div class="cTitle">IDENTIFIES OPPORTUNITIES</div><div class="cText">Structured trading opportunities detected through systematic market analysis.</div></div><div class="card reveal d2"><div class="icon">📐</div><div class="cTitle">PREDEFINED FRAMEWORKS</div><div class="cText">Every signal includes entry, invalidation, targets, and execution parameters.</div></div><div class="card reveal d3"><div class="icon">📡</div><div class="cTitle">REAL-TIME TRACKING</div><div class="cText">Trades are tracked live from issuance through resolution. Nothing disappears.</div></div></div>
-<div class="reveal d2" style="max-width:500px;margin:0 auto;"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:24px;">THE ORACLE PIPELINE</div><div class="pipeline" id="pipeline"><div class="pipeStep"><span class="stepNum">01</span><span class="stepText">MARKET STRUCTURE</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">02</span><span class="stepText">SIGNAL DETECTION</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">03</span><span class="stepText">AI PROBABILITY ASSESSMENT</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">04</span><span class="stepText">EXECUTION PLAN</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">05</span><span class="stepText">LIVE TRADE TRACKING</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">06</span><span class="stepText">PERFORMANCE ARCHIVE</span></div></div></div>
+<div class="reveal d2" style="max-width:500px;margin:0 auto;"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:24px;">THE ORACLE PIPELINE</div><div class="pipeline" id="pipeline"><div class="pipeStep"><span class="stepNum">01</span><span class="stepText">MARKET STRUCTURE</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">02</span><span class="stepText">SIGNAL DETECTION</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">03</span><span class="stepText">AI PROBABILITY ASSESSMENT</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">04</span><span class="stepText">EXECUTION PLAN + INVALIDATION LEVEL</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">05</span><span class="stepText">LIVE TRADE TRACKING</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">06</span><span class="stepText">TARGET HIT OR INVALIDATION</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">07</span><span class="stepText">PERFORMANCE ARCHIVE</span></div></div></div>
 <div class="reveal d3" style="margin-top:48px;"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">ORACLE DOES NOT</div><div class="cardGrid" style="max-width:700px;margin:0 auto;"><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="icon">✕</div><div class="cTitle" style="color:var(--red);">EXECUTE TRADES</div><div class="cText">Traders execute and manage positions themselves.</div></div><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="icon">✕</div><div class="cTitle" style="color:var(--red);">GUARANTEE OUTCOMES</div><div class="cText">Markets involve uncertainty. No setup is guaranteed.</div></div><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="icon">✕</div><div class="cTitle" style="color:var(--red);">REPLACE JUDGMENT</div><div class="cText">Oracle supports decisions. It does not make them for you.</div></div></div></div></section>
 
 <!-- S2 -->
@@ -172,11 +210,168 @@
 <div class="sigField" data-annot="Profit objectives derived from the technical structure. T1 is the conservative target. Higher targets carry lower probability."><span class="fLabel">TARGETS</span><span class="fValue target">T1 $155 · T2 $172 · T3 $198</span><div class="fAnnot"></div></div>
 <div class="sigField" data-annot="AI-assessed probability of the trade reaching T1. This score evolves as price action develops."><span class="fLabel">CONFIDENCE</span><span class="fValue conf">87.55%</span><div class="fAnnot"></div></div>
 <div class="sigField" data-annot="The expected time frame for the trade to reach its targets. Signals can remain active beyond this window."><span class="fLabel">HORIZON</span><span class="fValue" style="color:var(--text);">3–6 MONTHS</span><div class="fAnnot"></div></div>
+<div class="sigField" data-annot="The minimum number of days you must hold the trade before considering an early exit. No exits are permitted before this period unless invalidation is hit. This gives the thesis time to develop."><span class="fLabel">MIN HOLD TIME</span><span class="fValue" style="color:var(--amber);">30 DAYS</span><div class="fAnnot"></div></div>
 <div class="sigFieldHint">tap any field to learn more</div></div>
-<div class="reveal d2"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">SIGNAL STATUS TYPES</div><div class="statusGrid"><div class="statusBadge sb-active"><div class="sbDot"></div><div><div class="sbName">ACTIVE</div><div class="sbDesc">Signal issued. Monitoring price.</div></div></div><div class="statusBadge sb-triggered"><div class="sbDot"></div><div><div class="sbName">TRIGGERED</div><div class="sbDesc">Price confirmed the thesis direction.</div></div></div><div class="statusBadge sb-closed"><div class="sbDot"></div><div><div class="sbName">CLOSED</div><div class="sbDesc">Trade reached target or was exited.</div></div></div><div class="statusBadge sb-early"><div class="sbDot"></div><div><div class="sbName">CLOSED EARLY</div><div class="sbDesc">Exited before target for risk management.</div></div></div><div class="statusBadge sb-inval"><div class="sbDot"></div><div><div class="sbName">INVALIDATED</div><div class="sbDesc">Price hit invalidation. Thesis void.</div></div></div></div></div>
-<div class="reveal d3" style="margin-top:56px;"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:12px;">THE SIGNAL STREAM</div><p style="font-family:var(--body);font-size:14px;color:var(--text2);line-height:1.8;text-align:center;max-width:520px;margin:0 auto 28px;">The Signal Stream is your primary view inside the terminal. It displays every active Oracle signal as a live card — sorted newest to oldest, updating in real time.</p>
-<div class="streamDemo"><div class="streamHeader"><span class="streamHeaderLabel">ORACLE SIGNALS</span><span class="streamHeaderCount"><span class="streamPulse"></span> 5 ACTIVE</span></div><div class="streamCards"><div class="streamCard sc-bull sc-featured"><div class="scTop"><span class="scTicker">TLT</span><span class="scDirBadge scBull">▲ BULL</span></div><div class="scLevel">BULLISH BREAKOUT ALERT</div><div class="scMeta"><div class="scMetaItem"><span class="scMk">ENTRY</span><span class="scMv" style="color:var(--core);">$89.50</span></div><div class="scMetaItem"><span class="scMk">T1</span><span class="scMv" style="color:var(--green);">$94.00</span></div><div class="scMetaItem"><span class="scMk">CONF</span><span class="scMv" style="color:var(--core);">93.7%</span></div></div><div class="scNewBadge">⚡ NEW — MOST RECENT</div></div><div class="streamCard sc-bull"><div class="scTop"><span class="scTicker">GLD</span><span class="scDirBadge scBull">▲ BULL</span></div><div class="scLevel">MACRO BULL SIGNAL</div><div class="scMeta"><div class="scMetaItem"><span class="scMk">ENTRY</span><span class="scMv" style="color:var(--core);">$183.20</span></div><div class="scMetaItem"><span class="scMk">T1</span><span class="scMv" style="color:var(--green);">$192.00</span></div><div class="scMetaItem"><span class="scMk">CONF</span><span class="scMv" style="color:var(--core);">89.4%</span></div></div></div><div class="streamCard sc-bull"><div class="scTop"><span class="scTicker">NVDA</span><span class="scDirBadge scBull">▲ BULL</span></div><div class="scLevel">PHOENIX BREAKOUT</div><div class="scMeta"><div class="scMetaItem"><span class="scMk">ENTRY</span><span class="scMv" style="color:var(--core);">$135.50</span></div><div class="scMetaItem"><span class="scMk">T1</span><span class="scMv" style="color:var(--green);">$155.00</span></div><div class="scMetaItem"><span class="scMk">CONF</span><span class="scMv" style="color:var(--core);">87.6%</span></div></div></div></div><div class="streamNote">Signals sorted newest to oldest. Tap any card to view full trade details, thesis, and risk/reward.</div></div>
-<div class="cardGrid" style="max-width:700px;margin:28px auto 0;"><div class="card"><div class="cTitle">LIVE PRICE UPDATES</div><div class="cText">Each card shows real-time P&L, target progress, and live confidence. Data refreshes continuously.</div></div><div class="card"><div class="cTitle">NEWEST FIRST</div><div class="cText">The most recently issued signals appear at the top. Older signals move down the stream.</div></div></div></div></section>
+<div class="reveal d2"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">SIGNAL STATUS TYPES</div><div class="statusGrid"><div class="statusBadge sb-active"><div class="sbDot"></div><div><div class="sbName">ACTIVE</div><div class="sbDesc">Signal issued. Monitoring price.</div></div></div><div class="statusBadge sb-triggered"><div class="sbDot"></div><div><div class="sbName">TRIGGERED</div><div class="sbDesc">Price confirmed the thesis direction.</div></div></div><div class="statusBadge sb-closed"><div class="sbDot"></div><div><div class="sbName">CLOSED</div><div class="sbDesc">Trade reached target or was exited.</div></div></div><div class="statusBadge sb-early"><div class="sbDot"></div><div><div class="sbName">CLOSED EARLY</div><div class="sbDesc">Exited after minimum hold period, before target.</div></div></div><div class="statusBadge sb-inval"><div class="sbDot"></div><div><div class="sbName">INVALIDATED</div><div class="sbDesc">Price hit invalidation. Thesis void.</div></div></div></div></div>
+<div class="reveal d3" style="margin-top:56px;"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:12px;">THE SIGNAL STREAM</div><p style="font-family:var(--body);font-size:14px;color:var(--text2);line-height:1.8;text-align:center;max-width:520px;margin:0 auto 28px;">The Signal Stream is your primary view inside the terminal. Every active Oracle signal appears as a live card. Tap any card to open its full analysis.</p>
+
+<!-- INTERACTIVE STREAM + ANALYSIS DEMO -->
+<div class="streamAnalysisWrap">
+  <!-- LEFT: STREAM -->
+  <div class="streamDemo" id="interactiveStream">
+    <div class="streamHeader"><span class="streamHeaderLabel">ORACLE SIGNALS</span><span class="streamHeaderCount"><span class="streamPulse"></span> 3 ACTIVE</span></div>
+    <div class="streamCards">
+      <div class="streamCard sc-bull sc-featured sc-interactive active" data-sig="tlt">
+        <div class="scTop"><span class="scTicker">TLT</span><span class="scDirBadge scBull">▲ BULL</span></div>
+        <div class="scLevel">BULLISH BREAKOUT ALERT</div>
+        <div class="scMeta">
+          <div class="scMetaItem"><span class="scMk">ENTRY</span><span class="scMv" style="color:var(--core);">$89.50</span></div>
+          <div class="scMetaItem"><span class="scMk">T1</span><span class="scMv" style="color:var(--green);">$94.00</span></div>
+          <div class="scMetaItem"><span class="scMk">CONF</span><span class="scMv" style="color:var(--core);">93.7%</span></div>
+        </div>
+        <div class="scSelectHint">◈ VIEWING ANALYSIS</div>
+      </div>
+      <div class="streamCard sc-bull sc-interactive" data-sig="gld">
+        <div class="scTop"><span class="scTicker">GLD</span><span class="scDirBadge scBull">▲ BULL</span></div>
+        <div class="scLevel">MACRO BULL SIGNAL</div>
+        <div class="scMeta">
+          <div class="scMetaItem"><span class="scMk">ENTRY</span><span class="scMv" style="color:var(--core);">$183.20</span></div>
+          <div class="scMetaItem"><span class="scMk">T1</span><span class="scMv" style="color:var(--green);">$192.00</span></div>
+          <div class="scMetaItem"><span class="scMk">CONF</span><span class="scMv" style="color:var(--core);">89.4%</span></div>
+        </div>
+        <div class="scSelectHint">tap to analyze</div>
+      </div>
+      <div class="streamCard sc-bull sc-interactive" data-sig="nvda">
+        <div class="scTop"><span class="scTicker">NVDA</span><span class="scDirBadge scBull">▲ BULL</span></div>
+        <div class="scLevel">PHOENIX BREAKOUT</div>
+        <div class="scMeta">
+          <div class="scMetaItem"><span class="scMk">ENTRY</span><span class="scMv" style="color:var(--core);">$135.50</span></div>
+          <div class="scMetaItem"><span class="scMk">T1</span><span class="scMv" style="color:var(--green);">$155.00</span></div>
+          <div class="scMetaItem"><span class="scMk">CONF</span><span class="scMv" style="color:var(--core);">87.6%</span></div>
+        </div>
+        <div class="scSelectHint">tap to analyze</div>
+      </div>
+    </div>
+    <div class="streamNote">Tap a card to see its full analysis →</div>
+  </div>
+
+  <!-- RIGHT: ANALYSIS PANEL -->
+  <div class="analysisPanel" id="analysisPanel">
+    <div class="apHeader">
+      <span class="apLabel">◈ SIGNAL ANALYSIS</span>
+      <span class="apTicker" id="apTicker">TLT</span>
+    </div>
+
+    <!-- Confidence Arc -->
+    <div class="apSection">
+      <div class="apSectionLabel">CONFIDENCE INDEX</div>
+      <div class="apArcWrap">
+        <svg class="apArcSvg" viewBox="0 0 110 65">
+          <path d="M 10 60 A 45 45 0 0 1 100 60" fill="none" stroke="rgba(0,229,255,.1)" stroke-width="6" stroke-linecap="round"/>
+          <path id="apArcFill" d="M 10 60 A 45 45 0 0 1 100 60" fill="none" stroke="var(--core)" stroke-width="6" stroke-linecap="round" stroke-dasharray="141.4" stroke-dashoffset="9"/>
+          <text x="55" y="55" text-anchor="middle" font-family="Orbitron, monospace" font-size="17" font-weight="900" fill="#00e5ff" id="apArcText">93.7%</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Execution Snapshot -->
+    <div class="apSection">
+      <div class="apSectionLabel">EXECUTION SNAPSHOT</div>
+      <div class="apKV"><span class="apK">ASSET</span><span class="apV" id="apAsset">TLT</span></div>
+      <div class="apKV"><span class="apK">SIGNAL DATE</span><span class="apV" id="apDate" style="color:var(--text2);">FEB 18, 2026</span></div>
+      <div class="apKV"><span class="apK">ENTRY PRICE</span><span class="apV" id="apEntry" style="color:var(--core);font-weight:900;">$89.50</span></div>
+      <div class="apKV"><span class="apK">HORIZON</span><span class="apV" id="apHorizon">6–12 MONTHS</span></div>
+      <div class="apKV"><span class="apK">MIN HOLD</span><span class="apV" id="apMinHold" style="color:var(--amber);">30 DAYS</span></div>
+    </div>
+
+    <!-- Risk / Reward -->
+    <div class="apSection">
+      <div class="apSectionLabel">RISK / REWARD</div>
+      <div class="apRR">
+        <div class="apRRRatio"><span id="apRRNum">2.8</span><span class="apRRDenom"> : 1</span></div>
+        <div class="apRRBar">
+          <div class="apRRRisk" id="apRRRisk" style="flex:1;"></div>
+          <div class="apRRReward" id="apRRReward" style="flex:2.8;"></div>
+        </div>
+        <div class="apRRLabels"><span style="color:var(--red);">◀ RISK</span><span style="color:var(--green);">REWARD ▶</span></div>
+      </div>
+    </div>
+
+    <!-- Action Plan -->
+    <div class="apSection">
+      <div class="apSectionLabel">◈ ACTION PLAN</div>
+      <div class="apAction" id="apAction">
+        <div class="apStep"><span class="apStepN">1</span><span class="apStepT" id="apStep1">Initiate position at current levels near <strong>$89.50</strong>.</span></div>
+        <div class="apStep"><span class="apStepN">2</span><span class="apStepT" id="apStep2">Set stop at <strong>< $85.90</strong> daily close. No exceptions.</span></div>
+        <div class="apStep"><span class="apStepN">3</span><span class="apStepT" id="apStep3">Monitor for trigger confirmation above <strong>$92.50</strong>.</span></div>
+      </div>
+    </div>
+
+    <!-- Thesis -->
+    <div class="apSection" style="border-bottom:none;">
+      <div class="apSectionLabel">SIGNAL THESIS</div>
+      <div class="apThesis" id="apThesis">TLT is forming a textbook accumulation base as rate cut expectations build. The bond market is pricing in a pivot — this is a high-conviction macro trade with a 6–12 month horizon.</div>
+      <div style="margin-top:10px;font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);opacity:.5;">— ORACLE ANALYSIS</div>
+    </div>
+  </div>
+</div>
+
+<div class="cardGrid" style="max-width:700px;margin:28px auto 0;"><div class="card"><div class="cTitle">LIVE PRICE UPDATES</div><div class="cText">Each card shows real-time P&L, target progress, and live confidence. Data refreshes continuously.</div></div><div class="card"><div class="cTitle">REAL-TIME ACTION PLANS</div><div class="cText">The analysis panel generates dynamic action steps based on where price is relative to entry, targets, and invalidation.</div></div></div>
+
+<!-- MOBILE NAVIGATION -->
+<div style="margin-top:56px;">
+<div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">MOBILE NAVIGATION</div>
+<p style="font-family:var(--body);font-size:14px;color:var(--text2);line-height:1.8;text-align:center;max-width:520px;margin:0 auto 28px;">On mobile, the terminal is organized into five tabs. Navigate between them by tapping the bottom bar or swiping left and right.</p>
+
+<div class="mobileNavDemo">
+  <div class="mndScreen" id="mndScreen">
+    <div class="mndContent" id="mndContent">
+      <div class="mndPane active" data-pane="Signals">
+        <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:12px;">⚡ SIGNALS</div>
+        <div style="font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7;">All active Oracle signals displayed as live cards. Tap any card to view its full analysis.</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+          <div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:var(--display);font-size:10px;font-weight:800;color:#fff;">TLT</span><span style="font-family:var(--display);font-size:8px;color:var(--green);">93.7%</span></div>
+          <div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:var(--display);font-size:10px;font-weight:800;color:#fff;">GLD</span><span style="font-family:var(--display);font-size:8px;color:var(--green);">89.4%</span></div>
+          <div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:var(--display);font-size:10px;font-weight:800;color:#fff;">NVDA</span><span style="font-family:var(--display);font-size:8px;color:var(--green);">87.6%</span></div>
+        </div>
+      </div>
+      <div class="mndPane" data-pane="Analysis">
+        <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:12px;">◈ ANALYSIS</div>
+        <div style="font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7;">Deep-dive into the selected signal. Confidence arc, execution snapshot, action plan, thesis, and risk/reward — all in one view.</div>
+      </div>
+      <div class="mndPane" data-pane="Macro">
+        <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:12px;">🌐 MACRO</div>
+        <div style="font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7;">Market regime dashboard. SPY/QQQ benchmarks, sector stance, and macro indicators that feed into Oracle's signal generation.</div>
+      </div>
+      <div class="mndPane" data-pane="Flow">
+        <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:12px;">🌊 FLOW</div>
+        <div style="font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7;">Institutional options flow. Filtered sweeps, premium data, and sentiment — flagged when they align with active Oracle signals.</div>
+      </div>
+      <div class="mndPane" data-pane="History">
+        <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:12px;">📊 HISTORY</div>
+        <div style="font-family:var(--body);font-size:12px;color:var(--text2);line-height:1.7;">Performance archive. Every closed trade with full P&L, duration, and exit reason. Win rates, analytics, and monthly breakdowns.</div>
+      </div>
+    </div>
+    <div class="mndSwipeHint" id="mndSwipeHint">
+      <span>◀</span> swipe left / right <span>▶</span>
+    </div>
+  </div>
+  <div class="mndTabBar" id="mndTabBar">
+    <button class="mndTab active" data-tab="Signals"><span class="mndTabIcon">⚡</span><span class="mndTabLabel">SIGNALS</span></button>
+    <button class="mndTab" data-tab="Analysis"><span class="mndTabIcon">◈</span><span class="mndTabLabel">ANALYSIS</span></button>
+    <button class="mndTab" data-tab="Macro"><span class="mndTabIcon">🌐</span><span class="mndTabLabel">MACRO</span></button>
+    <button class="mndTab" data-tab="Flow"><span class="mndTabIcon">🌊</span><span class="mndTabLabel">FLOW</span></button>
+    <button class="mndTab" data-tab="History"><span class="mndTabIcon">📊</span><span class="mndTabLabel">HISTORY</span></button>
+  </div>
+</div>
+
+<div class="cardGrid" style="max-width:700px;margin:24px auto 0;">
+  <div class="card"><div class="cTitle">SWIPE BETWEEN TABS</div><div class="cText">Swipe left or right anywhere on the screen to move between tabs. Works from the edge of the screen even over charts.</div></div>
+  <div class="card"><div class="cTitle">TAP THE BOTTOM BAR</div><div class="cText">Tap any icon in the tab bar to jump directly to that section. The active tab is highlighted in cyan.</div></div>
+</div>
+</div>
+
+</div></section>
 
 <!-- S3 -->
 <section class="pbSection" id="s3"><div class="reveal"><div class="secLabel">SECTION 03</div><div class="secNum">03</div><h2 class="secTitle">Trade Execution <span class="ac">Framework</span></h2><p class="secDesc">Positions are built progressively as the market confirms the thesis. Capital is not committed all at once.</p></div>
@@ -184,15 +379,55 @@
 <div class="reveal d2" style="max-width:560px;margin:0 auto;"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:16px;">OBJECTIVE</div><div class="card" style="text-align:center;border-color:rgba(0,229,255,.12);"><div style="font-family:var(--body);font-size:14px;color:var(--text);line-height:1.9;">Build the position as the market proves the thesis correct, rather than committing full capital upfront.</div></div></div></section>
 
 <!-- S4 -->
-<section class="pbSection" id="s4"><div class="reveal"><div class="secLabel">SECTION 04</div><div class="secNum">04</div><h2 class="secTitle">Risk <span class="ac">Framework</span></h2><p class="secDesc">Capital preservation is the foundation. Position sizing determines long-term performance.</p></div>
-<div class="statRow reveal d1"><div class="stat"><div class="sLabel">OPTIONS POSITION</div><div class="sValue cyan" data-count="5">5%</div><div class="sSub">max of account</div></div><div class="stat"><div class="sLabel">STOCK POSITION</div><div class="sValue green" data-count="10">10%</div><div class="sSub">max of account</div></div><div class="stat"><div class="sLabel">EFFECTIVE OPTIONS RISK</div><div class="sValue gold">~2.5%</div><div class="sSub">expected loss ≈ 50%</div></div><div class="stat"><div class="sLabel">MINIMUM CAPITAL</div><div class="sValue cyan" data-count="10000">$10K</div><div class="sSub">recommended</div></div></div>
+<section class="pbSection" id="s4"><div class="reveal"><div class="secLabel">SECTION 04</div><div class="secNum">04</div><h2 class="secTitle">Risk <span class="ac">Framework</span></h2><p class="secDesc">Capital preservation is the foundation. Options trades can lose 50–75% of their value. Position sizing is the only variable you fully control.</p></div>
+<div class="statRow reveal d1"><div class="stat"><div class="sLabel">OPTIONS POSITION</div><div class="sValue cyan">3–5%</div><div class="sSub">of account value</div></div><div class="stat"><div class="sLabel">STOCK POSITION</div><div class="sValue green" data-count="10">10%</div><div class="sSub">max of account</div></div><div class="stat"><div class="sLabel">OPTIONS LOSS POTENTIAL</div><div class="sValue red">50–75%</div><div class="sSub">of position value</div></div><div class="stat"><div class="sLabel">MAX ACCOUNT RISK</div><div class="sValue gold">~3%</div><div class="sSub">per options trade</div></div><div class="stat"><div class="sLabel">MINIMUM CAPITAL</div><div class="sValue cyan" data-count="10000">$10K</div><div class="sSub">recommended</div></div></div>
+<div class="reveal d1" style="max-width:560px;margin:40px auto;">
+<div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">THE MATH — WHY 3–5% POSITION SIZE</div>
+<div style="background:rgba(0,10,20,.6);border:1px solid rgba(0,229,255,.1);border-radius:14px;padding:28px;overflow:hidden;">
+<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+<div style="text-align:center;padding:14px 18px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:10px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px;">ACCOUNT</div>
+<div style="font-family:var(--display);font-size:20px;font-weight:900;color:var(--core);">$25,000</div>
+</div>
+<div style="font-family:var(--display);font-size:14px;color:rgba(0,229,255,.3);">×</div>
+<div style="text-align:center;padding:14px 18px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:10px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px;">POSITION</div>
+<div style="font-family:var(--display);font-size:20px;font-weight:900;color:var(--core);">5%</div>
+</div>
+<div style="font-family:var(--display);font-size:14px;color:rgba(0,229,255,.3);">=</div>
+<div style="text-align:center;padding:14px 18px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:10px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px;">OPTIONS TRADE</div>
+<div style="font-family:var(--display);font-size:20px;font-weight:900;color:#fff;">$1,250</div>
+</div>
+</div>
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.1),transparent);margin:20px 0;"></div>
+<div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+<div style="text-align:center;padding:14px 18px;background:rgba(255,59,59,.04);border:1px solid rgba(255,59,59,.1);border-radius:10px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px;">IF TRADE LOSES</div>
+<div style="font-family:var(--display);font-size:20px;font-weight:900;color:var(--red);">50–75%</div>
+</div>
+<div style="font-family:var(--display);font-size:14px;color:rgba(0,229,255,.3);">→</div>
+<div style="text-align:center;padding:14px 18px;background:rgba(255,59,59,.04);border:1px solid rgba(255,59,59,.1);border-radius:10px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px;">$ LOST</div>
+<div style="font-family:var(--display);font-size:20px;font-weight:900;color:var(--red);">$625–$937</div>
+</div>
+<div style="font-family:var(--display);font-size:14px;color:rgba(0,229,255,.3);">=</div>
+<div style="text-align:center;padding:14px 20px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:10px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px;">ACCOUNT IMPACT</div>
+<div style="font-family:var(--display);font-size:20px;font-weight:900;color:var(--gold);">~2.5–3.7%</div>
+</div>
+</div>
+<div style="font-family:var(--mono);font-size:11px;color:var(--text2);text-align:center;margin-top:20px;line-height:1.7;">Options can lose 50–75% of their value on an incorrect trade.<br>Keeping position size at 3–5% caps your account damage to roughly 3%.</div>
+</div>
+</div>
+
 <div class="reveal d2"><div class="decisionFlow"><div class="dfQuestion">Does the required stop exceed your risk limits?</div><div class="dfArrows"><div class="dfArrowBranch"><div class="aLabel yes">YES</div><div class="aLine" style="background:linear-gradient(var(--red),transparent);width:2px;height:24px;"></div><div class="dfResult block">PASS THE TRADE</div></div><div class="dfArrowBranch"><div class="aLabel no">NO</div><div class="aLine" style="background:linear-gradient(var(--green),transparent);width:2px;height:24px;"></div><div class="dfResult pass">TRADE ALLOWED</div></div></div></div></div>
-<div class="reveal d3" style="max-width:600px;margin:0 auto;"><table class="ruleTable"><thead><tr><th>RULE</th><th>LIMIT</th></tr></thead><tbody><tr><td>Options position</td><td class="rVal">5% of account</td></tr><tr><td>Stock position</td><td class="rVal">10% of account</td></tr><tr><td>Effective options risk</td><td class="rVal">~2.5%</td></tr><tr><td>Minimum capital</td><td class="rVal">$10,000</td></tr><tr><td>If stop exceeds limits</td><td class="rVal" style="color:var(--red);">Pass trade</td></tr></tbody></table></div></section>
+<div class="reveal d3" style="max-width:600px;margin:0 auto;"><table class="ruleTable"><thead><tr><th>RULE</th><th>LIMIT</th></tr></thead><tbody><tr><td>Options position size</td><td class="rVal">3–5% of account</td></tr><tr><td>Stock position size</td><td class="rVal">10% of account</td></tr><tr><td>Options loss potential</td><td class="rVal" style="color:var(--red);">50–75% of position</td></tr><tr><td>Max account risk (options)</td><td class="rVal">~3% per trade</td></tr><tr><td>Minimum capital</td><td class="rVal">$10,000</td></tr><tr><td>If stop exceeds limits</td><td class="rVal" style="color:var(--red);">Pass trade</td></tr></tbody></table></div></section>
 
 <!-- S5 -->
 <section class="pbSection" id="s5"><div class="reveal"><div class="secLabel">SECTION 05</div><div class="secNum">05</div><h2 class="secTitle">Signal <span class="ac">Lifecycle</span></h2><p class="secDesc">Signals are not static alerts. They evolve through a defined lifecycle from issuance to resolution.</p></div>
-<div class="lcTimeline reveal d1"><div class="lcNode"><div class="lcTitle">SIGNAL ISSUED</div><div class="lcDesc">Oracle publishes the setup with all parameters defined. Initial 33% entry begins.</div></div><div class="lcNode"><div class="lcTitle">TRIGGER CONFIRMED</div><div class="lcDesc">Price crosses the trigger level. The market is confirming the thesis. Second 33% allocation added.</div></div><div class="lcNode"><div class="lcTitle">POSITION BUILT</div><div class="lcDesc">Full position established on the first pullback to trigger. Trade is now 100% active.</div></div><div class="lcNode"><div class="lcTitle">TRADE DEVELOPS</div><div class="lcDesc">Price moves toward targets. Confidence score updates in real time. T1, T2, T3 tracked live.</div></div><div class="lcNode"><div class="lcTitle">RESOLUTION</div><div class="lcDesc">Trade reaches target, hits invalidation, or is closed early. Result recorded permanently.</div></div></div>
-<div class="reveal d2"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">WHY THIS MATTERS</div><div class="cardGrid" style="max-width:700px;margin:0 auto;"><div class="card"><div class="cTitle">TRADES CAN STAY OPEN FOR WEEKS</div><div class="cText">Some setups take time to develop. Patience is part of the system.</div></div><div class="card"><div class="cTitle">SOME TRADES CLOSE EARLY</div><div class="cText">Risk management may require exiting before target is reached.</div></div><div class="card"><div class="cTitle">SOME SIGNALS NEVER TRIGGER</div><div class="cText">If the market doesn't confirm, you remain in the initial 33% position only. The remaining 67% is never deployed.</div></div></div></div></section>
+<div class="lcTimeline reveal d1"><div class="lcNode"><div class="lcTitle">SIGNAL ISSUED</div><div class="lcDesc">Oracle publishes the setup with all parameters defined. Initial 33% entry begins.</div></div><div class="lcNode"><div class="lcTitle">TRIGGER CONFIRMED</div><div class="lcDesc">Price crosses the trigger level. The market is confirming the thesis. Second 33% allocation added.</div></div><div class="lcNode"><div class="lcTitle">POSITION BUILT</div><div class="lcDesc">Full position established on the first pullback to trigger. Trade is now 100% active.</div></div><div class="lcNode"><div class="lcTitle">MINIMUM HOLD PERIOD</div><div class="lcDesc">Every signal has a minimum hold time (e.g. 30 days). No early exits are permitted before this period elapses — the thesis needs time to develop. Only invalidation overrides this rule.</div></div><div class="lcNode"><div class="lcTitle">TRADE DEVELOPS</div><div class="lcDesc">Price moves toward targets. Confidence score updates in real time. T1, T2, T3 tracked live.</div></div><div class="lcNode"><div class="lcTitle">RESOLUTION</div><div class="lcDesc">Trade reaches target, hits invalidation, or is closed early after the minimum hold period. Result recorded permanently.</div></div></div>
+<div class="reveal d2"><div style="font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:20px;">WHY THIS MATTERS</div><div class="cardGrid" style="max-width:700px;margin:0 auto;"><div class="card"><div class="cTitle">TRADES CAN STAY OPEN FOR WEEKS</div><div class="cText">Some setups take time to develop. Patience is part of the system.</div></div><div class="card"><div class="cTitle" style="color:var(--amber);">MINIMUM HOLD TIME IS ENFORCED</div><div class="cText">Every signal has a minimum hold period. No early exits are permitted until this time elapses — only invalidation overrides this rule.</div></div><div class="card"><div class="cTitle">SOME TRADES CLOSE EARLY</div><div class="cText">After the minimum hold period, risk management may require exiting before target is reached.</div></div><div class="card"><div class="cTitle">SOME SIGNALS NEVER TRIGGER</div><div class="cText">If the market doesn't confirm, you remain in the initial 33% position only. The remaining 67% is never deployed.</div></div></div></div></section>
 
 <!-- S6 -->
 <section class="pbSection" id="s6"><div class="reveal"><div class="secLabel">SECTION 06</div><div class="secNum">06</div><h2 class="secTitle">Options Flow <span class="ac">Intelligence</span></h2><p class="secDesc">Large institutional options sweeps filtered and displayed in real time. See what the big money is doing.</p></div>
@@ -223,7 +458,67 @@ const tocObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){toc
 tocItems.forEach(item=>{item.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(item.getAttribute('href'));if(t)window.scrollTo({top:t.getBoundingClientRect().top+window.pageYOffset-110,behavior:'smooth'});});});
 document.querySelectorAll('.sigField[data-annot]').forEach(f=>{f.addEventListener('click',()=>{const was=f.classList.contains('open');document.querySelectorAll('.sigField.open').forEach(x=>{x.classList.remove('open');x.querySelector('.fAnnot').textContent='';});if(!was){f.classList.add('open');f.querySelector('.fAnnot').textContent=f.getAttribute('data-annot');}});});
 const pipeObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.querySelectorAll('.pipeStep').forEach((s,i)=>{s.style.opacity='0';s.style.transform='translateY(16px)';setTimeout(()=>{s.style.transition='opacity .5s ease, transform .5s ease';s.style.opacity='1';s.style.transform='translateY(0)';},i*180);});x.target.querySelectorAll('.pipeArrow').forEach((a,i)=>{a.style.opacity='0';setTimeout(()=>{a.style.transition='opacity .4s ease';a.style.opacity='1';},i*180+120);});pipeObs.unobserve(x.target);}});},{threshold:.3});const pipeEl=document.getElementById('pipeline');if(pipeEl)pipeObs.observe(pipeEl);
+/* ── INTERACTIVE SIGNAL STREAM → ANALYSIS ── */
+const sigData = {
+  tlt: { ticker:'TLT', conf:93.7, asset:'TLT', date:'FEB 18, 2026', entry:'$89.50', horizon:'6–12 MONTHS', minHold:'30 DAYS', rr:'2.8', rrRisk:1, rrReward:2.8, steps:['Initiate position at current levels near <strong>$89.50</strong>.','Set stop at <strong>< $85.90</strong> daily close. No exceptions.','Monitor for trigger confirmation above <strong>$92.50</strong>.'], thesis:'TLT is forming a textbook accumulation base as rate cut expectations build. The bond market is pricing in a pivot — this is a high-conviction macro trade with a 6–12 month horizon.' },
+  gld: { ticker:'GLD', conf:89.4, asset:'GLD', date:'FEB 10, 2026', entry:'$183.20', horizon:'6–9 MONTHS', minHold:'45 DAYS', rr:'2.3', rrRisk:1, rrReward:2.3, steps:['Accumulate on pullbacks near <strong>$183.20</strong>.','Hard stop at <strong>< $176.50</strong> weekly close.','First target at <strong>$192.00</strong> — trail stop to entry on hit.'], thesis:'Gold is breaking out of a multi-year consolidation as dollar weakness and geopolitical risk accelerate. Central bank buying remains at historic levels. This is a macro positioning trade.' },
+  nvda: { ticker:'NVDA', conf:87.6, asset:'NVDA', date:'FEB 15, 2026', entry:'$135.50', horizon:'3–6 MONTHS', minHold:'30 DAYS', rr:'3.1', rrRisk:1, rrReward:3.1, steps:['Enter near <strong>$135.50</strong> on breakout confirmation.','Hard stop at <strong>< $121.00</strong> daily close.','Breakout above <strong>$138.00</strong> confirms thesis — add second tranche.'], thesis:'NVDA is reclaiming key structure after a significant correction. AI infrastructure demand remains the dominant secular theme. A confirmed breakout above $138 opens the path back to all-time highs.' }
+};
+function selectSignal(key) {
+  const d = sigData[key]; if (!d) return;
+  document.querySelectorAll('.sc-interactive').forEach(c => {
+    const isActive = c.dataset.sig === key;
+    c.classList.toggle('active', isActive);
+    c.querySelector('.scSelectHint').textContent = isActive ? '◈ VIEWING ANALYSIS' : 'tap to analyze';
+  });
+  const arcLen = 141.4;
+  const offset = arcLen - (arcLen * d.conf / 100);
+  document.getElementById('apTicker').textContent = d.ticker;
+  const arcFill = document.getElementById('apArcFill');
+  arcFill.style.transition = 'stroke-dashoffset .8s ease';
+  arcFill.setAttribute('stroke-dashoffset', offset);
+  document.getElementById('apArcText').textContent = d.conf + '%';
+  document.getElementById('apAsset').textContent = d.asset;
+  document.getElementById('apDate').textContent = d.date;
+  document.getElementById('apEntry').textContent = d.entry;
+  document.getElementById('apHorizon').textContent = d.horizon;
+  document.getElementById('apMinHold').textContent = d.minHold;
+  document.getElementById('apRRNum').textContent = d.rr;
+  document.getElementById('apRRRisk').style.flex = d.rrRisk;
+  document.getElementById('apRRReward').style.flex = d.rrReward;
+  d.steps.forEach((s, i) => { const el = document.getElementById('apStep'+(i+1)); if (el) el.innerHTML = s; });
+  document.getElementById('apThesis').textContent = d.thesis;
+  const panel = document.getElementById('analysisPanel');
+  panel.style.animation = 'none'; panel.offsetHeight; panel.style.animation = 'fadeIn .4s ease';
+}
+document.querySelectorAll('.sc-interactive').forEach(c => {
+  c.addEventListener('click', () => selectSignal(c.dataset.sig));
+});
 const streamObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.querySelectorAll('.streamCard').forEach((c,i)=>{c.style.opacity='0';c.style.transform='translateX(-20px)';setTimeout(()=>{c.style.transition='opacity .5s ease, transform .5s ease';c.style.opacity='1';c.style.transform='translateX(0)';},i*200+300);});streamObs.unobserve(x.target);}});},{threshold:.3});document.querySelectorAll('.streamDemo').forEach(s=>streamObs.observe(s));
+
+/* ── MOBILE NAV DEMO ── */
+const mndTabs = ['Signals','Analysis','Macro','Flow','History'];
+let mndIdx = 0;
+function switchMndTab(name) {
+  mndIdx = mndTabs.indexOf(name);
+  document.querySelectorAll('.mndPane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+  document.querySelectorAll('.mndTab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+}
+document.querySelectorAll('.mndTab').forEach(t => {
+  t.addEventListener('click', () => switchMndTab(t.dataset.tab));
+});
+let mndTouchX = 0;
+const mndScreen = document.getElementById('mndScreen');
+if (mndScreen) {
+  mndScreen.addEventListener('touchstart', e => { mndTouchX = e.touches[0].clientX; }, {passive:true});
+  mndScreen.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - mndTouchX;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0 && mndIdx < mndTabs.length - 1) switchMndTab(mndTabs[mndIdx + 1]);
+      else if (dx > 0 && mndIdx > 0) switchMndTab(mndTabs[mndIdx - 1]);
+    }
+  }, {passive:true});
+}
 document.querySelectorAll('.fdFilter').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.fdFilter').forEach(x=>x.classList.remove('active'));b.classList.add('active');});});
 const statObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){const v=x.target.querySelector('.sValue');if(v&&v.dataset.count){const tgt=parseInt(v.dataset.count);let cur=0;const step=tgt/30;const tmr=setInterval(()=>{cur+=step;if(cur>=tgt){cur=tgt;clearInterval(tmr);}if(tgt===10000){v.textContent='$'+(cur/1000).toFixed(cur>=tgt?0:1)+'K';}else{v.textContent=Math.round(cur)+'%';}},30);}statObs.unobserve(x.target);}});},{threshold:.5});document.querySelectorAll('.stat').forEach(s=>statObs.observe(s));
 const lcObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.querySelectorAll('.lcNode').forEach((n,i)=>{n.style.opacity='0';n.style.transform='translateX(-20px)';setTimeout(()=>{n.style.transition='opacity .5s ease, transform .5s ease';n.style.opacity='1';n.style.transform='translateX(0)';},i*200);});lcObs.unobserve(x.target);}});},{threshold:.2});document.querySelectorAll('.lcTimeline').forEach(t=>lcObs.observe(t));
