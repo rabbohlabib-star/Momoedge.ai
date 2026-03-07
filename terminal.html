@@ -4744,6 +4744,9 @@
 
 <!-- RIGHT -->
 <aside class="right">
+  <!-- TAKE TRADE — pinned at top -->
+  <button class="takeTradeBtn" id="takeTradeBtn" onclick="openTakeTradeModal()">◆ TAKE THIS TRADE</button>
+
   <!-- Confidence Arc -->
   <div class="box">
     <h3>CONFIDENCE INDEX</h3>
@@ -4804,12 +4807,6 @@
     </div>
   </div>
 
-  <!-- Position Sizing Calculator (consolidated into Take Trade modal) -->
-  <div class="box posSizeBox" id="posSizeBox" style="display:none;">
-    <h3>POSITION SIZING <span class="posSizeGear" id="posSizeGearBtn" title="Risk Settings">⚙</span></h3>
-    <div id="posSizeContent"></div>
-  </div>
-
   <!-- Signal Thesis -->
   <div class="box" id="thesisBox" style="display:none;">
     <div class="thesisBoxHeader">
@@ -4822,48 +4819,15 @@
     </div>
   </div>
 
-  <!-- Risk Calculator (consolidated into Take Trade modal) -->
-  <div class="box" id="riskCalcContainer" style="display:none;">
-    <div class="riskCalcBox">
-      <div class="riskCalcHeader">
-        <div class="riskCalcTitle">⬡ POSITION CALCULATOR</div>
-        <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ ACCOUNT</div>
-      </div>
-      <div id="riskCalcBody">
-        <div class="rcNoAcct" id="rcNoAcctMsg">SET YOUR ACCOUNT SIZE TO<br>ENABLE POSITION SIZING<br><button onclick="openRiskSettings()">SET ACCOUNT</button></div>
-        <div id="rcCalculated" style="display:none;">
-          <div class="rcVehicleToggle">
-            <button class="rcVehicleBtn active" data-rcv="STOCK" onclick="switchRcVehicle('STOCK')">◆ STOCK</button>
-            <button class="rcVehicleBtn" data-rcv="OPTIONS" onclick="switchRcVehicle('OPTIONS')">◆ OPTIONS</button>
-          </div>
-          <div id="rcStockCalc">
-            <div class="rcRow"><span class="rcLabel">RISK PER TRADE</span><span class="rcValue core" id="rcRiskDollar">—</span></div>
-            <div class="rcRow"><span class="rcLabel">RISK / SHARE</span><span class="rcValue" id="rcRiskPerShare">—</span></div>
-            <div class="rcRow"><span class="rcLabel">TOTAL SHARES</span><span class="rcValue green" id="rcTotalShares">—</span></div>
-            <div class="rcRow"><span class="rcLabel">POSITION VALUE</span><span class="rcValue" id="rcPositionVal">—</span></div>
-            <div class="rcTrancheGrid">
-              <div class="rcTrancheCard"><div class="rcTrancheLbl">1/3</div><div class="rcTrancheVal" id="rcT1Shares">—</div><div class="rcTrancheRisk" id="rcT1Risk">—</div></div>
-              <div class="rcTrancheCard"><div class="rcTrancheLbl">2/3</div><div class="rcTrancheVal" id="rcT2Shares">—</div><div class="rcTrancheRisk" id="rcT2Risk">—</div></div>
-              <div class="rcTrancheCard"><div class="rcTrancheLbl">3/3</div><div class="rcTrancheVal" id="rcT3Shares">—</div><div class="rcTrancheRisk" id="rcT3Risk">—</div></div>
-            </div>
-          </div>
-          <div id="rcOptionsCalc" style="display:none;">
-            <div class="rcRow"><span class="rcLabel">OPTION PREMIUM</span><span class="rcValue core" id="rcOptPremium">—</span></div>
-            <div class="rcRow"><span class="rcLabel">RISK PER TRADE</span><span class="rcValue core" id="rcOptRiskDollar">—</span></div>
-            <div class="rcRow"><span class="rcLabel">CONTRACTS</span><span class="rcValue green" id="rcContracts">—</span></div>
-            <div class="rcRow"><span class="rcLabel">MAX LOSS</span><span class="rcValue amber" id="rcMaxLoss">—</span></div>
-            <div class="rcTrancheGrid">
-              <div class="rcTrancheCard"><div class="rcTrancheLbl">1/3</div><div class="rcTrancheVal" id="rcOptT1">—</div><div class="rcTrancheRisk" id="rcOptT1R">—</div></div>
-              <div class="rcTrancheCard"><div class="rcTrancheLbl">2/3</div><div class="rcTrancheVal" id="rcOptT2">—</div><div class="rcTrancheRisk" id="rcOptT2R">—</div></div>
-              <div class="rcTrancheCard"><div class="rcTrancheLbl">3/3</div><div class="rcTrancheVal" id="rcOptT3">—</div><div class="rcTrancheRisk" id="rcOptT3R">—</div></div>
-            </div>
-            <div id="rcOptNote" style="font-family:var(--display);font-size:7.5px;letter-spacing:.5px;color:var(--muted);margin-top:6px;text-align:center;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Hidden containers kept for JS compatibility -->
+  <div id="posSizeBox" style="display:none;"><div id="posSizeContent"></div></div>
+  <div id="posSizeGearBtn" style="display:none;"></div>
+  <div id="riskCalcContainer" style="display:none;">
+    <div id="riskCalcBody"><div id="rcNoAcctMsg"></div><div id="rcCalculated" style="display:none;">
+      <div id="rcStockCalc"><div id="rcRiskDollar"></div><div id="rcRiskPerShare"></div><div id="rcTotalShares"></div><div id="rcPositionVal"></div><div id="rcT1Shares"></div><div id="rcT2Shares"></div><div id="rcT3Shares"></div><div id="rcT1Risk"></div><div id="rcT2Risk"></div><div id="rcT3Risk"></div></div>
+      <div id="rcOptionsCalc" style="display:none;"><div id="rcOptPremium"></div><div id="rcOptRiskDollar"></div><div id="rcContracts"></div><div id="rcMaxLoss"></div><div id="rcOptT1"></div><div id="rcOptT2"></div><div id="rcOptT3"></div><div id="rcOptT1R"></div><div id="rcOptT2R"></div><div id="rcOptT3R"></div><div id="rcOptNote"></div></div>
+    </div></div>
   </div>
-  <button class="takeTradeBtn" id="takeTradeBtn" onclick="openTakeTradeModal()">◆ TAKE THIS TRADE</button>
 </aside>
 
   </div>
@@ -5391,6 +5355,9 @@
           };
           // Also cache under the original symbol key
           if (upper !== symbol) PRICE_CACHE[symbol] = PRICE_CACHE[upper];
+          // Alias BTC ↔ BTCUSD so both always resolve
+          if (upper === 'BTC') PRICE_CACHE['BTCUSD'] = PRICE_CACHE[upper];
+          if (upper === 'BTCUSD') PRICE_CACHE['BTC'] = PRICE_CACHE[upper];
           return data.c;
         }
       } catch(e) {
@@ -12396,103 +12363,14 @@
       '</div>'+
     '</div>':'')+
 
-    // POSITION SIZING
+    // QUICK POSITION INFO (detail in Take Trade modal)
     (function() {
       var calc = (typeof calcPositionSizing === 'function') ? calcPositionSizing(sig) : null;
-      if (!calc) {
-        if (_riskSettings && _riskSettings.accountSize) {
-          return '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:9px;color:rgba(74,106,138,1);letter-spacing:1.5px;">POSITION SIZING</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-top:8px;">Needs entry price & invalidation</div></div>';
-        }
-        return '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;">'+
-          '<div style="font-family:Orbitron,monospace;font-size:9px;color:rgba(74,106,138,1);letter-spacing:1.5px;">POSITION SIZING</div>'+
-          '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-top:8px;">'+
-          '<span style="color:var(--core);cursor:pointer;border-bottom:1px dashed rgba(0,229,255,.3);" onclick="openRiskSettings()">Set up risk calculator</span></div></div>';
-      }
-      var hasOpts = calc.options;
-      var perTranche = calc.trancheShares[0];
-      var oTr = sig.oracle_tranche || 0;
-      var t1Cls = oTr >= 1 ? 'background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.35);box-shadow:0 0 10px rgba(0,255,136,.12);' : '';
-      var t2Cls = oTr >= 2 ? 'background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.35);box-shadow:0 0 10px rgba(0,255,136,.12);' : '';
-      var t3Cls = oTr >= 3 ? 'background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.35);box-shadow:0 0 10px rgba(0,255,136,.12);' : '';
-      var t1Clr = oTr >= 1 ? 'color:#00ff88;' : '';
-      var t2Clr = oTr >= 2 ? 'color:#00ff88;' : '';
-      var t3Clr = oTr >= 3 ? 'color:#00ff88;' : '';
-      var trancheBoxes =
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;">'+
-          '<div style="'+t1Cls+'border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;'+t1Clr+'">1/3</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:10px;font-weight:900;'+t1Clr+'">INITIAL</div>'+
-          '</div>'+
-          '<div style="'+t2Cls+'border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;'+t2Clr+'">2/3</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:10px;font-weight:900;'+t2Clr+'">TRIGGER</div>'+
-          '</div>'+
-          '<div style="'+t3Cls+'border:1px solid rgba(0,229,255,.08);border-radius:6px;padding:8px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;'+t3Clr+'">3/3</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:10px;font-weight:900;'+t3Clr+'">CONVICTION</div>'+
-          '</div>'+
-        '</div>';
-      // Tranche timeline
-      var trTimeline = '';
-      if (sig.tranche_1_date || sig.signal_date) {
-        var dd1 = new Date(sig.tranche_1_date || sig.signal_date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        trTimeline += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:#00ff88;">◆ 1/3 INITIAL</span><span>'+dd1+'</span></div>';
-      }
-      if (sig.tranche_2_date) {
-        var dd2 = new Date(sig.tranche_2_date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        trTimeline += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:#00ff88;">◆ 2/3 TRIGGER</span><span>'+dd2+'</span></div>';
-      }
-      if (sig.tranche_3_date) {
-        var dd3 = new Date(sig.tranche_3_date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        trTimeline += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:#00ff88;">◆ 3/3 FULL</span><span>'+dd3+'</span></div>';
-      }
-      if (trTimeline) trTimeline = '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-top:8px;border-top:1px solid rgba(0,229,255,.06);padding-top:8px;">'+trTimeline+'</div>';
-
-      var stockHtml =
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
-          '<div style="background:rgba(0,10,30,.5);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-bottom:3px;">PER TRANCHE</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:#fff;">'+perTranche+' sh</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">'+calc.shares+' sh full</div>'+
-          '</div>'+
-          '<div style="background:rgba(0,10,30,.5);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">'+
-            '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);margin-bottom:3px;">RISK</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:var(--amber);">$'+calc.riskDollars.toFixed(0)+'</div>'+
-            '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">'+calc.riskPct+'% of acct</div>'+
-          '</div>'+
-        '</div>' + trancheBoxes + trTimeline;
-      var optsHtml = '';
-      if (hasOpts) {
-        var o = calc.options;
-        optsHtml =
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
-            '<div style="background:rgba(0,10,30,.5);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">'+
-              '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">CONTRACTS</div>'+
-              '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:#fff;">'+o.contracts+'</div>'+
-              '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">@ $'+o.premium.toFixed(2)+'</div>'+
-            '</div>'+
-            '<div style="background:rgba(0,10,30,.5);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">'+
-              '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">MAX LOSS</div>'+
-              '<div style="font-family:Orbitron,monospace;font-size:18px;font-weight:900;color:'+(o.riskPct<=calc.riskPct?'var(--amber)':'var(--red)')+';">$'+o.maxLoss.toFixed(0)+'</div>'+
-              '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);margin-top:2px;">'+o.riskPct.toFixed(1)+'% of acct</div>'+
-            '</div>'+
-          '</div>';
-      }
-      return '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.12);border-radius:12px;padding:14px;margin-bottom:10px;">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'+
-          '<span style="font-family:Orbitron,monospace;font-size:10px;letter-spacing:1.5px;color:rgba(74,106,138,1);">POSITION SIZING</span>'+
-          '<span style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);cursor:pointer;" onclick="openRiskSettings()">⚙ EDIT</span>'+
-        '</div>'+
-        (hasOpts ?
-          '<div style="display:flex;border-radius:6px;overflow:hidden;border:1px solid rgba(0,229,255,.15);margin-bottom:10px;">'+
-            '<div id="mPsStock_'+sig.id+'" onclick="this.style.background=\'rgba(0,229,255,.12)\';this.style.color=\'#00e5ff\';this.nextElementSibling.style.background=\'transparent\';this.nextElementSibling.style.color=\'rgba(74,106,138,1)\';this.parentElement.nextElementSibling.innerHTML=document.getElementById(\'_mPsStockData_'+sig.id+'\').innerHTML;" style="flex:1;padding:6px;text-align:center;font-family:Orbitron,monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;background:rgba(0,229,255,.12);color:#00e5ff;transition:all .2s;">STOCK</div>'+
-            '<div id="mPsOpts_'+sig.id+'" onclick="this.style.background=\'rgba(0,229,255,.12)\';this.style.color=\'#00e5ff\';this.previousElementSibling.style.background=\'transparent\';this.previousElementSibling.style.color=\'rgba(74,106,138,1)\';this.parentElement.nextElementSibling.innerHTML=document.getElementById(\'_mPsOptsData_'+sig.id+'\').innerHTML;" style="flex:1;padding:6px;text-align:center;font-family:Orbitron,monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;color:rgba(74,106,138,1);transition:all .2s;">OPTIONS</div>'+
-          '</div>' : '') +
-        '<div id="mPsBody_'+sig.id+'">'+stockHtml+'</div>'+
-        (hasOpts ? '<div id="_mPsStockData_'+sig.id+'" style="display:none;">'+stockHtml+'</div><div id="_mPsOptsData_'+sig.id+'" style="display:none;">'+optsHtml+'</div>' : '') +
-        '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--muted);text-align:center;margin-top:6px;letter-spacing:.5px;">$'+calc.accountSize.toLocaleString('en-US',{maximumFractionDigits:0})+' ACCT · '+calc.riskPct+'% RISK · '+perTranche+' sh × 3 = '+calc.shares+' sh max</div>'+
+      if (!calc) return '';
+      var perTr = calc.trancheShares ? calc.trancheShares[0] : Math.floor(calc.shares / 3);
+      return '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">' +
+        '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);">POSITION: <b style="color:#fff;">'+perTr+' sh</b>/tranche · <b style="color:var(--amber);">$'+calc.riskDollars.toFixed(0)+'</b> risk</div>' +
+        '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--core);cursor:pointer;border-bottom:1px dashed rgba(0,229,255,.3);" onclick="openTakeTradeModal()">TAKE TRADE →</div>' +
       '</div>';
     })()+
 
