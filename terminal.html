@@ -7109,6 +7109,31 @@
     }
     window.switchHistView = switchHistView;
 
+    function navigateToMyTrades() {
+      // Desktop: switch to history tab
+      var deskHistBtn = document.querySelector('[data-dtab="history"]');
+      if (deskHistBtn && window.innerWidth > 768) {
+        deskHistBtn.click();
+      }
+      // Mobile: switch to history pane
+      var mobHistBtn = document.querySelector('[data-mtab="History"]');
+      if (mobHistBtn && window.innerWidth <= 768) {
+        mobHistBtn.click();
+      }
+      // Switch to My Trades view
+      setTimeout(function() {
+        switchHistView('my', null);
+        // Force-activate the My Trades buttons
+        document.querySelectorAll('.histViewToggle').forEach(function(toggle) {
+          toggle.querySelectorAll('.histViewBtn').forEach(function(b) {
+            b.classList.toggle('active', b.textContent.indexOf('MY') >= 0);
+          });
+        });
+        renderMyTradeHistory();
+      }, 100);
+    }
+    window.navigateToMyTrades = navigateToMyTrades;
+
     // Sync account settings from Take Trade modal inline fields
     function syncAcctFromTT() {
       var size = parseFloat(document.getElementById('ttAcctSize').value);
@@ -10218,7 +10243,7 @@
         var isFull = takenArr.indexOf(1)>=0 && takenArr.indexOf(2)>=0 && takenArr.indexOf(3)>=0;
         btn.className = 'takeTradeBtn has-position';
         if (isFull) {
-          btn.innerHTML = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml;
+          btn.innerHTML = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml+' <span style="font-size:8px;opacity:.6;margin-left:4px;">→ VIEW</span>';
         } else {
           btn.innerHTML = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml;
         }
@@ -10247,7 +10272,7 @@
         var takenMob = myTrades.map(function(t){return t.tranche||1;});
         var isFullMob = takenMob.indexOf(1)>=0 && takenMob.indexOf(2)>=0 && takenMob.indexOf(3)>=0;
         if (isFullMob) {
-          btn.textContent = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr;
+          btn.textContent = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr+' → VIEW';
         } else {
           btn.textContent = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr;
         }
@@ -10300,9 +10325,9 @@
       var myTrades = MEMBER_TRADES.filter(function(t){ return (t.signal_id===sig.id||t.asset===sig.asset)&&t.status==='OPEN'; });
       var taken = myTrades.map(function(t){return t.tranche||1;});
 
-      // Hard block: all 3 tranches filled
+      // Full position: navigate to History > My Trades instead of blocking
       if (taken.indexOf(1) >= 0 && taken.indexOf(2) >= 0 && taken.indexOf(3) >= 0) {
-        showToast('You already hold a full 3/3 position in ' + sig.asset);
+        navigateToMyTrades();
         return;
       }
       document.getElementById('ttAssetLabel').textContent = sig.asset+' — '+sig.direction+' · '+sig.level;
@@ -10786,6 +10811,8 @@
       updateTakeTradeBtn(sig); renderJournal(); renderList();
       if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
       if (typeof window._renderMList === 'function') window._renderMList();
+      // Auto-navigate to My Trades view so user sees their position
+      setTimeout(function() { navigateToMyTrades(); }, 300);
     }
 
     /* ── CLOSE TRADE ── */
