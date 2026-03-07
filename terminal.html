@@ -4601,8 +4601,8 @@
         </div>
       </div>
 
-      <!-- SECTION 2: PERIOD BREAKDOWN (collapsed) -->
-      <div style="margin-bottom:12px;">
+      <!-- SECTION 2: PERIOD BREAKDOWN (removed — kept hidden for JS compat) -->
+      <div style="display:none;">
         <div class="collapseHeader" data-collapse="periodBreakdown">
           <div class="collapseTitle"><span class="collapseChevron">▶</span> PERFORMANCE BREAKDOWN</div>
           <div class="perfControls" onclick="event.stopPropagation();">
@@ -5839,6 +5839,8 @@
 
     // ── TRIGGER STATE STAMPER — runs after every price refresh ──
     // Adds/removes .triggered-item class on existing DOM cards without full re-render
+    var _triggerAdvanced = new Set(); // track signals already auto-advanced to avoid repeats
+
     function applyTriggerStates() {
       SIGNALS.forEach(function(sig) {
         if (!sig.trigger) return;
@@ -5851,6 +5853,20 @@
         cards.forEach(function(card) {
           card.classList.toggle('triggered-item', isHit);
         });
+
+        // Auto-advance oracle_tranche from 1 → 2 on first trigger confirm
+        if (isHit && sig.oracle_tranche === 1 && sig.id && !_triggerAdvanced.has(sig.id)) {
+          _triggerAdvanced.add(sig.id);
+          sig.oracle_tranche = 2;
+          sig.tranche_2_date = new Date().toISOString();
+          console.log('[Oracle] Auto-advancing ' + sig.asset + ' to 2/3 — trigger confirmed');
+          // Update in Supabase
+          fetch(SB_URL + '/signals?id=eq.' + sig.id, {
+            method: 'PATCH',
+            headers: SB_HEADERS,
+            body: JSON.stringify({ oracle_tranche: 2, tranche_2_date: sig.tranche_2_date })
+          }).catch(function(e) { console.warn('[Oracle] Tranche auto-advance failed:', e); });
+        }
       });
     }
 
