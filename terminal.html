@@ -1047,7 +1047,7 @@
     .termBody {
       flex: 1;
       min-height: 0;
-      padding: 16px 18px 48px;
+      padding: 24px 28px 48px;
       font-family: var(--mono);
       font-size: 13px;
       line-height: 1.85;
@@ -1068,7 +1068,7 @@
     .sigBrief {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 18px;
       /* No height:100% — let content expand and let termBody scroll */
     }
 
@@ -1077,25 +1077,40 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
-      padding-bottom: 12px;
+      gap: 16px;
+      padding-bottom: 16px;
       border-bottom: 1px solid rgba(0,229,255,.08);
     }
     .sbAsset {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 2px;
       color: #fff;
       line-height: 1;
-      text-shadow: 0 0 12px rgba(0,229,255,.4);
+      text-shadow: 0 0 20px rgba(0,229,255,.3);
     }
     .sbLevel {
       font-family: var(--display);
       font-size: 11px;
       letter-spacing: 2px;
       color: var(--muted);
-      margin-top: 6px;
+      margin-top: 4px;
+    }
+    .sbCompanyName {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(255,255,255,.4);
+      letter-spacing: .5px;
+      margin-top: 3px;
+    }
+    .sbCompanyDesc {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(180,210,240,.3);
+      margin-top: 2px;
+      line-height: 1.4;
+      max-width: 400px;
     }
     .sbBadges {
       display: flex;
@@ -1145,10 +1160,10 @@
       overflow: hidden;
     }
     .sbTradeCol {
-      padding: 14px 16px;
+      padding: 18px 20px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
     .sbTradeCol.center-col { align-items: center; }
     .sbTradeCol.right-col  { align-items: flex-end; }
@@ -1159,14 +1174,14 @@
     }
     .sbTradeLabel {
       font-family: var(--display);
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 2px;
       color: var(--muted);
       font-weight: 700;
     }
     .sbTradeVal {
       font-family: var(--display);
-      font-size: 16px;
+      font-size: 22px;
       font-weight: 900;
       color: var(--core);
       letter-spacing: .5px;
@@ -1182,14 +1197,14 @@
     }
     .sbTargetItem {
       font-family: var(--display);
-      font-size: 13px;
+      font-size: 16px;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .sbTargetItem .tLabel {
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 1.5px;
       color: var(--muted);
       min-width: 18px;
@@ -1245,7 +1260,7 @@
     }
     .sbAssessLabel {
       font-family: var(--display);
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 2px;
       color: var(--core);
       margin-bottom: 9px;
@@ -1253,7 +1268,7 @@
     }
     .sbAssessText {
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.75;
       color: rgba(214,238,255,.8);
       letter-spacing: .15px;
@@ -1490,25 +1505,25 @@
     .sbActionStep {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 7px 0;
+      gap: 12px;
+      padding: 8px 0;
       border-bottom: 1px solid rgba(255,255,255,.04);
       font-family: var(--mono);
-      font-size: 12.5px;
+      font-size: 13px;
       line-height: 1.6;
       color: rgba(214,238,255,.82);
     }
     .sbActionStep:last-child { border-bottom: none; }
     .sbActionStep .stepNum {
       font-family: var(--display);
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 900;
       color: var(--core);
       background: rgba(0,229,255,.1);
       border: 1px solid rgba(0,229,255,.2);
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3593,9 +3608,12 @@
       }
       .sbAsset { font-size: 28px; }
       .sbLevel { font-size: 10px; }
+      .sbCompanyName { font-size: 11px; }
+      .sbCompanyDesc { font-size: 10px; }
       .sbDirBadge { font-size: 11px; padding: 5px 12px; }
       .sbConfBadge { font-size: 10px; }
       .sbTypeBadge { font-size: 9px; }
+      .sbTradeVal { font-size: 18px; }
 
       /* Trade row: stack 3 columns vertically instead of side by side */
       .sbTradeRow {
@@ -4392,7 +4410,7 @@
       <button class="deskTab" data-dtab="macro">🌐 MACRO</button>
       <button class="deskTab" data-dtab="history" id="deskHistTab">📊 HISTORY<span class="tabNotifBadge" id="histNotifBadgeDk"></span></button>
       <button class="deskTab" data-dtab="flow">🌊 FLOW</button>
-      <button class="deskTab" data-dtab="journal" id="deskJournalTab">📓 JOURNAL<span class="tabNotifBadge" id="journalBadgeDk"></span></button>
+      <button class="deskTab" data-dtab="journal" id="deskJournalTab" style="display:none;">📓 JOURNAL<span class="tabNotifBadge" id="journalBadgeDk"></span></button>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button type="button" class="notifBtn" id="notifBtn">🔔 ALERTS OFF</button>
@@ -4636,9 +4654,16 @@
   <div class="histViewPane" id="histViewMy">
     <div class="perfSection">
       <div class="perfHeader">
-        <div class="perfTitle">MY TRADE HISTORY</div>
+        <div class="perfTitle">MY TRADES</div>
+        <div class="perfControls">
+          <button type="button" class="exportBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
+          <button type="button" class="exportBtn" onclick="openRiskSettings()">⚙ SETTINGS</button>
+        </div>
       </div>
       <div id="myTradeStats" style="margin-bottom:16px;"></div>
+      <div id="myRiskMonitor" style="margin-bottom:16px;"></div>
+      <div id="myOpenPositions" style="margin-bottom:16px;"></div>
+      <div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);">CLOSED TRADES</div>
       <div class="dataPanel" style="margin-top:0;">
         <div class="tableWrap">
           <table class="perfTable">
@@ -4666,7 +4691,7 @@
           <button type="button" class="filterBtn" data-ofilter="PUT">PUTS</button>
           <button type="button" class="filterBtn" data-ofilter="BULLISH">BULLISH</button>
           <button type="button" class="filterBtn" data-ofilter="BEARISH">BEARISH</button>
-          <button type="button" class="addFlowBtn" id="addFlowBtn">+ LOG FLOW</button>
+          <button type="button" class="addFlowBtn" id="addFlowBtn" style="display:none;">+ LOG FLOW</button>
         </div>
       </div>
       <div class="dataPanel">
@@ -4698,7 +4723,7 @@
         <div class="journalTitle">MY TRADE JOURNAL</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <button class="jAddTradeBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
-          <div class="riskCalcSetup" onclick="document.getElementById('acctOverlay').classList.add('open')">⚙ ACCOUNT SETTINGS</div>
+          <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ ACCOUNT SETTINGS</div>
         </div>
       </div>
       <div class="journalStats" id="journalStats">
@@ -4779,12 +4804,10 @@
     </div>
   </div>
 
-  <!-- Position Sizing Calculator -->
-  <div class="box posSizeBox" id="posSizeBox">
+  <!-- Position Sizing Calculator (consolidated into Take Trade modal) -->
+  <div class="box posSizeBox" id="posSizeBox" style="display:none;">
     <h3>POSITION SIZING <span class="posSizeGear" id="posSizeGearBtn" title="Risk Settings">⚙</span></h3>
-    <div id="posSizeContent">
-      <!-- Populated by JS -->
-    </div>
+    <div id="posSizeContent"></div>
   </div>
 
   <!-- Signal Thesis -->
@@ -4799,15 +4822,15 @@
     </div>
   </div>
 
-  <!-- Risk Calculator -->
-  <div class="box" id="riskCalcContainer">
+  <!-- Risk Calculator (consolidated into Take Trade modal) -->
+  <div class="box" id="riskCalcContainer" style="display:none;">
     <div class="riskCalcBox">
       <div class="riskCalcHeader">
         <div class="riskCalcTitle">⬡ POSITION CALCULATOR</div>
-        <div class="riskCalcSetup" onclick="document.getElementById('acctOverlay').classList.add('open')">⚙ ACCOUNT</div>
+        <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ ACCOUNT</div>
       </div>
       <div id="riskCalcBody">
-        <div class="rcNoAcct" id="rcNoAcctMsg">SET YOUR ACCOUNT SIZE TO<br>ENABLE POSITION SIZING<br><button onclick="document.getElementById('acctOverlay').classList.add('open')">SET ACCOUNT</button></div>
+        <div class="rcNoAcct" id="rcNoAcctMsg">SET YOUR ACCOUNT SIZE TO<br>ENABLE POSITION SIZING<br><button onclick="openRiskSettings()">SET ACCOUNT</button></div>
         <div id="rcCalculated" style="display:none;">
           <div class="rcVehicleToggle">
             <button class="rcVehicleBtn active" data-rcv="STOCK" onclick="switchRcVehicle('STOCK')">◆ STOCK</button>
@@ -5905,7 +5928,7 @@
         renderList();
         applyTriggerStates();
         checkTargetHitAlerts();
-        renderMacroRegime();
+        // NOTE: renderMacroRegime removed from WS cycle — macro data only changes on admin save, not price ticks
         if (typeof window._renderMList === 'function') window._renderMList();
       }, 1000);
     }
@@ -7157,6 +7180,60 @@
           }).join('');
         }
       }
+
+      // ── OPEN POSITIONS (moved from Journal) ──
+      var openTrades = MEMBER_TRADES.filter(function(t) { return t.status === 'OPEN'; });
+      var positionMap = {};
+      openTrades.forEach(function(t) {
+        var key = t.signal_id || t.asset;
+        if (!positionMap[key]) positionMap[key] = [];
+        positionMap[key].push(t);
+      });
+      var openHtml = '';
+      if (Object.keys(positionMap).length > 0) {
+        openHtml = '<div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--core);margin-bottom:8px;font-weight:700;">OPEN POSITIONS</div>' +
+          Object.keys(positionMap).map(function(key) {
+            return typeof renderPositionCard === 'function' ? renderPositionCard(positionMap[key]) : '';
+          }).join('');
+      } else {
+        openHtml = '<div style="text-align:center;padding:16px;font-family:var(--display);font-size:9px;color:var(--muted);letter-spacing:1px;background:rgba(255,255,255,.01);border:1px dashed rgba(255,255,255,.06);border-radius:8px;">No open positions. <span style="color:var(--core);cursor:pointer;" onclick="openSignalPicker()">+ Take a trade</span></div>';
+      }
+      ['myOpenPositions','mMyOpenPositions'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.innerHTML = openHtml;
+      });
+
+      // ── Risk Monitor ──
+      if (typeof renderRiskMonitor === 'function') {
+        var riskData = typeof calcRiskExposure === 'function' ? calcRiskExposure() : null;
+        if (riskData && riskData.trades > 0) {
+          // Re-use existing renderRiskMonitor but target new containers
+          var origD = document.getElementById('riskMonitorDesktop');
+          var origM = document.getElementById('riskMonitorMobile');
+          renderRiskMonitor();
+          // Copy content to My Trades containers
+          ['myRiskMonitor','mMyRiskMonitor'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el && origD) el.innerHTML = origD.innerHTML;
+          });
+        } else {
+          ['myRiskMonitor','mMyRiskMonitor'].forEach(function(id) {
+            var el = document.getElementById(id); if (el) el.innerHTML = '';
+          });
+        }
+      }
+
+      // Update open position count badge on History tab
+      ['histNotifBadgeDk','histNotifBadgeMob'].forEach(function(id) {
+        var badge = document.getElementById(id);
+        if (!badge) return;
+        if (openTrades.length > 0) {
+          badge.textContent = openTrades.length;
+          badge.className = 'tabNotifBadge visible numbered';
+        } else {
+          badge.className = 'tabNotifBadge';
+          badge.textContent = '';
+        }
+      });
     }
 
     function openTradeDetail(id) {
@@ -8365,17 +8442,17 @@
         <div class="sbHead">
           <div>
             <div class="sbAsset">${sig.asset}</div>
-            ${getCompanyName(sig.asset) ? `<div style="font-family:Orbitron,monospace;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;margin-top:1px;">${getCompanyName(sig.asset)}</div>` : ''}
-            ${getCompanyDescription(sig.asset) ? `<div style="font-family:var(--mono);font-size:9px;color:rgba(180,210,240,.3);margin-top:1px;line-height:1.3;max-width:280px;">${getCompanyDescription(sig.asset)}</div>` : ''}
+            ${getCompanyName(sig.asset) ? `<div class="sbCompanyName">${getCompanyName(sig.asset)}</div>` : ''}
+            ${getCompanyDescription(sig.asset) ? `<div class="sbCompanyDesc">${getCompanyDescription(sig.asset)}</div>` : ''}
             <div class="sbLevel">${sig.level}</div>
           </div>
           <div class="sbBadges">
             <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}">◆ ${sig.direction} SIGNAL</div>
-            ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:8px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:5px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL CONVICTION':sig.oracle_tranche>=2?'TRIGGER CONFIRMED':'INITIAL'}</div>` : ''}
+            ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:5px 14px;border-radius:6px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL CONVICTION':sig.oracle_tranche>=2?'TRIGGER CONFIRMED':'INITIAL'}</div>` : ''}
             <div class="sbConfBadge" style="border-color:${zoneConf.color}33;color:${zoneConf.color}">
               CONF ${confDisplay}${confDelta}
             </div>
-            ${livePrice ? `<div style="font-family:var(--display);font-size:22px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};">$${livePrice.toFixed(2)} <span style="font-size:11px;opacity:.7;">${liveChange !== null ? (liveChange >= 0 ? '+' : '') + liveChange.toFixed(2) + '%' : ''}</span></div>` : ''}
+            ${livePrice ? `<div style="font-family:var(--display);font-size:28px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};line-height:1;">$${livePrice.toFixed(2)} <span style="font-size:13px;opacity:.7;">${liveChange !== null ? (liveChange >= 0 ? '+' : '') + liveChange.toFixed(2) + '%' : ''}</span></div>` : ''}
             ${bias ? `<div class="sbTypeBadge">${bias.replace(/_/g,' ')}</div>` : ''}
           </div>
         </div>
@@ -8390,7 +8467,7 @@
               const rawGain = ((livePrice - entryPrice) / entryPrice) * 100;
               const pnl = isBull ? rawGain : -rawGain;
               const col = pnl > 0 ? 'green' : pnl < 0 ? 'red' : '';
-              return `<div class="sbTradeVal ${col}" style="font-size:14px;">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</div>`;
+              return `<div class="sbTradeVal ${col}" style="font-size:16px;">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</div>`;
             })() : ''}
           </div>
           <div class="sbTradeDivider"></div>
@@ -9568,7 +9645,7 @@
       const tbody = document.getElementById("flowBody");
       
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="10"><div class="flowEmpty">NO FLOW LOGGED YET — CLICK "+ LOG FLOW" TO RECORD UNUSUAL OPTIONS ACTIVITY</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10"><div class="flowEmpty">NO OPTIONS FLOW LOGGED YET — CHECK BACK FOR UNUSUAL ACTIVITY ALERTS</div></td></tr>`;
         return;
       }
       
@@ -10765,7 +10842,7 @@
         '<div style="font-size:20px;margin-bottom:10px;">📋</div>' +
         '<div style="margin-bottom:12px;">No open positions yet.</div>' +
         (!MEMBER_SETTINGS.account_size
-          ? '<div style="margin-bottom:8px;color:var(--core);">Step 1: <span style="cursor:pointer;border-bottom:1px dashed rgba(0,229,255,.3);" onclick="document.getElementById(\'acctOverlay\').classList.add(\'open\')">Set your account size</span></div>' +
+          ? '<div style="margin-bottom:8px;color:var(--core);">Step 1: <span style="cursor:pointer;border-bottom:1px dashed rgba(0,229,255,.3);" onclick="openRiskSettings()">Set your account size</span></div>' +
             '<div style="color:var(--muted);">Step 2: Open any signal → tap <b style="color:var(--green);">◆ TAKE THIS TRADE</b></div>'
           : '<div style="color:var(--muted);">Open any signal → tap <b style="color:var(--green);">◆ TAKE THIS TRADE</b></div>' +
             '<div style="color:var(--muted);margin-top:4px;">Or tap <b style="color:var(--green);">+ ADD TRADE</b> above to pick a signal</div>') +
@@ -11519,7 +11596,17 @@
 
 <!-- MY TRADE HISTORY (MOBILE) -->
 <div class="histViewPane" id="mHistViewMy">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">MY TRADES</div>
+    <div style="display:flex;gap:6px;">
+      <button class="jAddTradeBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
+      <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ SETTINGS</div>
+    </div>
+  </div>
   <div id="mMyTradeStats" style="margin-bottom:10px;"></div>
+  <div id="mMyRiskMonitor" style="margin-bottom:10px;"></div>
+  <div id="mMyOpenPositions" style="margin-bottom:10px;"></div>
+  <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">CLOSED TRADES</div>
   <div id="mMyTradeBody" style="font-family:var(--display);font-size:10px;"></div>
 </div>
 
@@ -11534,7 +11621,7 @@
       <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">YOUR POSITIONS & STATS</div>
       <div style="display:flex;gap:6px;align-items:center;">
         <button class="jAddTradeBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
-        <div class="riskCalcSetup" onclick="document.getElementById('acctOverlay').classList.add('open')">⚙ ACCOUNT</div>
+        <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ ACCOUNT</div>
       </div>
     </div>
     <div class="journalStats" id="mJournalStats">
@@ -11557,7 +11644,7 @@
   <button class="mobileTabBtn" data-mtab="Macro"><span class="tabIcon">🌐</span><span class="tabLabel">MACRO</span></button>
   <button class="mobileTabBtn" data-mtab="Flow"><span class="tabIcon">🌊</span><span class="tabLabel">FLOW</span></button>
   <button class="mobileTabBtn" data-mtab="History" id="mobHistTab" style="position:relative;"><span class="tabIcon">📊</span><span class="tabLabel">HISTORY</span><span class="tabNotifBadge" id="histNotifBadgeMob"></span></button>
-  <button class="mobileTabBtn" data-mtab="Journal" id="mobJournalTab" style="position:relative;"><span class="tabIcon">📓</span><span class="tabLabel">JOURNAL</span><span class="tabNotifBadge" id="journalBadgeMob"></span></button>
+  <button class="mobileTabBtn" data-mtab="Journal" id="mobJournalTab" style="display:none;position:relative;"><span class="tabIcon">📓</span><span class="tabLabel">JOURNAL</span><span class="tabNotifBadge" id="journalBadgeMob"></span></button>
 </div>
 
 <script>
