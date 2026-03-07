@@ -4249,11 +4249,11 @@
         <div style="display:flex;gap:8px;">
           <div style="flex:1;">
             <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">ACCOUNT SIZE</div>
-            <input class="ttInput" id="ttAcctSize" type="number" step="100" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+            <input class="ttInput" id="ttAcctSize" type="number" step="100" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()" onkeyup="if(event.key==='Enter')syncAcctFromTT()"/>
           </div>
           <div style="flex:1;">
             <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">RISK %</div>
-            <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+            <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()" onkeyup="if(event.key==='Enter')syncAcctFromTT()"/>
           </div>
         </div>
       </div>
@@ -7163,6 +7163,10 @@
         var maxRisk = size * (risk / 100);
         ttAcctDisplay.innerHTML = '$' + size.toLocaleString('en-US',{maximumFractionDigits:0}) + ' acct · ' + risk.toFixed(1) + '% risk · <b style="color:var(--amber);">$' + maxRisk.toFixed(0) + ' max risk</b>';
       }
+      // Re-render center panel for personalized action plan
+      if (SIGNALS.length && SIGNALS[activeIndex] && typeof buildTemplate === 'function') {
+        try { var _termEl = document.getElementById('term'); if (_termEl) _termEl.innerHTML = buildTemplate(null, SIGNALS[activeIndex]); } catch(e) {}
+      }
     }
     window.syncAcctFromTT = syncAcctFromTT;
 
@@ -8617,6 +8621,23 @@
           const ep  = entryPrice ? `$${entryPrice.toFixed(2)}` : sig.trigger || '—';
           const zone = live.zone;
           const steps = [];
+
+          // Personalized sizing for action plan
+          const _acct = MEMBER_SETTINGS.account_size || (_riskSettings.accountSize || 0);
+          const _riskP = MEMBER_SETTINGS.risk_per_trade || (_riskSettings.riskPct || 2);
+          let _halfShares = 0, _fullShares = 0, _unit = 'shares';
+          if (_acct && entryPrice) {
+            const _maxRisk = _acct * (_riskP / 100);
+            let _inv = null;
+            if (sig.invalidation) { const _m = sig.invalidation.replace(/,/g,'').match(/([\d.]+)/); if (_m) _inv = parseFloat(_m[1]); }
+            if (_inv) {
+              const _rps = Math.abs(entryPrice - _inv);
+              if (_rps > 0) { _fullShares = Math.floor(_maxRisk / _rps); _halfShares = Math.floor(_fullShares / 2); }
+            }
+          }
+          const sizeNote = _halfShares > 0 ? ` <span style="color:var(--green);font-weight:900;">(${_halfShares} ${_unit} for your account)</span>` : '';
+          const fullNote = _fullShares > 0 ? ` <span style="color:var(--green);font-weight:900;">(${_fullShares} ${_unit} full)</span>` : '';
+
           if (zone === 'invalidated') {
             steps.push({ n:'!', cls:'danger', txt:`<strong>EXIT IMMEDIATELY.</strong> Price has broken below invalidation. Signal is no longer valid.` });
           } else if (zone === 'danger') {
@@ -8626,21 +8647,21 @@
             steps.push({ n:'1', cls:'warn', txt:`Below entry but above invalidation. <strong>Hold</strong> — within expected range.` });
             steps.push({ n:'2', cls:'',     txt:`Stop remains at <strong>${invalDisplay}</strong>. Let the trade breathe.` });
           } else if (zone === 'base') {
-            steps.push({ n:'1', cls:'',     txt:`<strong>Entry zone.</strong> Initiate position near <strong>${ep}</strong>.` });
+            steps.push({ n:'1', cls:'',     txt:`<strong>Entry zone.</strong> Buy half position near <strong>${ep}</strong>.${sizeNote}` });
             steps.push({ n:'2', cls:'',     txt:`Set stop at <strong>${invalDisplay}</strong> before entering.` });
-            steps.push({ n:'3', cls:'',     txt:`Early stage — patience required. Monitor for momentum.` });
+            steps.push({ n:'3', cls:'',     txt:`Wait for trigger confirmation to add remaining half.${_halfShares ? ' Full position: <strong>' + _fullShares + ' ' + _unit + '</strong>.' : ''}` });
           } else if (zone === 'winning') {
-            steps.push({ n:'1', cls:'done', txt:`Progressing well. <strong>Hold position.</strong>` });
+            steps.push({ n:'1', cls:'done', txt:`Progressing well. <strong>Hold position.</strong>${fullNote}` });
             steps.push({ n:'2', cls:'',     txt:`Trail stop to breakeven (<strong>${ep}</strong>).` });
             steps.push({ n:'3', cls:'',     txt:`T1 at <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</strong>. Let it reach before scaling.` });
           } else if (zone === 'approaching_t1') {
             steps.push({ n:'1', cls:'done', txt:`Strong push toward T1 at <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</strong>.` });
             steps.push({ n:'2', cls:'',     txt:`Trail stop to entry (<strong>${ep}</strong>) — now risk-free.` });
           } else if (zone === 't1_hit') {
-            steps.push({ n:'✓', cls:'done', txt:`<strong>T1 reached.</strong> Execute first profit tranche.` });
+            steps.push({ n:'✓', cls:'done', txt:`<strong>T1 reached.</strong> Take profit on first portion.` });
             steps.push({ n:'2', cls:'',     txt:`Move stop to entry. ${targets[1] ? 'Next: T2 at <strong>$'+targets[1].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong>.' : 'Trail aggressively.'}` });
           } else if (zone === 't2_hit') {
-            steps.push({ n:'✓', cls:'done', txt:`<strong>T2 reached.</strong> Execute second profit tranche.` });
+            steps.push({ n:'✓', cls:'done', txt:`<strong>T2 reached.</strong> Take second round of profit.` });
             steps.push({ n:'2', cls:'done', txt:`Trail stop to T1. ${targets[2] ? 'T3 at <strong>$'+targets[2].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong>.' : 'Close remaining.'}` });
           } else if (zone === 't3_hit') {
             steps.push({ n:'✓', cls:'done', txt:`<strong>All targets hit.</strong> Close position and lock in gains.` });
@@ -10684,12 +10705,14 @@
                 ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfShares + ' shares</b> to reach full position of <b>' + maxShares + ' shares</b>.</div>'
                 : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">Buy <b style="color:#fff;">' + halfShares + ' shares</b> now. After trigger confirms, add remaining <b style="color:#fff;">' + halfShares + '</b> to reach full position of <b style="color:#fff;">' + maxShares + '</b>.</div>';
 
+              var totalCost = halfShares * ep;
               contentEl.innerHTML = positionMeter +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Stop Loss</span><b>$' + inv.toFixed(2) + '</b></div>' +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Risk / Share</span><b>$' + rps.toFixed(2) + '</b></div>' +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + maxShares + ' shares</b></div>' +
                 '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">BUY NOW</span><b style="color:var(--green);font-size:16px;">' + halfShares + ' shares</b></div>' +
-                '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Risk on this entry</span><b style="color:var(--amber);">$' + entryRisk.toFixed(0) + ' (' + (entryRisk / acct * 100).toFixed(1) + '%)</b></div>' +
+                '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="color:var(--muted);">Total Cost</span><b style="color:#fff;">$' + totalCost.toLocaleString('en-US',{maximumFractionDigits:0}) + '</b></div>' +
+                '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Dollar at Risk</span><b style="color:var(--amber);">$' + entryRisk.toFixed(0) + ' (' + (entryRisk / acct * 100).toFixed(1) + '% of acct)</b></div>' +
                 guidanceText;
               summaryEl.style.display = '';
             }
@@ -10704,9 +10727,13 @@
           riskEl.value = (halfSh * fallbackRps).toFixed(2);
           riskEl.style.color = 'var(--amber)';
           if (summaryEl && contentEl) {
+            var fallbackCost = halfSh * ep;
+            var fallbackRisk = halfSh * fallbackRps;
             contentEl.innerHTML = positionMeter +
               '<div style="color:var(--amber);margin-bottom:6px;">⚠ No stop loss set — using 5% default.</div>' +
-              '<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-weight:700;">BUY NOW</span><b style="color:var(--green);font-size:14px;">' + halfSh + ' shares</b></div>';
+              '<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-weight:700;">BUY NOW</span><b style="color:var(--green);font-size:14px;">' + halfSh + ' shares</b></div>' +
+              '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="color:var(--muted);">Total Cost</span><b style="color:#fff;">$' + fallbackCost.toLocaleString('en-US',{maximumFractionDigits:0}) + '</b></div>' +
+              '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Dollar at Risk</span><b style="color:var(--amber);">$' + fallbackRisk.toFixed(0) + '</b></div>';
             summaryEl.style.display = '';
           }
         } else {
@@ -10728,11 +10755,14 @@
             : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">Buy <b style="color:#fff;">' + halfContracts + ' contracts</b> now. Add remaining <b style="color:#fff;">' + halfContracts + '</b> after trigger confirms.</div>';
 
           if (summaryEl && contentEl) {
+            var optTotalCost = halfContracts * costPerContract;
+            var optMaxLoss = optTotalCost; // options risk capped at premium
             contentEl.innerHTML = positionMeter +
               '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Premium</span><b>$' + prem.toFixed(2) + ' ($' + costPerContract.toFixed(0) + '/ct)</b></div>' +
               '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + maxContracts + ' contracts</b></div>' +
               '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">BUY NOW</span><b style="color:var(--green);font-size:16px;">' + halfContracts + ' contracts</b></div>' +
-              '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Capital deployed</span><b style="color:var(--amber);">$' + (halfContracts * costPerContract).toFixed(0) + '</b></div>' +
+              '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="color:var(--muted);">Total Cost</span><b style="color:#fff;">$' + optTotalCost.toLocaleString('en-US',{maximumFractionDigits:0}) + '</b></div>' +
+              '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Max Loss (at risk)</span><b style="color:var(--amber);">$' + optMaxLoss.toLocaleString('en-US',{maximumFractionDigits:0}) + ' (' + (optMaxLoss / acct * 100).toFixed(1) + '% of acct)</b></div>' +
               guidanceOpt;
             summaryEl.style.display = '';
           }
@@ -11084,12 +11114,12 @@
       var avgEntry = totalSh > 0 ? totalCost / totalSh : 0;
 
       // Live P&L on aggregate position
-      var livePnl = '';
+      var livePnl = false, livePnlPct = 0, livePnlDollar = 0;
       if (cached && cached.price && avgEntry > 0) {
         var raw = ((cached.price - avgEntry) / avgEntry) * 100;
-        var pct = isBull ? raw : -raw;
-        var dollarPnl = isBull ? (cached.price - avgEntry) * totalSh : (avgEntry - cached.price) * totalSh;
-        livePnl = '<div class="jTradeRow"><span class="jTradeK">LIVE P&L</span><span class="jTradeV" style="color:'+(pct>=0?'var(--green)':'var(--red)')+';font-size:14px;font-weight:900;">'+(pct>=0?'+':'')+pct.toFixed(2)+'% <span style="font-size:10px;opacity:.7;">($'+(dollarPnl>=0?'+':'')+dollarPnl.toFixed(0)+')</span></span></div>';
+        livePnlPct = isBull ? raw : -raw;
+        livePnlDollar = isBull ? (cached.price - avgEntry) * totalSh : (avgEntry - cached.price) * totalSh;
+        livePnl = true;
       }
 
       // Tranche dots — green for held tranches
@@ -11125,30 +11155,37 @@
       var signalId = (first.signal_id||'').replace(/'/g,"\\'");
       var assetEsc = first.asset.replace(/'/g,"\\'");
 
-      // Position meter — two segments
-      var seg1Style = 'background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.4);';
-      var seg2Style = isFull ? 'background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.4);' : 'background:rgba(255,255,255,.08);';
+      // Two pillars — tall, prominent
+      var p1Active = 'background:linear-gradient(180deg,rgba(0,255,136,.6),rgba(0,255,136,.2));box-shadow:0 0 12px rgba(0,255,136,.3);border:1px solid rgba(0,255,136,.4);';
+      var p2Active = isFull ? p1Active : 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);';
       var posLabel = isFull ? 'FULL POSITION' : 'HALF POSITION';
       var posColor = isFull ? 'var(--green)' : 'var(--core)';
 
-      return '<div class="jTradeCard">' +
+      return '<div class="jTradeCard" style="padding:16px;">' +
         '<div class="jTradeTop">' +
-          '<div><span class="jTradeAsset">'+first.asset+'</span><span style="font-family:var(--display);font-size:8px;letter-spacing:1px;color:var(--muted);margin-left:6px;">'+vehicle+' · '+first.direction+'</span></div>' +
-          '<div class="jTradeBadge open" style="border-color:'+posColor+'33;color:'+posColor+';">'+posLabel+'</div>' +
+          '<div><span class="jTradeAsset" style="font-size:16px;">'+first.asset+'</span><span style="font-family:var(--display);font-size:9px;letter-spacing:1px;color:var(--muted);margin-left:8px;">'+vehicle+' · '+first.direction+'</span></div>' +
+          '<div class="jTradeBadge open" style="border-color:'+posColor+'33;color:'+posColor+';font-size:9px;padding:4px 10px;">'+posLabel+'</div>' +
         '</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;">' +
-          '<div style="display:flex;gap:3px;">' +
-            '<div style="width:24px;height:6px;border-radius:3px;'+seg1Style+'"></div>' +
-            '<div style="width:24px;height:6px;border-radius:3px;'+seg2Style+'"></div>' +
+        // HERO: Pillars + Share Count
+        '<div style="display:flex;align-items:center;gap:14px;margin:12px 0;padding:14px;background:rgba(0,10,20,.4);border:1px solid rgba(255,255,255,.06);border-radius:10px;">' +
+          '<div style="display:flex;gap:6px;align-items:flex-end;">' +
+            '<div style="width:18px;height:36px;border-radius:4px;'+p1Active+'"></div>' +
+            '<div style="width:18px;height:36px;border-radius:4px;'+p2Active+'"></div>' +
           '</div>' +
-          '<span style="font-family:var(--display);font-size:8px;color:'+posColor+';letter-spacing:1px;">' + totalSh + ' ' + unit + ' TOTAL</span>' +
+          '<div style="flex:1;">' +
+            '<div style="font-family:var(--display);font-size:28px;font-weight:900;color:#fff;line-height:1;">' + totalSh + ' <span style="font-size:14px;color:var(--muted);">' + unit.toUpperCase() + '</span></div>' +
+            '<div style="font-family:var(--display);font-size:10px;color:'+posColor+';margin-top:2px;">' + posLabel + '</div>' +
+          '</div>' +
+          (livePnl ? '<div style="text-align:right;">' +
+            '<div style="font-family:var(--display);font-size:20px;font-weight:900;color:'+(livePnlPct>=0?'var(--green)':'var(--red)')+';line-height:1;">'+(livePnlPct>=0?'+':'')+livePnlPct.toFixed(2)+'%</div>' +
+            '<div style="font-family:var(--display);font-size:10px;color:'+(livePnlDollar>=0?'var(--green)':'var(--red)')+';">'+( livePnlDollar>=0?'+':'')+' $'+Math.abs(livePnlDollar).toFixed(0)+'</div>' +
+          '</div>' : '') +
         '</div>' +
         optInfo +
-        '<div class="jTradeRow"><span class="jTradeK">AVG ENTRY</span><span class="jTradeV" style="font-size:13px;font-weight:900;color:var(--core);">$'+avgEntry.toFixed(2)+'</span></div>' +
-        '<div class="jTradeRow"><span class="jTradeK">TOTAL RISK</span><span class="jTradeV" style="color:var(--amber);">$'+totalRisk.toFixed(0)+'</span></div>' +
-        livePnl +
-        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">'+entryLines+'</div>' +
-        '<div style="display:flex;gap:6px;margin-top:8px;">' +
+        '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-family:var(--display);font-size:9px;color:var(--muted);">AVG ENTRY</span><span style="font-family:var(--display);font-size:13px;font-weight:900;color:var(--core);">$'+avgEntry.toFixed(2)+'</span></div>' +
+        '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-family:var(--display);font-size:9px;color:var(--muted);">TOTAL RISK</span><span style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--amber);">$'+totalRisk.toFixed(0)+'</span></div>' +
+        '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);">'+entryLines+'</div>' +
+        '<div style="display:flex;gap:6px;margin-top:10px;">' +
           (!isFull ? '<button class="jAddTranche" onclick="openTakeTradeFromJournal(\''+signalId+'\',\''+assetEsc+'\')">+ ADD TO POSITION</button>' : '') +
           '<button class="jCloseBtn" onclick="openClosePosition(\''+signalId+'\',\''+assetEsc+'\')">CLOSE</button>' +
         '</div>' +
