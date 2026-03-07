@@ -698,10 +698,9 @@
       </div>
       <div class="formGroup">
         <div class="fLabel">◆ ORACLE TRANCHE STATUS</div>
-        <select class="fSelect" id="fOracleTranche" style="font-weight:700;" onchange="this.style.borderColor=this.value>=3?'rgba(0,255,136,.5)':this.value>=2?'rgba(255,179,0,.5)':'rgba(0,229,255,.3)'; this.style.color=this.value>=3?'var(--green)':this.value>=2?'#ffb300':'var(--core)';">
-          <option value="1">1/3 — INITIAL ENTRY</option>
-          <option value="2">2/3 — TRIGGER CONFIRMED</option>
-          <option value="3">3/3 — FULL CONVICTION</option>
+        <select class="fSelect" id="fOracleTranche" style="font-weight:700;" onchange="this.style.borderColor=this.value>=2?'rgba(0,255,136,.5)':'rgba(0,229,255,.3)'; this.style.color=this.value>=2?'var(--green)':'var(--core)';">
+          <option value="1">1/2 — INITIAL ENTRY</option>
+          <option value="2">2/2 — TRIGGER CONFIRMED</option>
         </select>
       </div>
       <div class="formGroup wide" id="optionContractsSection">
@@ -1836,18 +1835,17 @@
       // New signal — tranche 1 date = signal date
       payload.tranche_1_date = payload.signal_date || new Date().toISOString();
       if (payload.oracle_tranche >= 2) payload.tranche_2_date = payload.tranche_1_date;
-      if (payload.oracle_tranche >= 3) payload.tranche_3_date = payload.tranche_1_date;
     }
 
-    // 3/3 FULL CONVICTION WARNING
-    if (payload.oracle_tranche === 3) {
+    // 2/2 TRIGGER CONFIRMED notification
+    if (payload.oracle_tranche === 2) {
       var prevTranche2 = 1;
       if (editId) {
         var existingSig2 = SIGNALS.find(function(x) { return x.id === editId; });
         if (existingSig2) prevTranche2 = existingSig2.oracle_tranche || 1;
       }
-      if (prevTranche2 < 3) {
-        if (!confirm('⚠ FULL CONVICTION (3/3)\n\nSetting ' + asset + ' to 3/3 will alert all members that Oracle has entered a full position.\n\nConfirm?')) return;
+      if (prevTranche2 < 2) {
+        if (!confirm('⚡ TRIGGER CONFIRMED (2/2)\n\nSetting ' + asset + ' to 2/2 will alert all members that trigger has been confirmed.\n\nConfirm?')) return;
       }
     }
 
