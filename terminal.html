@@ -8463,41 +8463,46 @@
 
       return `<div class="sigBrief">
 
-        <!-- HERO HEADER -->
-        <div style="padding-bottom:16px;border-bottom:1px solid rgba(0,229,255,.08);">
-          <!-- Row 1: Ticker + Live Price -->
-          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px;">
+        <!-- SECTION 1: IDENTITY -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid rgba(0,229,255,.06);">
+          <div>
             <div class="sbAsset">${sig.asset}</div>
-            ${livePrice ? `<div style="text-align:right;">
-              <div style="font-family:var(--display);font-size:32px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};line-height:1;">$${livePrice.toFixed(2)}</div>
-              <div style="font-family:var(--display);font-size:12px;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : 'var(--muted)'};margin-top:2px;">${liveChange !== null ? (liveChange >= 0 ? '▲ +' : '▼ ') + Math.abs(liveChange).toFixed(2) + '% today' : ''}</div>
-            </div>` : ''}
+            ${getCompanyName(sig.asset) ? `<div style="font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.4);margin-top:4px;line-height:1.4;">${getCompanyName(sig.asset)}</div>` : ''}
+            ${getCompanyDescription(sig.asset) ? `<div style="font-family:var(--mono);font-size:11px;color:rgba(180,210,240,.28);margin-top:2px;line-height:1.4;max-width:360px;">${getCompanyDescription(sig.asset)}</div>` : ''}
           </div>
-          <!-- Row 2: Company info -->
-          ${getCompanyName(sig.asset) ? `<div style="font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.45);margin-bottom:2px;">${getCompanyName(sig.asset)}${getCompanyDescription(sig.asset) ? ' — ' + getCompanyDescription(sig.asset) : ''}</div>` : ''}
-          <!-- Row 3: Badge strip -->
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center;">
-            <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}" style="font-size:11px;padding:5px 14px;">◆ ${sig.direction}</div>
-            ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:999px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL':sig.oracle_tranche>=2?'TRIGGER':'INITIAL'}</div>` : ''}
-            <div style="font-family:var(--display);font-size:10px;letter-spacing:1px;padding:5px 12px;border-radius:999px;border:1px solid ${zoneConf.color}33;color:${zoneConf.color};background:rgba(0,229,255,.04);">CONF ${confDisplay}${confDelta}</div>
-            ${bias ? `<div style="font-family:var(--display);font-size:9px;letter-spacing:1px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.07);color:var(--muted);">${bias.replace(/_/g,' ')}</div>` : ''}
+          <div style="text-align:right;flex-shrink:0;margin-left:20px;">
+            <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}" style="font-size:10px;padding:5px 14px;margin-bottom:6px;">◆ ${sig.direction}${sig.oracle_tranche ? ' · ' + sig.oracle_tranche + '/3 ' + (sig.oracle_tranche>=3?'FULL':sig.oracle_tranche>=2?'TRIGGER':'INITIAL') : ''}</div>
+            <div style="font-family:var(--display);font-size:10px;letter-spacing:1px;color:${zoneConf.color};">CONF ${confDisplay}${confDelta}</div>
+            ${bias ? `<div style="font-family:var(--display);font-size:9px;letter-spacing:1px;color:var(--muted);margin-top:4px;">${bias.replace(/_/g,' ')}</div>` : ''}
           </div>
-          <!-- Row 4: P&L from entry -->
-          ${livePrice && entryPrice ? (() => {
-            const rawGain = ((livePrice - entryPrice) / entryPrice) * 100;
-            const pnl = isBull ? rawGain : -rawGain;
-            const pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-            return `<div style="margin-top:12px;padding:10px 14px;background:${pnl >= 0 ? 'rgba(0,255,136,.04)' : 'rgba(255,59,59,.04)'};border:1px solid ${pnl >= 0 ? 'rgba(0,255,136,.12)' : 'rgba(255,59,59,.12)'};border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-family:var(--display);font-size:11px;color:var(--muted);">FROM ENTRY $${entryPrice.toFixed(2)}</span>
-              <span style="font-family:var(--display);font-size:20px;font-weight:900;color:${pnlColor};">${pnl >= 0 ? '▲ +' : '▼ '}${Math.abs(pnl).toFixed(2)}%</span>
-            </div>`;
-          })() : ''}
         </div>
 
-        <!-- TRADE AT A GLANCE -->
+        <!-- SECTION 2: LIVE PRICE (hero, centered) -->
+        <div style="text-align:center;padding:20px 0;">
+          ${livePrice ? `
+            <div style="font-family:var(--display);font-size:42px;font-weight:900;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : '#fff'};line-height:1;letter-spacing:-1px;">$${livePrice.toFixed(2)}</div>
+            <div style="font-family:var(--display);font-size:12px;color:${liveChange >= 0 ? 'var(--green)' : liveChange < 0 ? 'var(--red)' : 'var(--muted)'};margin-top:6px;">${liveChange !== null ? (liveChange >= 0 ? '▲ +' : '▼ ') + Math.abs(liveChange).toFixed(2) + '% today' : ''}</div>
+          ` : '<div style="font-family:var(--display);font-size:28px;color:var(--muted);">—</div>'}
+        </div>
+
+        <!-- SECTION 3: P&L FROM ENTRY -->
+        ${livePrice && entryPrice ? (() => {
+          const rawGain = ((livePrice - entryPrice) / entryPrice) * 100;
+          const pnl = isBull ? rawGain : -rawGain;
+          const pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+          const pnlBg = pnl >= 0 ? 'rgba(0,255,136,.03)' : 'rgba(255,59,59,.03)';
+          const pnlBorder = pnl >= 0 ? 'rgba(0,255,136,.1)' : 'rgba(255,59,59,.1)';
+          const dollarMove = Math.abs(livePrice - entryPrice).toFixed(2);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:${pnlBg};border:1px solid ${pnlBorder};border-radius:10px;margin-bottom:6px;">
+            <span style="font-family:var(--display);font-size:11px;color:var(--muted);letter-spacing:1px;">FROM ENTRY $${entryPrice.toFixed(2)}</span>
+            <span style="font-family:var(--display);font-size:22px;font-weight:900;color:${pnlColor};">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}% <span style="font-size:11px;opacity:.6;">($${dollarMove})</span></span>
+          </div>`;
+        })() : ''}
+
+        <!-- SECTION 4: TRADE SETUP -->
         <div class="sbTradeRow">
           <div class="sbTradeCol">
-            <div class="sbTradeLabel">ENTRY PRICE</div>
+            <div class="sbTradeLabel">ENTRY</div>
             <div class="sbTradeVal">${entryDisplay}</div>
           </div>
           <div class="sbTradeDivider"></div>
@@ -8508,27 +8513,25 @@
           </div>
           <div class="sbTradeDivider"></div>
           <div class="sbTradeCol right-col">
-            <div class="sbTradeLabel">INVALIDATION</div>
-            <div class="sbTradeVal red" style="font-size:14px;text-align:right;">${invalDisplay}</div>
+            <div class="sbTradeLabel">STOP LOSS</div>
+            <div class="sbTradeVal red" style="text-align:right;">${invalDisplay}</div>
             ${sig.trigger ? (() => {
               const tr = parseTriggerHit(sig, livePrice);
               return tr.hit
-                ? `<div class="sbTriggerConfirmed">⚡ TRIGGER CONFIRMED @ $${tr.triggerPrice?.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`
+                ? `<div class="sbTriggerConfirmed">⚡ TRIGGER @ $${tr.triggerPrice?.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`
                 : `<div class="sbTriggerPending">TRIGGER: ${sig.trigger}</div>`;
             })() : ''}
           </div>
         </div>
 
-        <!-- ORACLE ASSESSMENT -->
+        <!-- SECTION 5: ORACLE GUIDANCE -->
         ${assessment ? `
         <div class="sbAssessment">
           <div class="sbAssessLabel">⬡ ORACLE ASSESSMENT</div>
           <div class="sbAssessText">${assessment}</div>
         </div>` : ''}
 
-        <!-- ACTION PLAN -->
         ${(() => {
-          // If admin wrote a custom action plan, parse and render it
           if (sig.action_plan && sig.action_plan.trim()) {
             const lines = sig.action_plan.trim().split('\n').filter(l => l.trim());
             const stepsHtml = lines.map(line => {
@@ -8536,93 +8539,60 @@
               const num = m ? m[1] : '·';
               const txt = m ? m[2] : line;
               const cls = num === '!' ? 'warn' : num === '✓' ? 'done' : '';
-              return `<div class="sbActionStep">
-                <div class="stepNum ${cls}">${num}</div>
-                <div>${txt}</div>
-              </div>`;
+              return `<div class="sbActionStep"><div class="stepNum ${cls}">${num}</div><div>${txt}</div></div>`;
             }).join('');
-            return `<div class="sbActionPlan">
-              <div class="sbPlanLabel">◈ ACTION PLAN</div>
-              ${stepsHtml}
-            </div>`;
+            return `<div class="sbActionPlan"><div class="sbPlanLabel">◈ WHAT TO DO NOW</div>${stepsHtml}</div>`;
           }
-
-          // Auto-generate from live zone
           const ep  = entryPrice ? `$${entryPrice.toFixed(2)}` : sig.trigger || '—';
           const zone = live.zone;
           const steps = [];
-
           if (zone === 'invalidated') {
-            steps.push({ n:'!', cls:'danger', txt:`<strong>EXIT IMMEDIATELY.</strong> Price has broken below invalidation. Signal is no longer valid — do not hold or average down.` });
-            steps.push({ n:'!', cls:'danger', txt:`Review position sizing. Any remaining exposure should be closed at market.` });
+            steps.push({ n:'!', cls:'danger', txt:`<strong>EXIT IMMEDIATELY.</strong> Price has broken below invalidation. Signal is no longer valid.` });
           } else if (zone === 'danger') {
-            steps.push({ n:'!', cls:'warn', txt:`<strong>High alert.</strong> Price is approaching the invalidation level. Tighten your stop or reduce exposure now.` });
-            steps.push({ n:'2', cls:'warn', txt:`Hard stop sits at <strong>${invalDisplay}</strong>. Do not remove or widen it under current conditions.` });
-            steps.push({ n:'3', cls:'',     txt:`If position is still full size, consider trimming 25–33% to protect capital while holding the thesis.` });
+            steps.push({ n:'!', cls:'warn', txt:`<strong>High alert.</strong> Price approaching invalidation. Tighten stop or reduce exposure.` });
+            steps.push({ n:'2', cls:'warn', txt:`Hard stop at <strong>${invalDisplay}</strong>. Do not remove or widen.` });
           } else if (zone === 'drawdown') {
-            steps.push({ n:'1', cls:'warn', txt:`Price is below entry but above invalidation. <strong>Hold the position</strong> — this is within expected drawdown range.` });
-            steps.push({ n:'2', cls:'',     txt:`Do not add to the position while price is below entry. Wait for reclaim of <strong>${ep}</strong> before re-engaging.` });
-            steps.push({ n:'3', cls:'',     txt:`Stop loss remains at <strong>${invalDisplay}</strong>. Let the trade breathe unless that level breaks.` });
+            steps.push({ n:'1', cls:'warn', txt:`Below entry but above invalidation. <strong>Hold</strong> — within expected range.` });
+            steps.push({ n:'2', cls:'',     txt:`Stop remains at <strong>${invalDisplay}</strong>. Let the trade breathe.` });
           } else if (zone === 'base') {
-            steps.push({ n:'1', cls:'',     txt:`<strong>Position entry:</strong> Initiate or confirm position at current levels near <strong>${ep}</strong>.` });
-            steps.push({ n:'2', cls:'',     txt:`Set stop loss at <strong>${invalDisplay}</strong> before entering. No exceptions.` });
-            steps.push({ n:'3', cls:'',     txt:`Signal is in early stage — no price progress yet. Patience required. Monitor for momentum confirmation.` });
+            steps.push({ n:'1', cls:'',     txt:`<strong>Entry zone.</strong> Initiate position near <strong>${ep}</strong>.` });
+            steps.push({ n:'2', cls:'',     txt:`Set stop at <strong>${invalDisplay}</strong> before entering.` });
+            steps.push({ n:'3', cls:'',     txt:`Early stage — patience required. Monitor for momentum.` });
           } else if (zone === 'winning') {
-            steps.push({ n:'1', cls:'done', txt:`Trade is progressing in the right direction. <strong>Hold the position</strong> — do not exit early.` });
-            steps.push({ n:'2', cls:'',     txt:`Consider trailing your stop up to breakeven (<strong>${ep}</strong>) to eliminate downside risk.` });
-            steps.push({ n:'3', cls:'',     txt:`First target is <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</strong>. Allow price to reach it before scaling out.` });
+            steps.push({ n:'1', cls:'done', txt:`Progressing well. <strong>Hold position.</strong>` });
+            steps.push({ n:'2', cls:'',     txt:`Trail stop to breakeven (<strong>${ep}</strong>).` });
+            steps.push({ n:'3', cls:'',     txt:`T1 at <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</strong>. Let it reach before scaling.` });
           } else if (zone === 'approaching_t1') {
-            steps.push({ n:'1', cls:'done', txt:`Strong progress toward T1 at <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</strong>. Prepare to act on the profit taking plan below.` });
-            steps.push({ n:'2', cls:'',     txt:`Trail stop to <strong>${ep}</strong> (entry) to lock in a risk-free trade.` });
-            steps.push({ n:'3', cls:'',     txt:`Do not close the full position here — let the plan run. Scale out at target levels only.` });
+            steps.push({ n:'1', cls:'done', txt:`Strong push toward T1 at <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</strong>.` });
+            steps.push({ n:'2', cls:'',     txt:`Trail stop to entry (<strong>${ep}</strong>) — now risk-free.` });
           } else if (zone === 't1_hit') {
-            steps.push({ n:'✓', cls:'done', txt:`<strong>T1 reached.</strong> Execute the first profit-taking tranche as outlined below.` });
-            steps.push({ n:'2', cls:'',     txt:`Move stop loss to <strong>${ep}</strong> (entry) on any remaining position — this trade is now risk-free.` });
-            steps.push({ n:'3', cls:'',     txt:`${targets[1] ? `Next target is T2 at <strong>${targets[1].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</strong>. Hold remaining position for continuation.` : 'No T2 defined — consider closing remaining position or trailing aggressively.'}` });
+            steps.push({ n:'✓', cls:'done', txt:`<strong>T1 reached.</strong> Execute first profit tranche.` });
+            steps.push({ n:'2', cls:'',     txt:`Move stop to entry. ${targets[1] ? 'Next: T2 at <strong>$'+targets[1].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong>.' : 'Trail aggressively.'}` });
           } else if (zone === 't2_hit') {
-            steps.push({ n:'✓', cls:'done', txt:`<strong>T2 reached.</strong> Execute the second profit-taking tranche. Outstanding performance.` });
-            steps.push({ n:'✓', cls:'done', txt:`Trail stop aggressively — minimum to <strong>${targets[0] ? '$'+targets[0].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : ep}</strong> (T1) for remaining size.` });
-            steps.push({ n:'3', cls:'',     txt:`${targets[2] ? `T3 at <strong>${targets[2].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</strong> is the final target. Let remaining position ride.` : 'No T3 defined — close remaining position or trail stop tightly.'}` });
+            steps.push({ n:'✓', cls:'done', txt:`<strong>T2 reached.</strong> Execute second profit tranche.` });
+            steps.push({ n:'2', cls:'done', txt:`Trail stop to T1. ${targets[2] ? 'T3 at <strong>$'+targets[2].val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong>.' : 'Close remaining.'}` });
           } else if (zone === 't3_hit') {
-            steps.push({ n:'✓', cls:'done', txt:`<strong>Full target sequence hit.</strong> Close any remaining position and lock in gains.` });
-            steps.push({ n:'✓', cls:'done', txt:`This signal has run its full course. Mark as complete and review the trade journal.` });
+            steps.push({ n:'✓', cls:'done', txt:`<strong>All targets hit.</strong> Close position and lock in gains.` });
           }
-
           if (!steps.length) return '';
-          const stepsHtml = steps.map(s => `
-            <div class="sbActionStep">
-              <div class="stepNum ${s.cls}">${s.n}</div>
-              <div>${s.txt}</div>
-            </div>`).join('');
-          return `<div class="sbActionPlan">
-            <div class="sbPlanLabel">◈ ACTION PLAN</div>
-            ${stepsHtml}
-          </div>`;
+          const stepsHtml = steps.map(s => `<div class="sbActionStep"><div class="stepNum ${s.cls}">${s.n}</div><div>${s.txt}</div></div>`).join('');
+          return `<div class="sbActionPlan"><div class="sbPlanLabel">◈ WHAT TO DO NOW</div>${stepsHtml}</div>`;
         })()}
 
         <!-- PROFIT TAKING PLAN -->
         ${(() => {
           if (!targets.length) return '';
-          // Suggested take-profit %s by number of targets
-          const takePcts = targets.length === 1 ? [100]
-                         : targets.length === 2 ? [40, 60]
-                         : [33, 33, 34];
-
+          const takePcts = targets.length === 1 ? [100] : targets.length === 2 ? [40, 60] : [33, 33, 34];
           const rows = targets.map((t, i) => {
             const isHit    = isBull ? (livePrice && livePrice >= t.val) : (livePrice && livePrice <= t.val);
             const isActive = !isHit && (i === 0 || (isBull ? (livePrice && livePrice >= targets[i-1]?.val) : (livePrice && livePrice <= targets[i-1]?.val)));
             const state    = isHit ? 'hit' : isActive ? 'active' : 'pending';
-
             const actionText = i === targets.length - 1
-              ? `Close remaining <strong>${takePcts[i]}%</strong> of position`
-              : i === 0
-              ? `Scale out <strong>${takePcts[i]}%</strong> of position, trail stop to entry`
-              : `Scale out <strong>${takePcts[i]}%</strong> more, trail stop to T${i}`;
-
-            const badgeText = isHit ? '✓ HIT' : isActive ? '▶ NEXT TARGET' : `PENDING`;
-
-            return `
-            <div class="sbProfitRow">
+              ? `Close remaining <strong>${takePcts[i]}%</strong>`
+              : i === 0 ? `Scale out <strong>${takePcts[i]}%</strong>, trail stop to entry`
+              : `Scale out <strong>${takePcts[i]}%</strong>, trail stop to T${i}`;
+            const badgeText = isHit ? '✓ HIT' : isActive ? '▶ NEXT' : 'PENDING';
+            return `<div class="sbProfitRow">
               <div class="sbProfitTarget ${state}">${t.label}</div>
               <div class="sbProfitDetail">
                 <div class="sbProfitPrice ${state}">${t.val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
@@ -8631,12 +8601,7 @@
               <div class="sbProfitBadge ${state}">${badgeText}</div>
             </div>`;
           }).join('');
-
-          return `
-          <div class="sbProfitPlan">
-            <div class="sbPlanLabel" style="color:var(--green);opacity:.8;">💰 PROFIT TAKING PLAN</div>
-            ${rows}
-          </div>`;
+          return `<div class="sbProfitPlan"><div class="sbPlanLabel" style="color:var(--green);opacity:.8;">💰 PROFIT TAKING PLAN</div>${rows}</div>`;
         })()}
 
         <!-- TIMELINE -->
@@ -8644,7 +8609,7 @@
         <div class="sbTimeline">
           <div class="sbTimelineLabel">
             <span>TRADE TIMELINE</span>
-            <span style="color:var(--core)">${daysLeft !== null ? daysLeft + ' DAYS REMAINING' : ''}</span>
+            <span style="color:var(--core)">${daysLeft !== null ? daysLeft + ' DAYS LEFT' : ''}</span>
           </div>
           <div class="sbTimelineTrack">
             <div class="sbTimelineFill" style="width:${timelinePct}%">
@@ -8661,20 +8626,20 @@
         <!-- DETAIL TILES -->
         <div class="sbDetailRow">
           <div class="sbDetailTile">
-            <div class="sbDetailTileLabel">VOLATILITY REGIME</div>
+            <div class="sbDetailTileLabel">VOLATILITY</div>
             <div class="sbDetailTileVal" style="color:var(--amber)">${sig.volatility || '—'}</div>
           </div>
           <div class="sbDetailTile">
-            <div class="sbDetailTileLabel">TIME HORIZON</div>
+            <div class="sbDetailTileLabel">HORIZON</div>
             <div class="sbDetailTileVal" style="color:var(--core)">${formatHorizon(sig.horizon)}</div>
           </div>
           ${sig.min_duration ? `
           <div class="sbDetailTile">
-            <div class="sbDetailTileLabel">MIN HOLD DURATION</div>
+            <div class="sbDetailTileLabel">MIN HOLD</div>
             <div class="sbDetailTileVal">${sig.min_duration}</div>
           </div>` : ''}
           <div class="sbDetailTile">
-            <div class="sbDetailTileLabel">ZONE STATUS</div>
+            <div class="sbDetailTileLabel">ZONE</div>
             <div class="sbDetailTileVal" style="color:${zoneConf.color}">${zoneConf.label}</div>
           </div>
         </div>
