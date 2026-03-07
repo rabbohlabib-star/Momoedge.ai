@@ -3418,13 +3418,18 @@
     .ttInput{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text);font-family:var(--display);font-size:12px;padding:8px 10px;outline:none;box-sizing:border-box;}
     .ttInput:focus{border-color:rgba(0,229,255,.4);}
     .ttTrancheSelect{display:flex;gap:6px;}
-    .ttTrancheOpt{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
-    .ttTrancheOpt.active{border-color:rgba(0,229,255,.5);background:rgba(0,229,255,.08);}
-    .ttTrancheOpt.active::after{content:'\2713';position:absolute;top:3px;right:5px;font-size:8px;color:var(--core);}
-    .ttTrancheOpt.taken{border-color:rgba(0,255,163,.3);background:rgba(0,255,163,.05);opacity:.5;pointer-events:none;}
-    .ttTrancheOpt.taken::after{content:'HELD';position:absolute;top:3px;right:4px;font-size:6px;color:var(--green);letter-spacing:.5px;}
-    .ttTrancheLbl{font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--core);}
-    .ttTrancheSub{font-family:var(--display);font-size:7px;color:var(--muted);letter-spacing:.5px;margin-top:2px;}
+    .ttTrancheOpt{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 6px 16px;text-align:center;cursor:default;transition:all .2s;position:relative;opacity:.3;}
+    .ttTrancheOpt.held{border-color:rgba(0,255,136,.35);background:rgba(0,255,136,.06);opacity:1;box-shadow:0 0 10px rgba(0,255,136,.1);}
+    .ttTrancheOpt.held .ttTrancheLbl{color:var(--green);}
+    .ttTrancheOpt.held .ttTrancheSub{color:var(--green);opacity:.7;}
+    .ttTrancheOpt.next{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06);opacity:1;cursor:pointer;}
+    .ttTrancheOpt.active{border-color:rgba(0,229,255,.6);background:rgba(0,229,255,.12);opacity:1;}
+    .ttTrancheLbl{font-family:var(--display);font-size:14px;font-weight:900;letter-spacing:1px;color:var(--core);}
+    .ttTrancheSub{font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:.5px;margin-top:2px;}
+    .ttTrancheTag{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:7px;letter-spacing:1px;font-weight:700;white-space:nowrap;}
+    .ttTrancheClose{position:absolute;top:3px;right:4px;font-family:var(--display);font-size:7px;color:var(--red);cursor:pointer;padding:2px 5px;border-radius:3px;background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.2);letter-spacing:.5px;}
+    .ttTrancheClose:hover{background:rgba(255,59,59,.25);}
+    .ttTrancheInfo{font-family:var(--display);font-size:8px;color:var(--muted);margin-top:4px;}
     .ttVehicleToggle{display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid rgba(0,229,255,.15);}
     .ttVehicleBtn{flex:1;background:transparent;border:none;color:var(--muted);font-family:var(--display);font-size:9px;letter-spacing:1px;padding:8px 0;cursor:pointer;transition:all .2s;}
     .ttVehicleBtn.active{background:rgba(0,229,255,.12);color:var(--core);font-weight:700;}
@@ -4226,12 +4231,14 @@
 
       <!-- STOCK FIELDS -->
       <div id="ttStockFields">
-        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">SELECT TRANCHES TO ENTER</div>
-          <div class="ttTrancheSelect" id="ttTrancheSelect">
-            <div class="ttTrancheOpt active" data-tranche="1" onclick="toggleTranche(this)"><div class="ttTrancheLbl" style="font-size:12px;">1/3</div><div class="ttTrancheSub">INITIAL</div></div>
-            <div class="ttTrancheOpt" data-tranche="2" onclick="toggleTranche(this)"><div class="ttTrancheLbl" style="font-size:12px;">2/3</div><div class="ttTrancheSub">TRIGGER</div></div>
-            <div class="ttTrancheOpt" data-tranche="3" onclick="toggleTranche(this)"><div class="ttTrancheLbl" style="font-size:12px;">3/3</div><div class="ttTrancheSub">CONVICTION</div></div>
-          </div>
+        <!-- CURRENT POSITION SUMMARY (shown when holding tranches) -->
+        <div id="ttPositionSummary" style="display:none;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15);border-radius:8px;padding:12px;margin-bottom:12px;">
+          <div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:8px;font-weight:700;">YOUR POSITION</div>
+          <div id="ttPosSummaryContent" style="font-family:var(--display);font-size:12px;color:var(--text);line-height:1.8;"></div>
+        </div>
+        <!-- TRANCHE SELECTOR -->
+        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">TRANCHE STATUS</div>
+          <div class="ttTrancheSelect" id="ttTrancheSelect"></div>
         </div>
         <div id="ttCalcSummary" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:12px 14px;margin-bottom:8px;">
           <div id="ttCalcContent" style="font-family:var(--display);font-size:11px;color:var(--text);line-height:1.7;"></div>
@@ -7764,39 +7771,36 @@
     }
 
     function renderActiveSignalsBoard() {
-      var activePerf = PERF_DATA.filter(function(r) { return r.status === 'ACTIVE'; });
-      if (!activePerf.length) {
+      if (!SIGNALS.length) {
         ['activeSignalsBoard','mActiveSignalsBoard'].forEach(function(id) {
           var el = document.getElementById(id); if (el) el.innerHTML = '';
         });
         return;
       }
 
-      var cards = activePerf.map(function(r) {
-        var assetKey = (r.asset || '').split(' ')[0].toUpperCase();
+      var cards = SIGNALS.map(function(sig) {
+        var assetKey = (sig.asset || '').split(' ')[0].toUpperCase();
         var cached = PRICE_CACHE[assetKey];
         var liveP = cached ? cached.price : null;
-        var entry = r.entry_price ? parseFloat(r.entry_price) : null;
-        var isBull = r.direction === 'BULL';
+        var entry = sig.entry_price ? parseFloat(sig.entry_price) : null;
+        var isBull = sig.direction === 'BULL';
         var pnl = null, pnlColor = 'var(--muted)';
         if (entry && liveP) {
           pnl = isBull ? ((liveP - entry) / entry * 100) : ((entry - liveP) / entry * 100);
           pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
         }
-        var chg = cached ? getLiveChangePercent(cached, getAssetClass(r.asset)) : null;
+        var chg = cached ? getLiveChangePercent(cached, getAssetClass(sig.asset)) : null;
         var priceColor = chg !== null ? (chg >= 0 ? 'var(--green)' : 'var(--red)') : '#fff';
 
-        // Find oracle tranche from SIGNALS
-        var sig = SIGNALS.find(function(s) { return s.asset === r.asset; });
-        var oTr = sig ? (sig.oracle_tranche || 1) : 1;
+        var oTr = sig.oracle_tranche || 1;
         var trDots = [1,2,3].map(function(n) {
           return '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:2px;background:' + (n <= oTr ? 'var(--green)' : 'rgba(255,255,255,.1)') + ';"></span>';
         }).join('');
 
         return '<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;min-width:180px;flex-shrink:0;">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
-            '<span style="font-family:var(--display);font-size:13px;font-weight:900;">' + r.asset + '</span>' +
-            '<span style="font-family:var(--display);font-size:8px;letter-spacing:1px;color:' + (isBull ? 'var(--green)' : 'var(--red)') + ';">' + r.direction + '</span>' +
+            '<span style="font-family:var(--display);font-size:13px;font-weight:900;">' + sig.asset + '</span>' +
+            '<span style="font-family:var(--display);font-size:8px;letter-spacing:1px;color:' + (isBull ? 'var(--green)' : 'var(--red)') + ';">' + sig.direction + '</span>' +
           '</div>' +
           '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + priceColor + ';">' + (liveP ? '$' + liveP.toFixed(2) : '—') + '</div>' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">' +
@@ -9956,6 +9960,7 @@
           if (tabId === 'history') {
             if (typeof drawEquityCurve === 'function') drawEquityCurve();
             if (typeof refreshAll === 'function') refreshAll();
+            if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
             if (typeof clearHistoryBadge === 'function') clearHistoryBadge();
           }
           if (tabId === 'macro' && typeof renderMacroRegime === 'function') renderMacroRegime();
@@ -10053,13 +10058,15 @@
           await loadMemberSettings();
           await loadMemberTrades();
           renderJournal();
+          if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
         } else {
           console.log('[Journal] No auth session — using localStorage fallback');
           loadLocalSettings();
           loadMemberTrades();
           renderJournal();
+          if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
         }
-      } catch(e) { console.warn('[Journal] Auth init error:', e); loadLocalSettings(); loadMemberTrades(); renderJournal(); }
+      } catch(e) { console.warn('[Journal] Auth init error:', e); loadLocalSettings(); loadMemberTrades(); renderJournal(); if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory(); }
     }
 
     function loadLocalSettings() {
@@ -10342,26 +10349,91 @@
       document.getElementById('ttRiskAmt').value = '';
       document.getElementById('ttRiskAmt').style.color = '';
 
-      // Tranche state — multi-select: auto-select first available
+      // Tranche state — build dynamically with sequential logic
       _ttSelectedTranches = [];
-      document.querySelectorAll('.ttTrancheOpt').forEach(function(el) {
-        var tr = parseInt(el.dataset.tranche); el.classList.remove('active','taken');
-        if (taken.indexOf(tr) >= 0) {
-          el.classList.add('taken');
+      var trancheGrid = document.getElementById('ttTrancheSelect');
+      var posSummary = document.getElementById('ttPositionSummary');
+      var posSummaryContent = document.getElementById('ttPosSummaryContent');
+      var trancheNames = ['INITIAL', 'TRIGGER', 'CONVICTION'];
+      var trancheCards = '';
+      var nextAvailable = 0; // which tranche is next to add
+      var totalHeldShares = 0, totalHeldRisk = 0, avgEntry = 0, totalCost = 0;
+
+      // Build held state
+      for (var tr = 1; tr <= 3; tr++) {
+        var heldTrade = myTrades.find(function(t) { return (t.tranche || 1) === tr; });
+        var isHeld = !!heldTrade;
+        if (isHeld) {
+          totalHeldShares += parseFloat(heldTrade.shares) || 0;
+          totalHeldRisk += parseFloat(heldTrade.risk_amount) || 0;
+          totalCost += (parseFloat(heldTrade.entry_price) || 0) * (parseFloat(heldTrade.shares) || 0);
+          nextAvailable = tr + 1;
         }
-      });
-      // Auto-select first available tranche
-      for (var t = 1; t <= 3; t++) {
-        if (taken.indexOf(t) < 0) { _ttSelectedTranches.push(t); break; }
       }
-      if (!_ttSelectedTranches.length) _ttSelectedTranches = [1]; // fallback
-      _ttTranche = Math.max.apply(null, _ttSelectedTranches);
-      // Update visual
-      document.querySelectorAll('.ttTrancheOpt').forEach(function(opt) {
-        if (!opt.classList.contains('taken')) {
-          opt.classList.toggle('active', _ttSelectedTranches.indexOf(parseInt(opt.dataset.tranche)) >= 0);
+      if (totalHeldShares > 0) avgEntry = totalCost / totalHeldShares;
+
+      // Build cards
+      for (var tr = 1; tr <= 3; tr++) {
+        var heldTrade = myTrades.find(function(t) { return (t.tranche || 1) === tr; });
+        var isHeld = !!heldTrade;
+        var isNext = (!isHeld && tr === nextAvailable);
+        var isLocked = (!isHeld && tr > nextAvailable); // can't skip
+
+        var cls = isHeld ? 'held' : isNext ? 'next' : isLocked ? '' : '';
+        var clickHandler = isNext ? ' onclick="toggleTranche(this)"' : '';
+        var tag = '';
+        if (isHeld) {
+          var sh = parseFloat(heldTrade.shares) || 0;
+          var unit = (heldTrade.vehicle === 'OPTIONS') ? 'ct' : 'sh';
+          var d = heldTrade.created_at ? new Date(heldTrade.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+          tag = '<div class="ttTrancheInfo">' + sh + ' ' + unit + ' · $' + parseFloat(heldTrade.entry_price).toFixed(2) + (d ? ' · ' + d : '') + '</div>';
+          tag += '<span class="ttTrancheClose" onclick="event.stopPropagation();closeSingleTranche(\'' + heldTrade.id + '\')">✕ CLOSE</span>';
+        } else if (isNext) {
+          tag = '<div class="ttTrancheTag" style="color:var(--core);">+ ADD</div>';
+        } else if (isLocked) {
+          tag = '<div class="ttTrancheTag" style="color:var(--muted);">LOCKED</div>';
         }
-      });
+
+        trancheCards += '<div class="ttTrancheOpt ' + cls + '" data-tranche="' + tr + '"' + clickHandler + '>' +
+          '<div class="ttTrancheLbl">' + tr + '/3</div>' +
+          '<div class="ttTrancheSub">' + trancheNames[tr-1] + '</div>' +
+          tag +
+        '</div>';
+      }
+      trancheGrid.innerHTML = trancheCards;
+
+      // Auto-select next available
+      if (nextAvailable >= 1 && nextAvailable <= 3) {
+        _ttSelectedTranches = [nextAvailable];
+        var nextEl = trancheGrid.querySelector('[data-tranche="' + nextAvailable + '"]');
+        if (nextEl) nextEl.classList.add('active');
+      }
+      _ttTranche = _ttSelectedTranches.length ? Math.max.apply(null, _ttSelectedTranches) : 1;
+
+      // Position summary
+      if (totalHeldShares > 0) {
+        var unit = myTrades[0].vehicle === 'OPTIONS' ? 'ct' : 'sh';
+        var livePnlHtml = '';
+        if (lp && avgEntry > 0) {
+          var isBull2 = sig.direction === 'BULL';
+          var rawPnl = ((lp - avgEntry) / avgEntry) * 100;
+          var posPnl = isBull2 ? rawPnl : -rawPnl;
+          var dollarPnl = isBull2 ? (lp - avgEntry) * totalHeldShares : (avgEntry - lp) * totalHeldShares;
+          var pnlC = posPnl >= 0 ? 'var(--green)' : 'var(--red)';
+          livePnlHtml = '<div style="display:flex;justify-content:space-between;padding-top:6px;margin-top:6px;border-top:1px solid rgba(0,255,136,.1);">' +
+            '<span>LIVE P&L</span><span style="color:' + pnlC + ';font-weight:900;font-size:14px;">' + (posPnl >= 0 ? '+' : '') + posPnl.toFixed(2) + '% <span style="font-size:10px;">(' + (dollarPnl >= 0 ? '+' : '') + '$' + Math.abs(dollarPnl).toFixed(0) + ')</span></span>' +
+          '</div>';
+        }
+        posSummary.style.display = '';
+        posSummaryContent.innerHTML =
+          '<div style="display:flex;justify-content:space-between;"><span>TOTAL SIZE</span><span style="font-weight:900;color:#fff;">' + totalHeldShares + ' ' + unit + '</span></div>' +
+          '<div style="display:flex;justify-content:space-between;"><span>AVG ENTRY</span><span style="color:var(--core);">$' + avgEntry.toFixed(2) + '</span></div>' +
+          '<div style="display:flex;justify-content:space-between;"><span>TRANCHES HELD</span><span>' + taken.length + '/3</span></div>' +
+          '<div style="display:flex;justify-content:space-between;"><span>TOTAL RISK</span><span style="color:var(--amber);">$' + totalHeldRisk.toFixed(0) + '</span></div>' +
+          livePnlHtml;
+      } else {
+        posSummary.style.display = 'none';
+      }
 
       // Option fields — parse Oracle contract cards AND pre-fill premium
       _ttSelectedContract = null;
@@ -10438,34 +10510,64 @@
     var _ttSelectedTranches = [1]; // array of selected tranche numbers
 
     function toggleTranche(el) {
-      if (el.classList.contains('taken')) return;
+      if (el.classList.contains('held')) return;
       var t = parseInt(el.dataset.tranche);
-      var idx = _ttSelectedTranches.indexOf(t);
-      if (idx >= 0) {
-        if (_ttSelectedTranches.length <= 1) return; // must have at least 1
-        _ttSelectedTranches.splice(idx, 1);
+      // Sequential: only the next available tranche can be toggled
+      if (_ttSelectedTranches.indexOf(t) >= 0) {
+        // Deselect — go back to "next" state
+        _ttSelectedTranches = [];
+        el.classList.remove('active');
+        el.classList.add('next');
       } else {
-        _ttSelectedTranches.push(t);
+        // Select this tranche
+        _ttSelectedTranches = [t];
+        _ttTranche = t;
+        el.classList.remove('next');
+        el.classList.add('active');
       }
-      _ttSelectedTranches.sort();
-      // Update tranche max for save
-      _ttTranche = Math.max.apply(null, _ttSelectedTranches);
-      // Update visual
-      document.querySelectorAll('.ttTrancheOpt').forEach(function(opt) {
-        if (opt.classList.contains('taken')) return;
-        opt.classList.toggle('active', _ttSelectedTranches.indexOf(parseInt(opt.dataset.tranche)) >= 0);
-      });
       autoFillTradeFields();
     }
 
-    function selectTranche(t) {
-      // Legacy wrapper
-      _ttSelectedTranches = [t]; _ttTranche = t;
-      document.querySelectorAll('.ttTrancheOpt').forEach(function(el) {
-        if (!el.classList.contains('taken')) el.classList.toggle('active', parseInt(el.dataset.tranche) === t);
-      });
-      autoFillTradeFields();
+    // Close a single tranche from within the Take Trade modal
+    async function closeSingleTranche(tradeId) {
+      var trade = MEMBER_TRADES.find(function(t) { return t.id === tradeId; });
+      if (!trade) return;
+      var asset = trade.asset.split(' ')[0].toUpperCase();
+      var cached = PRICE_CACHE[asset];
+      var exitP = cached && cached.price ? cached.price : null;
+
+      if (!exitP) { showToast('No live price — cannot close'); return; }
+
+      var isBull = trade.direction === 'BULL', entP = parseFloat(trade.entry_price);
+      var raw = ((exitP - entP) / entP) * 100;
+      var pnlPct = isBull ? raw : -raw;
+      var pnlD = isBull ? (exitP - entP) * parseFloat(trade.shares) : (entP - exitP) * parseFloat(trade.shares);
+
+      var msg = 'Close tranche ' + (trade.tranche || 1) + '/3 of ' + trade.asset + '?\n\n' +
+        'Entry: $' + entP.toFixed(2) + ' → Exit: $' + exitP.toFixed(2) + '\n' +
+        'P&L: ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '% ($' + (pnlD >= 0 ? '+' : '') + pnlD.toFixed(0) + ')';
+      if (!confirm(msg)) return;
+
+      trade.status = 'CLOSED';
+      trade.exit_price = exitP;
+      trade.exit_date = new Date().toISOString();
+      trade.realized_pnl = parseFloat(pnlD.toFixed(2));
+      trade.realized_pnl_pct = parseFloat(pnlPct.toFixed(2));
+
+      if (CURRENT_USER) {
+        try { await SB_AUTH.from('member_trades').update({ status: 'CLOSED', exit_price: exitP, exit_date: trade.exit_date, realized_pnl: trade.realized_pnl, realized_pnl_pct: trade.realized_pnl_pct }).eq('id', tradeId); } catch(e) {}
+      }
+      saveMemberTradesLocal();
+      showToast('✓ Closed tranche ' + (trade.tranche || 1) + '/3 — ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%');
+
+      // Refresh the Take Trade modal to reflect new state
+      closeTakeTradeModal();
+      renderJournal(); renderList();
+      if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
+      if (typeof window._renderMList === 'function') window._renderMList();
+      if (SIGNALS.length && SIGNALS[activeIndex]) updateTakeTradeBtn(SIGNALS[activeIndex]);
     }
+    window.closeSingleTranche = closeSingleTranche;
 
     function selectTtVehicle(v) {
       _ttVehicle = v;
@@ -10496,7 +10598,14 @@
 
       // How many tranches selected
       var trancheCount = _ttSelectedTranches.length;
-      var trancheFraction = trancheCount / 3; // e.g. 2 selected = 0.667
+      if (trancheCount === 0) {
+        var summaryEl0 = document.getElementById('ttCalcSummary');
+        if (summaryEl0) summaryEl0.style.display = 'none';
+        document.getElementById('ttShares').value = '';
+        document.getElementById('ttRiskAmt').value = '';
+        return;
+      }
+      var trancheFraction = trancheCount / 3; // 1 selected = 0.333
 
       // Parse invalidation / stop loss
       var inv = null;
@@ -10583,6 +10692,9 @@
 
     async function confirmTakeTrade() {
       if(!_ttSignal) return; var sig=_ttSignal;
+
+      // Must have at least one tranche selected
+      if (!_ttSelectedTranches.length) { showToast('Select a tranche to enter'); return; }
 
       // Safety: check for duplicate or full position
       var existingTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
@@ -10672,6 +10784,7 @@
         : sig.asset+' × '+trade.shares+' shares';
       showToast('✓ '+label+' logged');
       updateTakeTradeBtn(sig); renderJournal(); renderList();
+      if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
       if (typeof window._renderMList === 'function') window._renderMList();
     }
 
@@ -10833,6 +10946,7 @@
       showToast(label);
       renderJournal();
       renderList();
+      if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory();
       if (typeof window._renderMList === 'function') window._renderMList();
       if (SIGNALS.length && SIGNALS[activeIndex]) updateTakeTradeBtn(SIGNALS[activeIndex]);
     }
@@ -11208,7 +11322,7 @@
       if(idx>=0){setActive(idx);setTimeout(openTakeTradeModal,200);} else showToast('Signal no longer active');
     }
 
-    setInterval(function(){ if(MEMBER_TRADES.some(function(t){return t.status==='OPEN';})) renderJournal(); }, 60000);
+    setInterval(function(){ if(MEMBER_TRADES.some(function(t){return t.status==='OPEN';})) { renderJournal(); if(typeof renderMyTradeHistory==='function') renderMyTradeHistory(); } }, 60000);
 
     init();
     loadStance();
@@ -11694,7 +11808,7 @@
     if (tabName === 'Macro')    renderMMacro();
     if (tabName === 'Flow')     renderMFlow();
     if (tabName === 'Signals') { if (typeof clearSignalsBadge === 'function') clearSignalsBadge(); }
-    if (tabName === 'History') { renderMHistory(); if (typeof clearHistoryBadge === 'function') clearHistoryBadge(); }
+    if (tabName === 'History') { renderMHistory(); if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory(); if (typeof clearHistoryBadge === 'function') clearHistoryBadge(); }
     if (tabName === 'Journal') { if (typeof renderJournal === 'function') renderJournal(); }
     window.scrollTo(0, 0);
   }
