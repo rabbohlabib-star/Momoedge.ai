@@ -656,7 +656,6 @@
   <div class="aSectionHeader">
     <div class="aSectionTitle">PERFORMANCE HISTORY</div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="addBtn" id="backfillSpyBtn" style="background:rgba(0,255,163,.06);border-color:rgba(0,255,163,.25);color:#00ffa3;font-size:8px;">⟳ BACKFILL SPY ALPHA</button>
       <button class="addBtn" id="addPerfBtn">+ ADD TRADE</button>
     </div>
   </div>
@@ -1222,48 +1221,6 @@
      Scans closed trades. If 1w/1m/3m has passed since exit_date
      and the aftermath field is still null, fetches current price and saves it.
   */
-  async function backfillSpyReturns() {
-    const btn = document.getElementById('backfillSpyBtn');
-    const missing = PERF.filter(r => r.result !== null && (r.spy_return === null || r.spy_return === undefined) && r.date && r.exit_date);
-    if (!missing.length) { toast('✓ All trades already have SPY alpha data'); return; }
-
-    btn.disabled = true;
-    btn.textContent = `BACKFILLING 0/${missing.length}...`;
-    let updated = 0, failed = 0;
-
-    for (let i = 0; i < missing.length; i++) {
-      const row = missing[i];
-      btn.textContent = `BACKFILLING ${i+1}/${missing.length}...`;
-
-      // Rate limit protection — Finnhub allows ~1 req/sec on free tier
-      if (i > 0) await new Promise(r => setTimeout(r, 1200));
-
-      const spyRet = await fetchSpyReturn(row.date, row.exit_date);
-      if (spyRet === null) { failed++; continue; }
-
-      const res = await fetch(`${SB_URL}/performance?id=eq.${row.id}`, {
-        method: 'PATCH',
-        headers: { ...SB_H, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ spy_return: spyRet })
-      });
-
-      if (res.ok) { updated++; }
-      else { failed++; }
-    }
-
-    btn.disabled = false;
-    btn.textContent = '⟳ BACKFILL SPY ALPHA';
-
-    if (updated) {
-      toast(`✓ SPY alpha backfilled for ${updated} trade${updated > 1 ? 's' : ''}${failed ? ` (${failed} no historical data)` : ''}`);
-      await loadAll();
-    } else if (failed) {
-      toast(`⚠️ No SPY data found — trades may be older than Finnhub's 1-year free tier limit. Check console for details.`, false);
-    } else {
-      toast(`⚠️ Backfill failed — check console for details`, false);
-    }
-  }
-
   async function checkAftermath() {
     const closed = PERF.filter(r => r.exit_date && r.status !== 'ACTIVE');
     if (!closed.length) return;
@@ -1846,12 +1803,12 @@
         <td style="color:var(--muted)">${r.days ? r.days + 'd' : '—'}</td>
         <td style="color:var(--blue);font-family:var(--display)">${r.conf ? parseFloat(r.conf).toFixed(2) + '%' : '—'}</td>
         <td>
-          <input class="perfNoteInput" data-pid="${r.id}" value="${(r.notes || '').replace(/"/g,'&quot;')}"
+          <textarea class="perfNoteInput" data-pid="${r.id}"
             placeholder="Add note..."
-            style="font-family:var(--display);font-size:9px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);color:var(--core);padding:4px 8px;border-radius:5px;width:140px;outline:none;transition:border-color .2s;"
+            style="font-family:var(--display);font-size:9px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);color:var(--core);padding:4px 8px;border-radius:5px;width:140px;min-height:26px;max-height:120px;outline:none;transition:border-color .2s;resize:none;overflow:hidden;line-height:1.5;field-sizing:content;"
             onfocus="this.style.borderColor='rgba(0,229,255,.4)'"
             onblur="this.style.borderColor='rgba(0,229,255,.1)'"
-          />
+          >${(r.notes || '').replace(/</g,'&lt;')}</textarea>
         </td>
         <td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
           <button class="scBtn perfEdit" data-pid="${r.id}"
@@ -1939,8 +1896,11 @@
       });
     });
 
-    // Notes — auto-save on blur or Enter
+    // Notes — auto-save on blur, auto-resize on input
     tbody.querySelectorAll(".perfNoteInput").forEach(input => {
+      const autoResize = () => { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; };
+      autoResize();
+      input.addEventListener('input', autoResize);
       const save = async () => {
         const pid = input.dataset.pid;
         const note = input.value.trim();
@@ -1951,18 +1911,38 @@
         if (ok) {
           row.notes = note || null;
           input.style.borderColor = 'rgba(0,255,163,.5)';
-          setTimeout(() => { input.style.borderColor = 'rgba(0,229,255,.1)'; }, 1000);
+          // Show saved indicator
+          let badge = input.parentElement.querySelector('.noteSavedBadge');
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'noteSavedBadge';
+            badge.style.cssText = 'font-family:var(--display);font-size:8px;letter-spacing:1px;color:#00ffa3;text-align:right;margin-top:2px;opacity:0;transition:opacity .3s;';
+            input.parentElement.appendChild(badge);
+          }
+          badge.textContent = 'SAVED ✓';
+          badge.style.opacity = '1';
+          setTimeout(() => { badge.style.opacity = '0'; }, 2000);
+          setTimeout(() => { input.style.borderColor = 'rgba(0,229,255,.1)'; }, 1500);
         } else {
           input.style.borderColor = 'rgba(255,59,59,.5)';
+          let badge = input.parentElement.querySelector('.noteSavedBadge');
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'noteSavedBadge';
+            badge.style.cssText = 'font-family:var(--display);font-size:8px;letter-spacing:1px;color:#ff3b3b;text-align:right;margin-top:2px;opacity:0;transition:opacity .3s;';
+            input.parentElement.appendChild(badge);
+          }
+          badge.textContent = 'FAILED ✕';
+          badge.style.color = '#ff3b3b';
+          badge.style.opacity = '1';
+          setTimeout(() => { badge.style.opacity = '0'; }, 2000);
         }
       };
       input.addEventListener('blur', save);
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
     });
   }
 
   /* ── ADD PERF FORM ── */
-  document.getElementById('backfillSpyBtn').addEventListener('click', backfillSpyReturns);
 
   document.getElementById("addPerfBtn").addEventListener("click", () => {
     document.getElementById("perfForm").style.display = document.getElementById("perfForm").style.display === "none" ? "block" : "none";
@@ -2198,14 +2178,26 @@
 
           MACRO[i].status = newStance;
           MACRO[i].last_changed = new Date().toISOString();
+          // Always reset benchmark_price on stance change so stale % doesn't persist
+          MACRO[i].benchmark_price = null;
 
           // Auto-fetch benchmark price at moment of stance change
           const ticker = MACRO[i].benchmark_ticker;
           if (ticker) {
-            try {
-              const price = await fetchLivePrice(ticker);
-              if (price) MACRO[i].benchmark_price = price;
-            } catch(e) {}
+            let price = null;
+            try { price = await fetchLivePrice(ticker); } catch(e) {}
+            // If Finnhub failed for crypto, try direct Finnhub crypto endpoint
+            if (!price && ticker.includes(':')) {
+              try {
+                const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${FINNHUB_KEY}`);
+                if (r.ok) { const d = await r.json(); if (d && d.c > 0) price = d.c; }
+              } catch(e) {}
+            }
+            if (price) {
+              MACRO[i].benchmark_price = price;
+            } else {
+              toast('⚠️ Could not fetch ' + (MACRO[i].benchmark || ticker) + ' price — save anyway and terminal will pick it up on next refresh', false);
+            }
           }
           renderMacroEditor();
         });
@@ -2265,6 +2257,22 @@
     window.closePerfEdit = function() {
       document.getElementById('perfEditOverlay').style.display = 'none';
     }
+
+    // Auto-calc result% when entry + exit prices both filled
+    function autoCalcResult() {
+      const entry = parseFloat(document.getElementById('peEntryPrice').value);
+      const exit = parseFloat(document.getElementById('peExitPrice').value);
+      const dir = document.getElementById('peDir').value;
+      if (!entry || !exit || entry <= 0) return;
+      const result = dir === 'BULL'
+        ? ((exit - entry) / entry) * 100
+        : ((entry - exit) / entry) * 100;
+      document.getElementById('peResult').value = result.toFixed(2);
+    }
+    document.getElementById('peEntryPrice').addEventListener('input', autoCalcResult);
+    document.getElementById('peExitPrice').addEventListener('input', autoCalcResult);
+    document.getElementById('peDir').addEventListener('change', autoCalcResult);
+
     document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
       const id = document.getElementById('perfEditId').value;
       if (!id) return;
