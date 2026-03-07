@@ -2809,7 +2809,7 @@
       width: 100%;
       padding: 10px 14px;
       font-family: var(--display);
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 700;
       color: #fff;
       background: rgba(0,10,30,.6);
@@ -3446,7 +3446,7 @@
     .ttSubtitle{font-family:var(--display);font-size:9px;letter-spacing:1px;color:var(--muted);margin-bottom:16px;}
     .ttGroup{margin-bottom:12px;}
     .ttLabel{font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;}
-    .ttInput{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text);font-family:var(--display);font-size:12px;padding:8px 10px;outline:none;box-sizing:border-box;}
+    .ttInput{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text);font-family:var(--display);font-size:16px;padding:10px 12px;outline:none;box-sizing:border-box;-webkit-text-size-adjust:100%;}
     .ttInput:focus{border-color:rgba(0,229,255,.4);}
     .ttTrancheSelect{display:flex;gap:6px;}
     .ttTrancheOpt{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 6px 16px;text-align:center;cursor:default;transition:all .2s;position:relative;opacity:.3;}
@@ -4249,11 +4249,11 @@
         <div style="display:flex;gap:8px;">
           <div style="flex:1;">
             <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">ACCOUNT SIZE</div>
-            <input class="ttInput" id="ttAcctSize" type="number" step="100" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()" onkeyup="if(event.key==='Enter')syncAcctFromTT()"/>
+            <input class="ttInput" id="ttAcctSize" type="number" step="100" style="padding:8px 10px;" onchange="syncAcctFromTT()" onkeyup="if(event.key==='Enter')syncAcctFromTT()"/>
           </div>
           <div style="flex:1;">
             <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">RISK %</div>
-            <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()" onkeyup="if(event.key==='Enter')syncAcctFromTT()"/>
+            <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="padding:8px 10px;" onchange="syncAcctFromTT()" onkeyup="if(event.key==='Enter')syncAcctFromTT()"/>
           </div>
         </div>
       </div>
@@ -4281,7 +4281,7 @@
           <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">FILL PRICE</div><input class="ttInput" id="ttEntryPrice" type="number" step="0.01" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
           <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">SHARES</div><input class="ttInput" id="ttShares" type="number" step="1" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
         </div>
-        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttRiskAmt" type="number" step="0.01" style="font-size:14px;padding:10px 12px;"/></div>
+        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttRiskAmt" type="number" step="0.01"/></div>
       </div>
 
       <!-- OPTION FIELDS -->
@@ -4294,24 +4294,24 @@
         <!-- Manual entry fallback (no Oracle contracts) -->
         <div id="ttManualOption">
           <div class="ttRow">
-            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">STRIKE</div><input class="ttInput" id="ttOptStrike" type="text" placeholder="e.g. 150" style="font-size:14px;padding:10px 12px;"/></div>
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">STRIKE</div><input class="ttInput" id="ttOptStrike" type="text" placeholder="e.g. 150"/></div>
             <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">TYPE</div>
-              <select class="ttInput" id="ttOptType" style="padding:10px 12px;cursor:pointer;font-size:14px;">
+              <select class="ttInput" id="ttOptType" style="cursor:pointer;">
                 <option value="CALL">CALL</option>
                 <option value="PUT">PUT</option>
               </select>
             </div>
           </div>
           <div class="ttRow">
-            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">EXPIRY</div><input class="ttInput" id="ttOptExpiry" type="date" style="font-size:14px;padding:10px 12px;"/></div>
-            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">PREMIUM ($)</div><input class="ttInput" id="ttOptPremium" type="number" step="0.01" style="font-size:14px;padding:10px 12px;"/></div>
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">EXPIRY</div><input class="ttInput" id="ttOptExpiry" type="date"/></div>
+            <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">PREMIUM ($)</div><input class="ttInput" id="ttOptPremium" type="number" step="0.01"/></div>
           </div>
         </div>
         <div class="ttRow">
-          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">PREMIUM PAID ($)</div><input class="ttInput" id="ttOptFillPrice" type="number" step="0.01" placeholder="Your fill" style="font-size:14px;padding:10px 12px;"/></div>
-          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">CONTRACTS</div><input class="ttInput" id="ttOptContracts" type="number" step="1" min="1" placeholder="1" style="font-size:14px;padding:10px 12px;"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">PREMIUM PAID ($)</div><input class="ttInput" id="ttOptFillPrice" type="number" step="0.01" placeholder="Your fill"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">CONTRACTS</div><input class="ttInput" id="ttOptContracts" type="number" step="1" min="1" placeholder="1"/></div>
         </div>
-        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttOptRiskAmt" type="number" step="0.01" readonly style="opacity:.7;font-size:14px;padding:10px 12px;"/></div>
+        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttOptRiskAmt" type="number" step="0.01" readonly style="opacity:.7;"/></div>
       </div>
 
       <!-- POSITION SIZING RECOMMENDATION (hidden — integrated into calc summary) -->
@@ -4319,7 +4319,7 @@
         <div id="ttPosSizeContent"></div>
       </div>
 
-      <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">NOTES (OPTIONAL)</div><input class="ttInput" id="ttNotes" type="text" placeholder="e.g. Entered on pullback to trigger" style="font-size:12px;padding:10px 12px;"/></div>
+      <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">NOTES (OPTIONAL)</div><input class="ttInput" id="ttNotes" type="text" placeholder="e.g. Entered on pullback to trigger"/></div>
       <div class="ttActions" style="margin-top:18px;">
         <button class="ttConfirm" id="ttConfirmBtn" onclick="confirmTakeTrade()" style="font-size:12px;padding:14px;">◆ CONFIRM ENTRY</button>
         <button class="ttCancel" onclick="closeTakeTradeModal()" style="font-size:11px;padding:12px 20px;">CANCEL</button>
@@ -4355,7 +4355,7 @@
       <div class="ttGroup"><div class="ttLabel">NOTES</div><input class="ttInput" id="ctNotes" type="text" placeholder="e.g. Trimming at T1"/></div>
       <div class="ttActions">
         <button class="ttConfirm" style="border-color:rgba(255,59,59,.4);color:var(--red);background:rgba(255,59,59,.1);" onclick="confirmCloseTrade()">◆ CLOSE SELECTED</button>
-        <button class="ttCancel" onclick="document.getElementById('ctOverlay').classList.remove('open')">CANCEL</button>
+        <button class="ttCancel" onclick="if(document.activeElement)document.activeElement.blur();document.getElementById('ctOverlay').classList.remove('open')">CANCEL</button>
       </div>
     </div>
   </div>
@@ -4367,7 +4367,7 @@
       <div class="ttGroup"><div class="ttLabel">RISK PER TRADE (%)</div><input class="ttInput" id="acctRiskInput" type="number" step="0.1" value="2.0" min="0.5" max="10"/></div>
       <div class="ttActions">
         <button class="ttConfirm" onclick="saveAccountSettings()">SAVE</button>
-        <button class="ttCancel" onclick="document.getElementById('acctOverlay').classList.remove('open')">CANCEL</button>
+        <button class="ttCancel" onclick="if(document.activeElement)document.activeElement.blur();document.getElementById('acctOverlay').classList.remove('open')">CANCEL</button>
       </div>
     </div>
   </div>
@@ -9545,6 +9545,7 @@
     }
 
     function closeRiskSettings() {
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       const overlay = document.getElementById('riskSettingsOverlay');
       if (overlay) overlay.classList.remove('open');
     }
@@ -10196,6 +10197,7 @@
       if (CURRENT_USER) {
         try { await SB_AUTH.from('member_settings').upsert({ user_id: CURRENT_USER.id, account_size: size, risk_per_trade: risk, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }); } catch(e) {}
       }
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       document.getElementById('acctOverlay').classList.remove('open');
       showToast('Account settings saved ✓');
       // Sync risk settings overlay inputs
@@ -10558,7 +10560,22 @@
       updateOptRiskAmt();
     }
 
-    function closeTakeTradeModal() { document.getElementById('ttOverlay').classList.remove('open'); _ttSignal=null; _ttSelectedContract=null; }
+    function closeTakeTradeModal() {
+      // Blur any focused input to release iOS zoom
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      document.getElementById('ttOverlay').classList.remove('open');
+      _ttSignal = null;
+      _ttSelectedContract = null;
+      // Reset iOS zoom — temporarily set viewport then restore
+      var vp = document.querySelector('meta[name="viewport"]');
+      if (vp) {
+        var orig = vp.getAttribute('content');
+        vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1');
+        setTimeout(function() { vp.setAttribute('content', orig || 'width=device-width, initial-scale=1'); }, 100);
+      }
+      // Scroll to top to reset any offset
+      window.scrollTo(0, window.scrollY);
+    }
     var _ttSelectedTranches = [1]; // array of selected tranche numbers
 
     function toggleTranche(el) {
@@ -11025,6 +11042,7 @@
       }
 
       saveMemberTradesLocal();
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       document.getElementById('ctOverlay').classList.remove('open');
       var label = closingCount < totalTranches
         ? '✓ Closed ' + closingCount + ' tranche(s) of ' + selectedTrades[0].asset
