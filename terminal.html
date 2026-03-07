@@ -4601,8 +4601,8 @@
         </div>
       </div>
 
-      <!-- SECTION 2: PERIOD BREAKDOWN (removed — kept hidden for JS compat) -->
-      <div style="display:none;">
+      <!-- SECTION 2: PERIOD BREAKDOWN (collapsed) -->
+      <div style="margin-bottom:12px;">
         <div class="collapseHeader" data-collapse="periodBreakdown">
           <div class="collapseTitle"><span class="collapseChevron">▶</span> PERFORMANCE BREAKDOWN</div>
           <div class="perfControls" onclick="event.stopPropagation();">
@@ -8815,6 +8815,9 @@
           </button>
           <div class="thesisExpander">${sig.thesis.trim()}</div>` : '';
 
+        // ── Position badge + T1 progress setup ──
+        const assetKey2 = sig.asset.split(' ')[0].toUpperCase();
+
         // Position badge — show if member holds this signal
         let positionBadgeHtml = '';
         if (typeof MEMBER_TRADES !== 'undefined') {
@@ -8835,7 +8838,6 @@
         }
 
         // ── T1 Progress for sidebar card ──
-        const assetKey2 = sig.asset.split(' ')[0].toUpperCase();
         const cachedPrice = PRICE_CACHE[assetKey2]?.price || null;
         const entryPriceVal = sig.entry_price ? parseFloat(sig.entry_price) : null;
         const targets2 = [];
