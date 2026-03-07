@@ -697,8 +697,8 @@
         <input class="fInput" id="fEntryPrice" type="number" step="0.01" placeholder="e.g. 43.21"/>
       </div>
       <div class="formGroup">
-        <div class="fLabel">ORACLE TRANCHE STATUS</div>
-        <select class="fSelect" id="fOracleTranche">
+        <div class="fLabel">◆ ORACLE TRANCHE STATUS</div>
+        <select class="fSelect" id="fOracleTranche" style="font-weight:700;" onchange="this.style.borderColor=this.value>=3?'rgba(0,255,136,.5)':this.value>=2?'rgba(255,179,0,.5)':'rgba(0,229,255,.3)'; this.style.color=this.value>=3?'var(--green)':this.value>=2?'#ffb300':'var(--core)';">
           <option value="1">1/3 — INITIAL ENTRY</option>
           <option value="2">2/3 — TRIGGER CONFIRMED</option>
           <option value="3">3/3 — FULL CONVICTION</option>
@@ -1824,14 +1824,29 @@
     if (!editId) {
       payload.signal_date = signalDateVal ? new Date(signalDateVal).toISOString() : new Date().toISOString();
     }
+    // ── Tranche date auto-stamping ──
+    if (editId) {
+      var existingSig = SIGNALS.find(function(x) { return x.id === editId; });
+      var prevTranche = existingSig ? (existingSig.oracle_tranche || 1) : 0;
+      var newTranche = payload.oracle_tranche;
+      var now = new Date().toISOString();
+      if (newTranche >= 2 && prevTranche < 2 && !payload.tranche_2_date) payload.tranche_2_date = now;
+      if (newTranche >= 3 && prevTranche < 3 && !payload.tranche_3_date) payload.tranche_3_date = now;
+    } else {
+      // New signal — tranche 1 date = signal date
+      payload.tranche_1_date = payload.signal_date || new Date().toISOString();
+      if (payload.oracle_tranche >= 2) payload.tranche_2_date = payload.tranche_1_date;
+      if (payload.oracle_tranche >= 3) payload.tranche_3_date = payload.tranche_1_date;
+    }
+
     // 3/3 FULL CONVICTION WARNING
     if (payload.oracle_tranche === 3) {
-      var prevTranche = 1;
+      var prevTranche2 = 1;
       if (editId) {
-        var existingSig = SIGNALS.find(function(x) { return x.id === editId; });
-        if (existingSig) prevTranche = existingSig.oracle_tranche || 1;
+        var existingSig2 = SIGNALS.find(function(x) { return x.id === editId; });
+        if (existingSig2) prevTranche2 = existingSig2.oracle_tranche || 1;
       }
-      if (prevTranche < 3) {
+      if (prevTranche2 < 3) {
         if (!confirm('⚠ FULL CONVICTION (3/3)\n\nSetting ' + asset + ' to 3/3 will alert all members that Oracle has entered a full position.\n\nConfirm?')) return;
       }
     }
