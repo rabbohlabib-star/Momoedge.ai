@@ -4231,20 +4231,17 @@
 
       <!-- STOCK FIELDS -->
       <div id="ttStockFields">
-        <!-- CURRENT POSITION SUMMARY (shown when holding tranches) -->
+        <!-- EXISTING POSITION INFO (shown when adding to position) -->
         <div id="ttPositionSummary" style="display:none;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15);border-radius:8px;padding:12px;margin-bottom:12px;">
-          <div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:8px;font-weight:700;">YOUR POSITION</div>
           <div id="ttPosSummaryContent" style="font-family:var(--display);font-size:12px;color:var(--text);line-height:1.8;"></div>
-        </div>
-        <!-- TRANCHE SELECTOR -->
-        <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">TRANCHE STATUS</div>
-          <div class="ttTrancheSelect" id="ttTrancheSelect"></div>
         </div>
         <div id="ttCalcSummary" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:12px 14px;margin-bottom:8px;">
           <div id="ttCalcContent" style="font-family:var(--display);font-size:11px;color:var(--text);line-height:1.7;"></div>
         </div>
+        <!-- Hidden tranche select for JS compat -->
+        <div id="ttTrancheSelect" style="display:none;"></div>
         <div class="ttRow">
-          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">ENTRY PRICE</div><input class="ttInput" id="ttEntryPrice" type="number" step="0.01" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
+          <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">FILL PRICE</div><input class="ttInput" id="ttEntryPrice" type="number" step="0.01" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
           <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">SHARES</div><input class="ttInput" id="ttShares" type="number" step="1" style="font-size:16px;padding:10px 12px;font-weight:700;"/></div>
         </div>
         <div class="ttGroup"><div class="ttLabel" style="font-size:9px;">RISK AMOUNT ($)</div><input class="ttInput" id="ttRiskAmt" type="number" step="0.01" style="font-size:14px;padding:10px 12px;"/></div>
@@ -4435,7 +4432,7 @@
       <button class="deskTab" data-dtab="macro">🌐 MACRO</button>
       <button class="deskTab" data-dtab="history" id="deskHistTab">📊 HISTORY<span class="tabNotifBadge" id="histNotifBadgeDk"></span></button>
       <button class="deskTab" data-dtab="flow">🌊 FLOW</button>
-      <button class="deskTab" data-dtab="journal" id="deskJournalTab" style="display:none;">📓 JOURNAL<span class="tabNotifBadge" id="journalBadgeDk"></span></button>
+      <button class="deskTab" data-dtab="journal" id="deskJournalTab">📋 MY TRADES<span class="tabNotifBadge" id="journalBadgeDk"></span></button>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button type="button" class="notifBtn" id="notifBtn">🔔 ALERTS OFF</button>
@@ -4567,16 +4564,9 @@
 
   <!-- HISTORY PANE -->
   <div class="centerPane" id="centerHistory">
-    <!-- VIEW TOGGLE -->
-    <div class="histViewToggle">
-      <button class="histViewBtn active" onclick="switchHistView('oracle',this)">◆ ORACLE PERFORMANCE</button>
-      <button class="histViewBtn" onclick="switchHistView('my',this)">◆ MY TRADE HISTORY</button>
-    </div>
-
-    <div class="histViewPane active" id="histViewOracle">
     <div class="perfSection">
       <div class="perfHeader">
-        <div class="perfTitle">ALERT PERFORMANCE HISTORY</div>
+        <div class="perfTitle">ORACLE PERFORMANCE</div>
         <div class="perfControls">
           <button type="button" class="exportBtn" id="exportCsv">↓ EXPORT CSV</button>
         </div>
@@ -4673,35 +4663,6 @@
       </div>
 
     </div>
-  </div><!-- end histViewOracle -->
-
-  <!-- MY TRADE HISTORY VIEW -->
-  <div class="histViewPane" id="histViewMy">
-    <div class="perfSection">
-      <div class="perfHeader">
-        <div class="perfTitle">MY TRADES</div>
-        <div class="perfControls">
-          <button type="button" class="exportBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
-          <button type="button" class="exportBtn" onclick="openRiskSettings()">⚙ SETTINGS</button>
-        </div>
-      </div>
-      <div id="myTradeStats" style="margin-bottom:16px;"></div>
-      <div id="myRiskMonitor" style="margin-bottom:16px;"></div>
-      <div id="myOpenPositions" style="margin-bottom:16px;"></div>
-      <div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);">CLOSED TRADES</div>
-      <div class="dataPanel" style="margin-top:0;">
-        <div class="tableWrap">
-          <table class="perfTable">
-            <thead><tr>
-              <th>ASSET</th><th>DIR</th><th>VEHICLE</th><th>ENTRY</th>
-              <th>EXIT</th><th>P&L %</th><th>P&L $</th><th>DATE</th>
-            </tr></thead>
-            <tbody id="myTradeBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div><!-- end histViewMy -->
 
   </div>
 
@@ -4743,25 +4704,32 @@
 
   <!-- JOURNAL PANE -->
   <div class="centerPane" id="centerJournal">
-    <div class="journalPane">
-      <div class="journalHeader">
-        <div class="journalTitle">MY TRADE JOURNAL</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="jAddTradeBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
-          <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ ACCOUNT SETTINGS</div>
+    <div style="padding:16px 20px 40px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:var(--display);font-size:14px;font-weight:900;letter-spacing:2px;color:var(--core);">MY TRADES</div>
+        <div style="display:flex;gap:8px;">
+          <button class="exportBtn" onclick="openRiskSettings()">⚙ SETTINGS</button>
         </div>
       </div>
-      <div class="journalStats" id="journalStats">
-        <div class="jStatCard"><div class="jStatLabel">OPEN POSITIONS</div><div class="jStatVal" id="jsOpen">0</div></div>
-        <div class="jStatCard"><div class="jStatLabel">WIN RATE</div><div class="jStatVal" id="jsWinRate">—</div></div>
-        <div class="jStatCard"><div class="jStatLabel">TOTAL P&L</div><div class="jStatVal" id="jsTotalPnl">—</div></div>
-        <div class="jStatCard"><div class="jStatLabel">AVG R-MULTIPLE</div><div class="jStatVal" id="jsAvgR">—</div></div>
+      <!-- STATS -->
+      <div id="myTradeStats" style="margin-bottom:16px;"></div>
+      <!-- SIGNAL ATTRIBUTION -->
+      <div id="signalAttribution" style="margin-bottom:16px;"></div>
+      <!-- OPEN POSITIONS -->
+      <div id="myOpenPositions" style="margin-bottom:16px;"></div>
+      <!-- CLOSED TRADES -->
+      <div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.04);">CLOSED TRADES</div>
+      <div class="dataPanel" style="margin-top:0;">
+        <div class="tableWrap">
+          <table class="perfTable">
+            <thead><tr>
+              <th>ASSET</th><th>DIR</th><th>VEHICLE</th><th>ENTRY</th>
+              <th>EXIT</th><th>P&L %</th><th>P&L $</th><th>HELD</th><th>DATE</th>
+            </tr></thead>
+            <tbody id="myTradeBody"></tbody>
+          </table>
+        </div>
       </div>
-      <div id="riskMonitorDesktop"></div>
-      <div class="jSectionLabel">OPEN POSITIONS</div>
-      <div id="journalOpenTrades"></div>
-      <div class="jSectionLabel">CLOSED TRADES</div>
-      <div id="journalClosedTrades"></div>
     </div>
   </div>
 
@@ -4896,7 +4864,7 @@
     <div id="rsPreview" class="rsPreview" style="display:none;">
       <div class="rsPreviewTitle">YOUR RISK PER TRADE</div>
       <div class="rsPreviewVal" id="rsPreviewVal">$0</div>
-      <div class="rsPreviewSub" id="rsPreviewSub">per signal · 3 tranches</div>
+      <div class="rsPreviewSub" id="rsPreviewSub">per signal · 2 entries</div>
     </div>
 
     <button class="rsSaveBtn" id="rsSaveBtn">SAVE SETTINGS</button>
@@ -5866,7 +5834,7 @@
           _triggerAdvanced.add(sig.id);
           sig.oracle_tranche = 2;
           sig.tranche_2_date = new Date().toISOString();
-          console.log('[Oracle] Auto-advancing ' + sig.asset + ' to 2/3 — trigger confirmed');
+          console.log('[Oracle] Auto-advancing ' + sig.asset + ' to 2/2 — trigger confirmed');
           // Update in Supabase
           fetch(SB_URL + '/signals?id=eq.' + sig.id, {
             method: 'PATCH',
@@ -6145,9 +6113,9 @@
         var newTr = payload.new.oracle_tranche || 1;
         var oldTr = payload.old.oracle_tranche || 1;
         if (newTr > oldTr && newTr >= 3) {
-          showToast('🔥 ' + (payload.new.asset || 'Signal') + ' → FULL CONVICTION (3/3) — Oracle has entered a full position');
+          showToast('🔥 ' + (payload.new.asset || 'Signal') + ' → FULL POSITION (2/2) — Oracle has entered a full position');
         } else if (newTr > oldTr && newTr >= 2) {
-          showToast('⚡ ' + (payload.new.asset || 'Signal') + ' → TRIGGER CONFIRMED (2/3) — Oracle adding to position');
+          showToast('⚡ ' + (payload.new.asset || 'Signal') + ' → TRIGGER CONFIRMED (2/2) — Oracle adding to position');
         }
       }
 
@@ -7110,27 +7078,26 @@
     window.switchHistView = switchHistView;
 
     function navigateToMyTrades() {
-      // Desktop: switch to history tab
-      var deskHistBtn = document.querySelector('[data-dtab="history"]');
-      if (deskHistBtn && window.innerWidth > 768) {
-        deskHistBtn.click();
+      // Mobile: switch to Journal pane
+      if (window.innerWidth <= 768) {
+        document.querySelectorAll('.mobilePane').forEach(function(p) { p.classList.remove('active'); });
+        var journalPane = document.getElementById('mobilePaneJournal');
+        if (journalPane) journalPane.classList.add('active');
+        document.querySelectorAll('.mobileTabBtn').forEach(function(b) { b.classList.remove('active'); });
+        var journalTab = document.querySelector('[data-mtab="Journal"]');
+        if (journalTab) journalTab.classList.add('active');
       }
-      // Mobile: switch to history pane
-      var mobHistBtn = document.querySelector('[data-mtab="History"]');
-      if (mobHistBtn && window.innerWidth <= 768) {
-        mobHistBtn.click();
+      // Desktop: switch to journal center pane
+      if (window.innerWidth > 768) {
+        document.querySelectorAll('.centerPane').forEach(function(p) { p.classList.remove('active'); });
+        var centerJournal = document.getElementById('centerJournal');
+        if (centerJournal) centerJournal.classList.add('active');
+        document.querySelectorAll('.deskTab').forEach(function(b) { b.classList.remove('active'); });
+        var deskJournalTab = document.getElementById('deskJournalTab');
+        if (deskJournalTab) deskJournalTab.classList.add('active');
       }
-      // Switch to My Trades view
-      setTimeout(function() {
-        switchHistView('my', null);
-        // Force-activate the My Trades buttons
-        document.querySelectorAll('.histViewToggle').forEach(function(toggle) {
-          toggle.querySelectorAll('.histViewBtn').forEach(function(b) {
-            b.classList.toggle('active', b.textContent.indexOf('MY') >= 0);
-          });
-        });
-        renderMyTradeHistory();
-      }, 100);
+      renderMyTradeHistory();
+      window.scrollTo(0, 0);
     }
     window.navigateToMyTrades = navigateToMyTrades;
 
@@ -7158,42 +7125,89 @@
 
     function renderMyTradeHistory() {
       var closedTrades = MEMBER_TRADES.filter(function(t) { return t.status === 'CLOSED'; });
+      var openTrades = MEMBER_TRADES.filter(function(t) { return t.status === 'OPEN'; });
       closedTrades.sort(function(a, b) { return new Date(b.exit_date || b.created_at) - new Date(a.exit_date || a.created_at); });
 
-      // Stats
+      // ── STATS ──
       var wins = closedTrades.filter(function(t) { return (t.realized_pnl_pct || 0) > 0; });
       var winRate = closedTrades.length > 0 ? (wins.length / closedTrades.length * 100).toFixed(0) : '—';
       var totalPnl = closedTrades.reduce(function(s, t) { return s + (t.realized_pnl || 0); }, 0);
       var avgPnl = closedTrades.length > 0 ? (closedTrades.reduce(function(s, t) { return s + (t.realized_pnl_pct || 0); }, 0) / closedTrades.length).toFixed(1) : '—';
 
+      function statCard(label, value, color) {
+        return '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
+          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">' + label + '</div>' +
+          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + color + ';">' + value + '</div></div>';
+      }
+
       var statsHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">' +
-        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">TRADES</div>' +
-          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:#fff;">' + closedTrades.length + '</div>' +
-        '</div>' +
-        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">WIN RATE</div>' +
-          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + (winRate !== '—' && parseFloat(winRate) >= 50 ? 'var(--green)' : winRate !== '—' ? 'var(--red)' : '#fff') + ';">' + winRate + (winRate !== '—' ? '%' : '') + '</div>' +
-        '</div>' +
-        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">TOTAL P&L</div>' +
-          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + (totalPnl >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + (totalPnl >= 0 ? '+' : '') + '$' + Math.abs(totalPnl).toFixed(0) + '</div>' +
-        '</div>' +
-        '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-family:var(--display);font-size:8px;color:var(--muted);letter-spacing:1px;">AVG RETURN</div>' +
-          '<div style="font-family:var(--display);font-size:18px;font-weight:900;color:' + (avgPnl !== '—' && parseFloat(avgPnl) >= 0 ? 'var(--green)' : avgPnl !== '—' ? 'var(--red)' : '#fff') + ';">' + (avgPnl !== '—' ? (parseFloat(avgPnl) >= 0 ? '+' : '') + avgPnl + '%' : '—') + '</div>' +
-        '</div>' +
+        statCard('OPEN', openTrades.length, 'var(--core)') +
+        statCard('WIN RATE', winRate !== '—' ? winRate + '%' : '—', winRate !== '—' && parseFloat(winRate) >= 50 ? 'var(--green)' : winRate !== '—' ? 'var(--red)' : '#fff') +
+        statCard('TOTAL P&L', (totalPnl >= 0 ? '+' : '') + '$' + Math.abs(totalPnl).toFixed(0), totalPnl >= 0 ? 'var(--green)' : 'var(--red)') +
+        statCard('AVG RETURN', avgPnl !== '—' ? (parseFloat(avgPnl) >= 0 ? '+' : '') + avgPnl + '%' : '—', avgPnl !== '—' && parseFloat(avgPnl) >= 0 ? 'var(--green)' : avgPnl !== '—' ? 'var(--red)' : '#fff') +
       '</div>';
 
-      // Desktop table
+      ['myTradeStats', 'mMyTradeStats'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.innerHTML = statsHtml.replace(/repeat\(4,1fr\)/g, id.startsWith('m') ? 'repeat(2,1fr)' : 'repeat(4,1fr)');
+      });
+
+      // ── SIGNAL ATTRIBUTION ──
+      var attrHtml = '';
+      try {
+        var closedOracle = (typeof PERF_DATA !== 'undefined') ? PERF_DATA.filter(function(r) { return r.status !== 'ACTIVE' && r.result !== null; }) : [];
+        var takenSignalIds = new Set();
+        MEMBER_TRADES.forEach(function(t) { if (t.signal_id) takenSignalIds.add(t.signal_id); });
+
+        var taken = closedOracle.filter(function(r) { return takenSignalIds.has(r.id); });
+        var missed = closedOracle.filter(function(r) { return !takenSignalIds.has(r.id); });
+        var missedReturns = missed.reduce(function(s, r) { return s + (r.result || 0); }, 0);
+        var oracleWinRate = closedOracle.length ? (closedOracle.filter(function(r) { return r.result > 0; }).length / closedOracle.length * 100).toFixed(0) : '—';
+
+        if (closedOracle.length > 0) {
+          var missedCards = missed.length > 0 ? missed.slice(0, 5).map(function(r) {
+            var col = (r.result || 0) >= 0 ? '#00ff88' : '#ff4466';
+            return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-family:var(--display);font-size:10px;">' +
+              '<span style="color:#fff;font-weight:700;">' + r.asset + '</span>' +
+              '<span style="color:' + col + ';font-weight:700;">' + (r.result >= 0 ? '+' : '') + r.result.toFixed(1) + '%</span></div>';
+          }).join('') : '<div style="font-family:var(--display);font-size:10px;color:var(--green);">You took every signal!</div>';
+
+          attrHtml = '<div style="background:rgba(0,229,255,.02);border:1px solid rgba(0,229,255,.1);border-radius:10px;padding:14px;margin-bottom:16px;">' +
+            '<div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:10px;font-weight:700;">ORACLE SIGNAL ATTRIBUTION</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">' +
+              '<div style="text-align:center;"><div style="font-family:var(--display);font-size:8px;color:var(--muted);">SIGNALS TAKEN</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--green);">' + taken.length + '/' + closedOracle.length + '</div></div>' +
+              '<div style="text-align:center;"><div style="font-family:var(--display);font-size:8px;color:var(--muted);">YOUR WIN RATE</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:#fff;">' + winRate + '%</div></div>' +
+              '<div style="text-align:center;"><div style="font-family:var(--display);font-size:8px;color:var(--muted);">ORACLE WIN RATE</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--core);">' + oracleWinRate + '%</div></div>' +
+            '</div>' +
+            (missed.length > 0 ? '<div style="padding-top:8px;border-top:1px solid rgba(0,229,255,.08);">' +
+              '<div style="font-family:var(--display);font-size:9px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">MISSED SIGNALS (' + missed.length + ') — ' + (missedReturns >= 0 ? '+' : '') + missedReturns.toFixed(1) + '% TOTAL</div>' +
+              missedCards + '</div>' : '') +
+          '</div>';
+        }
+      } catch(e) { console.warn('[Attribution] Error:', e); }
+
+      ['signalAttribution', 'mSignalAttribution'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.innerHTML = attrHtml;
+      });
+
+      // ── HOLDING TIME helper ──
+      function calcHoldingDays(t) {
+        if (!t.created_at || !t.exit_date) return null;
+        var ms = new Date(t.exit_date) - new Date(t.created_at);
+        return Math.max(1, Math.round(ms / 86400000));
+      }
+
+      // ── DESKTOP CLOSED TRADES TABLE ──
       var tbody = document.getElementById('myTradeBody');
       if (tbody) {
         if (!closedTrades.length) {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;">No closed trades yet. Take a trade and close it to see your history here.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;">No closed trades yet. Take a trade from the signal stream to get started.</td></tr>';
         } else {
           tbody.innerHTML = closedTrades.map(function(t) {
             var pnlColor = (t.realized_pnl_pct || 0) >= 0 ? 'var(--green)' : 'var(--red)';
             var dateStr = t.exit_date ? new Date(t.exit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+            var held = calcHoldingDays(t);
+            var heldStr = held ? held + 'd' : '—';
             return '<tr>' +
               '<td style="font-family:var(--display);font-weight:900;">' + t.asset + '</td>' +
               '<td class="' + (t.direction === 'BULL' ? 'dBull' : 'dBear') + '">' + t.direction + '</td>' +
@@ -7202,18 +7216,14 @@
               '<td>$' + (t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '—') + '</td>' +
               '<td style="font-family:var(--display);font-weight:900;color:' + pnlColor + ';">' + (t.realized_pnl_pct != null ? (t.realized_pnl_pct >= 0 ? '+' : '') + t.realized_pnl_pct.toFixed(2) + '%' : '—') + '</td>' +
               '<td style="color:' + pnlColor + ';">' + (t.realized_pnl != null ? (t.realized_pnl >= 0 ? '+' : '') + '$' + Math.abs(t.realized_pnl).toFixed(0) : '—') + '</td>' +
+              '<td style="color:var(--muted);">' + heldStr + '</td>' +
               '<td style="color:var(--muted);">' + dateStr + '</td>' +
             '</tr>';
           }).join('');
         }
       }
-      var dStats = document.getElementById('myTradeStats');
-      if (dStats) dStats.innerHTML = statsHtml;
 
-      // Mobile — card-style
-      var mStats = document.getElementById('mMyTradeStats');
-      if (mStats) mStats.innerHTML = statsHtml.replace(/repeat\(4,1fr\)/g, 'repeat(2,1fr)');
-
+      // ── MOBILE CLOSED TRADES CARDS ──
       var mBody = document.getElementById('mMyTradeBody');
       if (mBody) {
         if (!closedTrades.length) {
@@ -7222,6 +7232,8 @@
           mBody.innerHTML = closedTrades.map(function(t) {
             var pnlColor = (t.realized_pnl_pct || 0) >= 0 ? '#00ff88' : '#ff4466';
             var dateStr = t.exit_date ? new Date(t.exit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+            var held = calcHoldingDays(t);
+            var heldStr = held ? held + ' days' : '';
             return '<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;margin-bottom:8px;">' +
               '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
                 '<div style="font-family:Orbitron,monospace;font-size:14px;font-weight:900;">' + t.asset + ' <span style="font-size:9px;color:var(--muted);">' + (t.vehicle || 'STOCK') + ' · ' + t.direction + '</span></div>' +
@@ -7229,15 +7241,14 @@
               '</div>' +
               '<div style="display:flex;justify-content:space-between;font-family:Orbitron,monospace;font-size:9px;color:var(--muted);">' +
                 '<span>$' + parseFloat(t.entry_price).toFixed(2) + ' → $' + (t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '—') + '</span>' +
-                '<span>' + (t.realized_pnl != null ? (t.realized_pnl >= 0 ? '+' : '') + '$' + Math.abs(t.realized_pnl).toFixed(0) : '') + ' · ' + dateStr + '</span>' +
+                '<span>' + (t.realized_pnl != null ? (t.realized_pnl >= 0 ? '+' : '') + '$' + Math.abs(t.realized_pnl).toFixed(0) : '') + (heldStr ? ' · ' + heldStr : '') + ' · ' + dateStr + '</span>' +
               '</div>' +
             '</div>';
           }).join('');
         }
       }
 
-      // ── OPEN POSITIONS (moved from Journal) ──
-      var openTrades = MEMBER_TRADES.filter(function(t) { return t.status === 'OPEN'; });
+      // ── OPEN POSITIONS ──
       var positionMap = {};
       openTrades.forEach(function(t) {
         var key = t.signal_id || t.asset;
@@ -7246,39 +7257,20 @@
       });
       var openHtml = '';
       if (Object.keys(positionMap).length > 0) {
-        openHtml = '<div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--core);margin-bottom:8px;font-weight:700;">OPEN POSITIONS</div>' +
+        openHtml = '<div style="font-family:var(--display);font-size:10px;letter-spacing:2px;color:var(--core);margin-bottom:8px;font-weight:700;">OPEN POSITIONS</div>' +
           Object.keys(positionMap).map(function(key) {
-            return typeof renderPositionCard === 'function' ? renderPositionCard(positionMap[key]) : '';
+            try { return typeof renderPositionCard === 'function' ? renderPositionCard(positionMap[key]) : ''; }
+            catch(e) { return ''; }
           }).join('');
       } else {
-        openHtml = '<div style="text-align:center;padding:16px;font-family:var(--display);font-size:9px;color:var(--muted);letter-spacing:1px;background:rgba(255,255,255,.01);border:1px dashed rgba(255,255,255,.06);border-radius:8px;">No open positions. <span style="color:var(--core);cursor:pointer;" onclick="openSignalPicker()">+ Take a trade</span></div>';
+        openHtml = '<div style="text-align:center;padding:16px;font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;background:rgba(255,255,255,.01);border:1px dashed rgba(255,255,255,.06);border-radius:8px;">No open positions. Select a signal and tap Take Trade to get started.</div>';
       }
       ['myOpenPositions','mMyOpenPositions'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.innerHTML = openHtml;
       });
 
-      // ── Risk Monitor ──
-      if (typeof renderRiskMonitor === 'function') {
-        var riskData = typeof calcRiskExposure === 'function' ? calcRiskExposure() : null;
-        if (riskData && riskData.trades > 0) {
-          // Re-use existing renderRiskMonitor but target new containers
-          var origD = document.getElementById('riskMonitorDesktop');
-          var origM = document.getElementById('riskMonitorMobile');
-          renderRiskMonitor();
-          // Copy content to My Trades containers
-          ['myRiskMonitor','mMyRiskMonitor'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el && origD) el.innerHTML = origD.innerHTML;
-          });
-        } else {
-          ['myRiskMonitor','mMyRiskMonitor'].forEach(function(id) {
-            var el = document.getElementById(id); if (el) el.innerHTML = '';
-          });
-        }
-      }
-
-      // Update open position count badge on History tab
-      ['histNotifBadgeDk','histNotifBadgeMob'].forEach(function(id) {
+      // ── Badge on MY TRADES tab ──
+      ['journalBadgeDk','journalBadgeMob'].forEach(function(id) {
         var badge = document.getElementById(id);
         if (!badge) return;
         if (openTrades.length > 0) {
@@ -7818,7 +7810,7 @@
         var priceColor = chg !== null ? (chg >= 0 ? 'var(--green)' : 'var(--red)') : '#fff';
 
         var oTr = sig.oracle_tranche || 1;
-        var trDots = [1,2,3].map(function(n) {
+        var trDots = [1,2].map(function(n) {
           return '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:2px;background:' + (n <= oTr ? 'var(--green)' : 'rgba(255,255,255,.1)') + ';"></span>';
         }).join('');
 
@@ -8500,7 +8492,7 @@
             ${getCompanyDescription(sig.asset) ? `<div style="font-family:var(--mono);font-size:11px;color:rgba(180,210,240,.28);margin-top:2px;line-height:1.4;max-width:360px;">${getCompanyDescription(sig.asset)}</div>` : ''}
           </div>
           <div style="text-align:right;flex-shrink:0;margin-left:20px;">
-            <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}" style="font-size:10px;padding:5px 14px;margin-bottom:6px;">◆ ${sig.direction}${sig.oracle_tranche ? ' · ' + sig.oracle_tranche + '/3 ' + (sig.oracle_tranche>=3?'FULL':sig.oracle_tranche>=2?'TRIGGER':'INITIAL') : ''}</div>
+            <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}" style="font-size:10px;padding:5px 14px;margin-bottom:6px;">◆ ${sig.direction}${sig.oracle_tranche ? ' · ' + sig.oracle_tranche + '/2 ' + (sig.oracle_tranche>=2?'CONFIRMED':'INITIAL') : ''}</div>
             <div style="font-family:var(--display);font-size:10px;letter-spacing:1px;color:${zoneConf.color};">CONF ${confDisplay}${confDelta}</div>
             ${bias ? `<div style="font-family:var(--display);font-size:9px;letter-spacing:1px;color:var(--muted);margin-top:4px;">${bias.replace(/_/g,' ')}</div>` : ''}
           </div>
@@ -9294,11 +9286,10 @@
       const positionValue = totalShares * entry;
       const positionPctOfAcct = (positionValue / acct) * 100;
 
-      // Tranche breakdown — each tranche is equal (1/3 of max)
-      const perTranche = Math.max(1, Math.floor(totalShares / 3));
+      // Tranche breakdown — each tranche is equal (1/2 of max)
+      const perTranche = Math.max(1, Math.floor(totalShares / 2));
       const t1Shares = perTranche;
       const t2Shares = perTranche;
-      const t3Shares = perTranche;
 
       // Options calculation — prefer option_contracts, fall back to option_price
       let optionsData = null;
@@ -9316,18 +9307,17 @@
         const optionRiskPct = (optionMaxLoss / acct) * 100;
 
         // Tranche breakdown for options — equal per tranche
-        const optPerTranche = Math.max(1, Math.floor(totalContracts / 3));
+        const optPerTranche = Math.max(1, Math.floor(totalContracts / 2));
         const ot1 = optPerTranche;
         const ot2 = optPerTranche;
-        const ot3 = optPerTranche;
 
         optionsData = {
           premium: optionPrice,
           contracts: totalContracts,
           maxLoss: optionMaxLoss,
           riskPct: optionRiskPct,
-          tranches: [ot1, ot2, ot3],
-          minContracts: totalContracts < 3
+          tranches: [ot1, ot2],
+          minContracts: totalContracts < 2
         };
       }
 
@@ -9341,10 +9331,10 @@
         shares: totalShares,
         positionValue,
         positionPctOfAcct,
-        tranches: [t1Shares, t1Shares + t2Shares, totalShares], // cumulative
-        trancheShares: [t1Shares, t2Shares, t3Shares],
-        trancheValues: [t1Shares * entry, (t1Shares + t2Shares) * entry, totalShares * entry],
-        trancheRisks: [t1Shares * riskPerShare, (t1Shares + t2Shares) * riskPerShare, totalShares * riskPerShare],
+        tranches: [t1Shares, totalShares], // cumulative
+        trancheShares: [t1Shares, t2Shares],
+        trancheValues: [t1Shares * entry, totalShares * entry],
+        trancheRisks: [t1Shares * riskPerShare, totalShares * riskPerShare],
         options: optionsData
       };
     }
@@ -9387,7 +9377,7 @@
         bodyHtml = `
           <div class="psGrid">
             <div class="psCell">
-              <div class="psCellLabel">PER TRANCHE</div>
+              <div class="psCellLabel">PER ENTRY</div>
               <div class="psCellVal">${calc.trancheShares[0]} sh</div>
               <div class="psCellSub">${calc.shares} sh full position</div>
             </div>
@@ -9398,40 +9388,32 @@
             </div>
           </div>
           <div class="psTrancheSec">
-            <div class="psTrancheLabel">ORACLE TRANCHE STATUS</div>
+            <div class="psTrancheLabel">ORACLE POSITION STATUS</div>
             <div class="psTrancheGrid">
               <div class="psTranche${(sig.oracle_tranche||0) >= 1 ? ' taken' : ''}">
-                <div class="ptLabel">1/3</div>
-                <div class="ptVal">INITIAL</div>
+                <div class="ptLabel">1/2</div>
+                <div class="ptVal">ENTRY</div>
               </div>
               <div class="psTranche${(sig.oracle_tranche||0) >= 2 ? ' taken' : ''}">
-                <div class="ptLabel">2/3</div>
-                <div class="ptVal">TRIGGER</div>
-              </div>
-              <div class="psTranche${(sig.oracle_tranche||0) >= 3 ? ' taken' : ''}">
-                <div class="ptLabel">3/3</div>
-                <div class="ptVal">CONVICTION</div>
+                <div class="ptLabel">2/2</div>
+                <div class="ptVal">FULL</div>
               </div>
             </div>
             ${(function() {
               var tl = '';
               if (sig.tranche_1_date || sig.signal_date) {
                 var d1 = new Date(sig.tranche_1_date || sig.signal_date);
-                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 1/3 INITIAL</span><span>' + d1.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
+                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 1/2 INITIAL</span><span>' + d1.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
               }
               if (sig.tranche_2_date) {
                 var d2 = new Date(sig.tranche_2_date);
-                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 2/3 TRIGGER</span><span>' + d2.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
-              }
-              if (sig.tranche_3_date) {
-                var d3 = new Date(sig.tranche_3_date);
-                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 3/3 FULL</span><span>' + d3.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
+                tl += '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--green);">◆ 2/2 CONFIRMED</span><span>' + d2.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
               }
               return tl ? '<div style="font-family:var(--display);font-size:9px;color:var(--muted);margin-top:8px;border-top:1px solid rgba(0,229,255,.06);padding-top:8px;">' + tl + '</div>' : '';
             })()}
           </div>
           <div style="font-family:var(--display);font-size:9px;letter-spacing:.5px;color:var(--muted);margin-top:8px;text-align:center;">
-            RISK/SHARE: $${calc.riskPerShare.toFixed(2)} · ${calc.trancheShares[0]} sh × 3 tranches = ${calc.shares} sh max
+            RISK/SHARE: $${calc.riskPerShare.toFixed(2)} · ${calc.trancheShares[0]} sh × 2 tranches = ${calc.shares} sh max
           </div>`;
       } else {
         const opt = calc.options;
@@ -9450,19 +9432,15 @@
           </div>
           ${opt.minContracts ? `<div style="font-family:var(--display);font-size:9px;color:var(--amber);text-align:center;margin-top:8px;letter-spacing:.5px;">⚠ MINIMUM 1 CONTRACT — TRANCHE SIZING LIMITED AT THIS PREMIUM</div>` : ''}
           <div class="psTrancheSec">
-            <div class="psTrancheLabel">ORACLE TRANCHE STATUS</div>
+            <div class="psTrancheLabel">ORACLE POSITION STATUS</div>
             <div class="psTrancheGrid">
               <div class="psTranche${(sig.oracle_tranche||0) >= 1 ? ' taken' : ''}">
-                <div class="ptLabel">1/3</div>
-                <div class="ptVal">INITIAL</div>
+                <div class="ptLabel">1/2</div>
+                <div class="ptVal">ENTRY</div>
               </div>
               <div class="psTranche${(sig.oracle_tranche||0) >= 2 ? ' taken' : ''}">
-                <div class="ptLabel">2/3</div>
-                <div class="ptVal">TRIGGER</div>
-              </div>
-              <div class="psTranche${(sig.oracle_tranche||0) >= 3 ? ' taken' : ''}">
-                <div class="ptLabel">3/3</div>
-                <div class="ptVal">CONVICTION</div>
+                <div class="ptLabel">2/2</div>
+                <div class="ptVal">FULL</div>
               </div>
             </div>
           </div>
@@ -9506,7 +9484,7 @@
         const risk = acct * (pct / 100);
         previewDiv.style.display = '';
         previewVal.textContent = '$' + risk.toLocaleString('en-US', { maximumFractionDigits: 0 });
-        previewSub.textContent = `${pct}% of $${acct.toLocaleString('en-US', {maximumFractionDigits:0})} · per signal · 3 tranches`;
+        previewSub.textContent = `${pct}% of $${acct.toLocaleString('en-US', {maximumFractionDigits:0})} · per signal · 2 entries`;
       } else {
         previewDiv.style.display = 'none';
       }
@@ -9990,7 +9968,7 @@
           }
           if (tabId === 'macro' && typeof renderMacroRegime === 'function') renderMacroRegime();
           if (tabId === 'flow' && typeof renderFlow === 'function') renderFlow('all');
-          if (tabId === 'journal' && typeof renderJournal === 'function') renderJournal();
+          if (tabId === 'journal') { if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory(); if (typeof renderJournal === 'function') renderJournal(); }
         }, 50);
       }
 
@@ -10196,7 +10174,7 @@
         document.getElementById('rcRiskPerShare').textContent = '$' + rps.toFixed(2);
         document.getElementById('rcTotalShares').textContent = tot + ' sh';
         document.getElementById('rcPositionVal').textContent = '$' + posVal.toLocaleString('en-US', {maximumFractionDigits:0});
-        var t1s = Math.floor(tot/3), t2s = Math.floor(tot*2/3), t3s = tot;
+        var t1s = Math.floor(tot/2), t2s = tot;
         document.getElementById('rcT1Shares').textContent = t1s+' sh'; document.getElementById('rcT2Shares').textContent = t2s+' sh'; document.getElementById('rcT3Shares').textContent = t3s+' sh';
         document.getElementById('rcT1Risk').textContent = '$'+(t1s*rps).toFixed(0); document.getElementById('rcT2Risk').textContent = '$'+(t2s*rps).toFixed(0); document.getElementById('rcT3Risk').textContent = '$'+(t3s*rps).toFixed(0);
       } else {
@@ -10212,10 +10190,10 @@
         document.getElementById('rcOptPremium').style.opacity = '';
         document.getElementById('rcContracts').textContent = cts + ' ct';
         document.getElementById('rcMaxLoss').textContent = '$' + (cts * cpc).toFixed(0);
-        var c1=Math.max(1,Math.floor(cts/3)),c2=Math.max(1,Math.floor(cts*2/3)),c3=cts;
+        var c1=Math.max(1,Math.floor(cts/2)),c2=cts;
         document.getElementById('rcOptT1').textContent = cts>=3 ? c1+' ct' : '—'; document.getElementById('rcOptT2').textContent = c2+' ct'; document.getElementById('rcOptT3').textContent = c3+' ct';
         document.getElementById('rcOptT1R').textContent = cts>=3 ? '$'+(c1*cpc).toFixed(0) : ''; document.getElementById('rcOptT2R').textContent = '$'+(c2*cpc).toFixed(0); document.getElementById('rcOptT3R').textContent = '$'+(c3*cpc).toFixed(0);
-        document.getElementById('rcOptNote').textContent = cts<3 ? '⚠ Min 1 contract — 1/3 sizing not possible at this premium' : '';
+        document.getElementById('rcOptNote').textContent = cts<3 ? '⚠ Min 1 contract — 1/2 sizing not possible at this premium' : '';
       } else {
         document.getElementById('rcOptPremium').textContent = 'NOT SET'; document.getElementById('rcOptPremium').style.opacity = '.5';
         ['rcContracts','rcMaxLoss','rcOptT1','rcOptT2','rcOptT3','rcOptT1R','rcOptT2R','rcOptT3R'].forEach(function(id) { document.getElementById(id).textContent = '—'; });
@@ -10229,7 +10207,6 @@
       var myTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
       if (myTrades.length > 0) {
         var totalSh = myTrades.reduce(function(s,t){ return s+(parseFloat(t.shares)||0); },0);
-        var maxTr = Math.max.apply(null, myTrades.map(function(t){return t.tranche||1;}));
         var avgEnt = myTrades.reduce(function(s,t){ return s+parseFloat(t.entry_price)*parseFloat(t.shares); },0)/totalSh;
         var cached = PRICE_CACHE[sig.asset.split(' ')[0].toUpperCase()];
         var pnlHtml = '';
@@ -10240,12 +10217,13 @@
           pnlHtml = '<div class="positionStatus" style="color:'+(pnl>=0?'var(--green)':'var(--red)')+'">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'%</div>';
         }
         var takenArr = myTrades.map(function(t){return t.tranche||1;});
-        var isFull = takenArr.indexOf(1)>=0 && takenArr.indexOf(2)>=0 && takenArr.indexOf(3)>=0;
+        var isFull = takenArr.indexOf(1)>=0 && takenArr.indexOf(2)>=0;
+        var unit = myTrades[0].vehicle==='OPTIONS'?'CT':'SH';
         btn.className = 'takeTradeBtn has-position';
         if (isFull) {
-          btn.innerHTML = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml+' <span style="font-size:8px;opacity:.6;margin-left:4px;">→ VIEW</span>';
+          btn.innerHTML = '◆ FULL POSITION · '+totalSh+' '+unit+pnlHtml+' <span style="font-size:8px;opacity:.6;margin-left:4px;">→ VIEW</span>';
         } else {
-          btn.innerHTML = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlHtml;
+          btn.innerHTML = '◆ HALF POSITION · '+totalSh+' '+unit+' — ADD MORE'+pnlHtml;
         }
       } else { btn.className = 'takeTradeBtn'; btn.innerHTML = '◆ TAKE THIS TRADE'; }
     }
@@ -10260,7 +10238,6 @@
       var btn = sticky.querySelector('button');
       if (myTrades.length > 0) {
         var totalSh = myTrades.reduce(function(s,t){ return s+(parseFloat(t.shares)||0); },0);
-        var maxTr = Math.max.apply(null, myTrades.map(function(t){return t.tranche||1;}));
         var cached = PRICE_CACHE[sig.asset.split(' ')[0].toUpperCase()];
         var pnlStr = '';
         if (cached && cached.price) {
@@ -10269,12 +10246,13 @@
           pnlStr = ' · '+(pnl>=0?'+':'')+pnl.toFixed(2)+'%';
         }
         sticky.className = 'mTakeTradeSticky has-position';
+        var unit = myTrades[0].vehicle==='OPTIONS'?'CT':'SH';
         var takenMob = myTrades.map(function(t){return t.tranche||1;});
-        var isFullMob = takenMob.indexOf(1)>=0 && takenMob.indexOf(2)>=0 && takenMob.indexOf(3)>=0;
+        var isFullMob = takenMob.indexOf(1)>=0 && takenMob.indexOf(2)>=0;
         if (isFullMob) {
-          btn.textContent = '◆ FULL POSITION · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr+' → VIEW';
+          btn.textContent = '◆ FULL POSITION · '+totalSh+' '+unit+pnlStr+' → VIEW';
         } else {
-          btn.textContent = 'POSITION: '+maxTr+'/3 · '+totalSh+' '+(myTrades[0].vehicle==='OPTIONS'?'CT':'SH')+pnlStr;
+          btn.textContent = '◆ HALF POSITION · '+totalSh+' '+unit+pnlStr+' — ADD MORE';
         }
       } else {
         sticky.className = 'mTakeTradeSticky';
@@ -10326,7 +10304,7 @@
       var taken = myTrades.map(function(t){return t.tranche||1;});
 
       // Full position: navigate to History > My Trades instead of blocking
-      if (taken.indexOf(1) >= 0 && taken.indexOf(2) >= 0 && taken.indexOf(3) >= 0) {
+      if (taken.indexOf(1) >= 0 && taken.indexOf(2) >= 0) {
         navigateToMyTrades();
         return;
       }
@@ -10374,68 +10352,25 @@
       document.getElementById('ttRiskAmt').value = '';
       document.getElementById('ttRiskAmt').style.color = '';
 
-      // Tranche state — build dynamically with sequential logic
+      // Auto-determine tranche and show position info
       _ttSelectedTranches = [];
-      var trancheGrid = document.getElementById('ttTrancheSelect');
       var posSummary = document.getElementById('ttPositionSummary');
       var posSummaryContent = document.getElementById('ttPosSummaryContent');
-      var trancheNames = ['INITIAL', 'TRIGGER', 'CONVICTION'];
-      var trancheCards = '';
-      var nextAvailable = 0; // which tranche is next to add
       var totalHeldShares = 0, totalHeldRisk = 0, avgEntry = 0, totalCost = 0;
+      var nextTranche = 1;
 
-      // Build held state
-      for (var tr = 1; tr <= 3; tr++) {
-        var heldTrade = myTrades.find(function(t) { return (t.tranche || 1) === tr; });
-        var isHeld = !!heldTrade;
-        if (isHeld) {
-          totalHeldShares += parseFloat(heldTrade.shares) || 0;
-          totalHeldRisk += parseFloat(heldTrade.risk_amount) || 0;
-          totalCost += (parseFloat(heldTrade.entry_price) || 0) * (parseFloat(heldTrade.shares) || 0);
-          nextAvailable = tr + 1;
-        }
-      }
+      myTrades.forEach(function(t) {
+        totalHeldShares += parseFloat(t.shares) || 0;
+        totalHeldRisk += parseFloat(t.risk_amount) || 0;
+        totalCost += (parseFloat(t.entry_price) || 0) * (parseFloat(t.shares) || 0);
+        if ((t.tranche || 1) >= nextTranche) nextTranche = (t.tranche || 1) + 1;
+      });
       if (totalHeldShares > 0) avgEntry = totalCost / totalHeldShares;
 
-      // Build cards
-      for (var tr = 1; tr <= 3; tr++) {
-        var heldTrade = myTrades.find(function(t) { return (t.tranche || 1) === tr; });
-        var isHeld = !!heldTrade;
-        var isNext = (!isHeld && tr === nextAvailable);
-        var isLocked = (!isHeld && tr > nextAvailable); // can't skip
+      _ttSelectedTranches = [nextTranche];
+      _ttTranche = nextTranche;
 
-        var cls = isHeld ? 'held' : isNext ? 'next' : isLocked ? '' : '';
-        var clickHandler = isNext ? ' onclick="toggleTranche(this)"' : '';
-        var tag = '';
-        if (isHeld) {
-          var sh = parseFloat(heldTrade.shares) || 0;
-          var unit = (heldTrade.vehicle === 'OPTIONS') ? 'ct' : 'sh';
-          var d = heldTrade.created_at ? new Date(heldTrade.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-          tag = '<div class="ttTrancheInfo">' + sh + ' ' + unit + ' · $' + parseFloat(heldTrade.entry_price).toFixed(2) + (d ? ' · ' + d : '') + '</div>';
-          tag += '<span class="ttTrancheClose" onclick="event.stopPropagation();closeSingleTranche(\'' + heldTrade.id + '\')">✕ CLOSE</span>';
-        } else if (isNext) {
-          tag = '<div class="ttTrancheTag" style="color:var(--core);">+ ADD</div>';
-        } else if (isLocked) {
-          tag = '<div class="ttTrancheTag" style="color:var(--muted);">LOCKED</div>';
-        }
-
-        trancheCards += '<div class="ttTrancheOpt ' + cls + '" data-tranche="' + tr + '"' + clickHandler + '>' +
-          '<div class="ttTrancheLbl">' + tr + '/3</div>' +
-          '<div class="ttTrancheSub">' + trancheNames[tr-1] + '</div>' +
-          tag +
-        '</div>';
-      }
-      trancheGrid.innerHTML = trancheCards;
-
-      // Auto-select next available
-      if (nextAvailable >= 1 && nextAvailable <= 3) {
-        _ttSelectedTranches = [nextAvailable];
-        var nextEl = trancheGrid.querySelector('[data-tranche="' + nextAvailable + '"]');
-        if (nextEl) nextEl.classList.add('active');
-      }
-      _ttTranche = _ttSelectedTranches.length ? Math.max.apply(null, _ttSelectedTranches) : 1;
-
-      // Position summary
+      // Show existing position if adding to it
       if (totalHeldShares > 0) {
         var unit = myTrades[0].vehicle === 'OPTIONS' ? 'ct' : 'sh';
         var livePnlHtml = '';
@@ -10446,19 +10381,22 @@
           var dollarPnl = isBull2 ? (lp - avgEntry) * totalHeldShares : (avgEntry - lp) * totalHeldShares;
           var pnlC = posPnl >= 0 ? 'var(--green)' : 'var(--red)';
           livePnlHtml = '<div style="display:flex;justify-content:space-between;padding-top:6px;margin-top:6px;border-top:1px solid rgba(0,255,136,.1);">' +
-            '<span>LIVE P&L</span><span style="color:' + pnlC + ';font-weight:900;font-size:14px;">' + (posPnl >= 0 ? '+' : '') + posPnl.toFixed(2) + '% <span style="font-size:10px;">(' + (dollarPnl >= 0 ? '+' : '') + '$' + Math.abs(dollarPnl).toFixed(0) + ')</span></span>' +
-          '</div>';
+            '<span>LIVE P&L</span><span style="color:' + pnlC + ';font-weight:900;font-size:14px;">' + (posPnl >= 0 ? '+' : '') + posPnl.toFixed(2) + '% <span style="font-size:10px;">(' + (dollarPnl >= 0 ? '+' : '') + '$' + Math.abs(dollarPnl).toFixed(0) + ')</span></span></div>';
         }
         posSummary.style.display = '';
         posSummaryContent.innerHTML =
-          '<div style="display:flex;justify-content:space-between;"><span>TOTAL SIZE</span><span style="font-weight:900;color:#fff;">' + totalHeldShares + ' ' + unit + '</span></div>' +
+          '<div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:6px;font-weight:700;">ADDING TO EXISTING POSITION</div>' +
+          '<div style="display:flex;justify-content:space-between;"><span>CURRENT SIZE</span><span style="font-weight:900;color:#fff;">' + totalHeldShares + ' ' + unit + '</span></div>' +
           '<div style="display:flex;justify-content:space-between;"><span>AVG ENTRY</span><span style="color:var(--core);">$' + avgEntry.toFixed(2) + '</span></div>' +
-          '<div style="display:flex;justify-content:space-between;"><span>TRANCHES HELD</span><span>' + taken.length + '/3</span></div>' +
           '<div style="display:flex;justify-content:space-between;"><span>TOTAL RISK</span><span style="color:var(--amber);">$' + totalHeldRisk.toFixed(0) + '</span></div>' +
           livePnlHtml;
       } else {
         posSummary.style.display = 'none';
       }
+
+      // Update confirm button text
+      var confirmBtn = document.getElementById('ttConfirmBtn');
+      if (confirmBtn) confirmBtn.textContent = totalHeldShares > 0 ? '◆ ADD TO POSITION' : '◆ CONFIRM ENTRY';
 
       // Option fields — parse Oracle contract cards AND pre-fill premium
       _ttSelectedContract = null;
@@ -10568,7 +10506,7 @@
       var pnlPct = isBull ? raw : -raw;
       var pnlD = isBull ? (exitP - entP) * parseFloat(trade.shares) : (entP - exitP) * parseFloat(trade.shares);
 
-      var msg = 'Close tranche ' + (trade.tranche || 1) + '/3 of ' + trade.asset + '?\n\n' +
+      var msg = 'Close position in ' + trade.asset + '?\n\n' +
         'Entry: $' + entP.toFixed(2) + ' → Exit: $' + exitP.toFixed(2) + '\n' +
         'P&L: ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '% ($' + (pnlD >= 0 ? '+' : '') + pnlD.toFixed(0) + ')';
       if (!confirm(msg)) return;
@@ -10583,7 +10521,7 @@
         try { await SB_AUTH.from('member_trades').update({ status: 'CLOSED', exit_price: exitP, exit_date: trade.exit_date, realized_pnl: trade.realized_pnl, realized_pnl_pct: trade.realized_pnl_pct }).eq('id', tradeId); } catch(e) {}
       }
       saveMemberTradesLocal();
-      showToast('✓ Closed tranche ' + (trade.tranche || 1) + '/3 — ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%');
+      showToast('✓ Closed ' + trade.asset + ' — ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%');
 
       // Refresh the Take Trade modal to reflect new state
       closeTakeTradeModal();
@@ -10619,9 +10557,8 @@
       var acct = MEMBER_SETTINGS.account_size || (_riskSettings.accountSize || 0);
       var riskPct = MEMBER_SETTINGS.risk_per_trade || (_riskSettings.riskPct || 2);
       if (!acct) return;
-      var totalRiskD = acct * (riskPct / 100); // max risk for FULL position (3/3)
+      var totalRiskD = acct * (riskPct / 100);
 
-      // How many tranches selected
       var trancheCount = _ttSelectedTranches.length;
       if (trancheCount === 0) {
         var summaryEl0 = document.getElementById('ttCalcSummary');
@@ -10630,14 +10567,31 @@
         document.getElementById('ttRiskAmt').value = '';
         return;
       }
-      var trancheFraction = trancheCount / 3; // 1 selected = 0.333
+      var trancheFraction = 0.5; // always half position per entry
 
-      // Parse invalidation / stop loss
       var inv = null;
       if (sig.invalidation) { var m = sig.invalidation.replace(/,/g, '').match(/([\d.]+)/); if (m) inv = parseFloat(m[1]); }
 
       var summaryEl = document.getElementById('ttCalcSummary');
       var contentEl = document.getElementById('ttCalcContent');
+
+      // Determine if user already holds a position
+      var myTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
+      var isAdding = myTrades.length > 0;
+      var heldShares = myTrades.reduce(function(s,t) { return s + (parseFloat(t.shares) || 0); }, 0);
+
+      // Position meter: two segments
+      var seg1 = isAdding ? 'background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.4);' : 'background:rgba(0,229,255,.3);';
+      var seg2 = 'background:rgba(255,255,255,.08);';
+      var meterLabel = isAdding ? 'COMPLETING POSITION' : 'INITIAL ENTRY';
+      var positionMeter =
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+          '<div style="display:flex;gap:4px;">' +
+            '<div style="width:28px;height:8px;border-radius:4px;' + seg1 + '"></div>' +
+            '<div style="width:28px;height:8px;border-radius:4px;' + seg2 + '"></div>' +
+          '</div>' +
+          '<span style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:' + (isAdding ? 'var(--green)' : 'var(--core)') + ';font-weight:700;">' + meterLabel + '</span>' +
+        '</div>';
 
       if (_ttVehicle === 'STOCK') {
         var ep = parseFloat(document.getElementById('ttEntryPrice').value);
@@ -10645,42 +10599,46 @@
         var riskEl = document.getElementById('ttRiskAmt');
 
         if (ep && inv) {
-          var rps = Math.abs(ep - inv); // risk per share
+          var rps = Math.abs(ep - inv);
           if (rps > 0) {
-            var maxShares = Math.floor(totalRiskD / rps); // full 3/3 position
-            var trancheShares = Math.max(1, Math.round(maxShares * trancheFraction));
-            var trancheRisk = trancheShares * rps;
+            var maxShares = Math.floor(totalRiskD / rps);
+            var halfShares = Math.max(1, Math.floor(maxShares / 2));
+            var entryRisk = halfShares * rps;
 
-            sharesEl.value = trancheShares;
+            sharesEl.value = halfShares;
             sharesEl.style.color = 'var(--green)';
             sharesEl.style.fontWeight = '900';
-            riskEl.value = trancheRisk.toFixed(2);
+            riskEl.value = entryRisk.toFixed(2);
             riskEl.style.color = 'var(--amber)';
 
-            // Summary
             if (summaryEl && contentEl) {
-              contentEl.innerHTML =
+              var guidanceText = isAdding
+                ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfShares + ' shares</b> to reach full position of <b>' + maxShares + ' shares</b>.</div>'
+                : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">Buy <b style="color:#fff;">' + halfShares + ' shares</b> now. After trigger confirms, add remaining <b style="color:#fff;">' + halfShares + '</b> to reach full position of <b style="color:#fff;">' + maxShares + '</b>.</div>';
+
+              contentEl.innerHTML = positionMeter +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Stop Loss</span><b>$' + inv.toFixed(2) + '</b></div>' +
-                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Risk/Share</span><b>$' + rps.toFixed(2) + '</b></div>' +
-                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Max Position (3/3)</span><b>' + maxShares + ' sh</b></div>' +
-                '<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:var(--core);font-weight:700;">THIS ENTRY (' + trancheCount + '/3)</span><b style="color:var(--green);font-size:14px;">' + trancheShares + ' shares</b></div>' +
-                '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Risk on this entry</span><b style="color:var(--amber);">$' + trancheRisk.toFixed(0) + ' (' + (trancheRisk / acct * 100).toFixed(1) + '% of acct)</b></div>';
+                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Risk / Share</span><b>$' + rps.toFixed(2) + '</b></div>' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + maxShares + ' shares</b></div>' +
+                '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">BUY NOW</span><b style="color:var(--green);font-size:16px;">' + halfShares + ' shares</b></div>' +
+                '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Risk on this entry</span><b style="color:var(--amber);">$' + entryRisk.toFixed(0) + ' (' + (entryRisk / acct * 100).toFixed(1) + '%)</b></div>' +
+                guidanceText;
               summaryEl.style.display = '';
             }
           }
         } else if (ep && !inv) {
-          // No stop loss — use 5% default risk distance
           var fallbackRps = ep * 0.05;
           var maxSh = Math.floor(totalRiskD / fallbackRps);
-          var trSh = Math.max(1, Math.round(maxSh * trancheFraction));
-          sharesEl.value = trSh;
+          var halfSh = Math.max(1, Math.floor(maxSh / 2));
+          sharesEl.value = halfSh;
           sharesEl.style.color = 'var(--amber)';
           sharesEl.style.fontWeight = '900';
-          riskEl.value = (trSh * fallbackRps).toFixed(2);
+          riskEl.value = (halfSh * fallbackRps).toFixed(2);
           riskEl.style.color = 'var(--amber)';
           if (summaryEl && contentEl) {
-            contentEl.innerHTML = '<div style="color:var(--amber);">⚠ No stop loss defined — using 5% default. Set invalidation in admin for precise sizing.</div>' +
-              '<div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="color:var(--core);">THIS ENTRY (' + trancheCount + '/3)</span><b style="color:var(--green);">' + trSh + ' shares</b></div>';
+            contentEl.innerHTML = positionMeter +
+              '<div style="color:var(--amber);margin-bottom:6px;">⚠ No stop loss set — using 5% default.</div>' +
+              '<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-weight:700;">BUY NOW</span><b style="color:var(--green);font-size:14px;">' + halfSh + ' shares</b></div>';
             summaryEl.style.display = '';
           }
         } else {
@@ -10691,19 +10649,23 @@
         var prem = parseFloat(document.getElementById('ttOptFillPrice').value);
         if (prem > 0) {
           var costPerContract = prem * 100;
-          // Options risk: typically deploy 5% of account per full position, 50% expected loss
           var maxDeploy = acct * 0.05;
           var maxContracts = Math.max(1, Math.floor(maxDeploy / costPerContract));
-          var trancheContracts = Math.max(1, Math.round(maxContracts * trancheFraction));
-          document.getElementById('ttOptContracts').value = trancheContracts;
+          var halfContracts = Math.max(1, Math.floor(maxContracts / 2));
+          document.getElementById('ttOptContracts').value = halfContracts;
           updateOptRiskAmt();
 
+          var guidanceOpt = isAdding
+            ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfContracts + ' contracts</b> to reach full position.</div>'
+            : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">Buy <b style="color:#fff;">' + halfContracts + ' contracts</b> now. Add remaining <b style="color:#fff;">' + halfContracts + '</b> after trigger confirms.</div>';
+
           if (summaryEl && contentEl) {
-            contentEl.innerHTML =
+            contentEl.innerHTML = positionMeter +
               '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Premium</span><b>$' + prem.toFixed(2) + ' ($' + costPerContract.toFixed(0) + '/ct)</b></div>' +
-              '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Max Contracts (3/3)</span><b>' + maxContracts + ' ct</b></div>' +
-              '<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:var(--core);font-weight:700;">THIS ENTRY (' + trancheCount + '/3)</span><b style="color:var(--green);font-size:14px;">' + trancheContracts + ' contracts</b></div>' +
-              '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Capital deployed</span><b style="color:var(--amber);">$' + (trancheContracts * costPerContract).toFixed(0) + '</b></div>';
+              '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + maxContracts + ' contracts</b></div>' +
+              '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">BUY NOW</span><b style="color:var(--green);font-size:16px;">' + halfContracts + ' contracts</b></div>' +
+              '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Capital deployed</span><b style="color:var(--amber);">$' + (halfContracts * costPerContract).toFixed(0) + '</b></div>' +
+              guidanceOpt;
             summaryEl.style.display = '';
           }
         } else {
@@ -10724,8 +10686,8 @@
       // Safety: check for duplicate or full position
       var existingTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
       var takenTranches = existingTrades.map(function(t) { return t.tranche || 1; });
-      if (takenTranches.indexOf(1) >= 0 && takenTranches.indexOf(2) >= 0 && takenTranches.indexOf(3) >= 0) {
-        showToast('Full 3/3 position already held'); return;
+      if (takenTranches.indexOf(1) >= 0 && takenTranches.indexOf(2) >= 0) {
+        showToast('Full 2/2 position already held'); return;
       }
       // Check if selected tranches overlap with existing
       var overlap = _ttSelectedTranches.filter(function(t) { return takenTranches.indexOf(t) >= 0; });
@@ -10831,7 +10793,7 @@
       _ctSelectedIds = new Set(_ctTrades.map(function(t) { return t.id; }));
 
       var first = _ctTrades[0];
-      document.getElementById('ctAssetLabel').textContent = first.asset + ' — ' + first.vehicle + ' · ' + _ctTrades.length + ' tranche(s)';
+      document.getElementById('ctAssetLabel').textContent = first.asset + ' — ' + first.vehicle + ' · ' + _ctTrades.length + ' position(s)';
 
       // Build tranche checkboxes
       var grid = document.getElementById('ctTrancheGrid');
@@ -10839,7 +10801,7 @@
         var sh = parseFloat(t.shares) || 0;
         var unit = t.vehicle === 'OPTIONS' ? 'ct' : 'sh';
         return '<div class="ttTrancheOpt active" data-ctid="' + t.id + '" onclick="toggleCtTranche(this)" style="flex:1;padding:8px 4px;text-align:center;cursor:pointer;border:1px solid rgba(255,59,59,.3);border-radius:6px;background:rgba(255,59,59,.06);position:relative;">' +
-          '<div style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--red);">' + (t.tranche || 1) + '/3</div>' +
+          '<div style="font-family:var(--display);font-size:10px;font-weight:700;color:var(--red);">' + (t.tranche || 1) + '/2</div>' +
           '<div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:2px;">' + sh + ' ' + unit + '</div>' +
           '<div style="font-family:var(--display);font-size:8px;color:var(--muted);">$' + parseFloat(t.entry_price).toFixed(2) + '</div>' +
         '</div>';
@@ -10931,10 +10893,9 @@
       var closingCount = selectedTrades.length;
 
       // Build confirmation message
-      var trancheList = selectedTrades.map(function(t) { return (t.tranche || 1) + '/3'; }).join(', ');
       var confirmMsg = closingCount < totalTranches
-        ? 'Close tranche(s) ' + trancheList + ' of ' + selectedTrades[0].asset + '?\n\nKeeping ' + (totalTranches - closingCount) + ' tranche(s) open.\n\nExit: $' + exitP.toFixed(2) + '\nThis action cannot be undone.'
-        : 'Close entire ' + selectedTrades[0].asset + ' position (' + closingCount + ' tranches)?\n\nExit: $' + exitP.toFixed(2) + '\nThis action cannot be undone.';
+        ? 'Close part of your ' + selectedTrades[0].asset + ' position?\n\nClosing ' + closingCount + ' of ' + totalTranches + ' entries.\n\nExit: $' + exitP.toFixed(2) + '\nThis action cannot be undone.'
+        : 'Close entire ' + selectedTrades[0].asset + ' position?\n\nExit: $' + exitP.toFixed(2) + '\nThis action cannot be undone.';
       if (!confirm(confirmMsg)) return;
 
       var noteAdd = document.getElementById('ctNotes').value.trim();
@@ -11064,16 +11025,17 @@
       }
 
       // Tranche dots — green for held tranches
-      var dots = [1,2,3].map(function(n) {
+      var dots = [1,2].map(function(n) {
         var held = trancheNums.indexOf(n) >= 0;
         return '<span class="jTrancheDot'+(held?' filled':'')+'"></span>';
       }).join('');
 
-      // Tranche detail lines
-      var trancheLines = trades.map(function(t) {
+      // Entry detail lines
+      var entryLines = trades.map(function(t, i) {
         var d = t.created_at ? new Date(t.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+        var label = i === 0 ? 'Entry' : 'Added';
         return '<div style="display:flex;justify-content:space-between;padding:2px 0;font-family:var(--display);font-size:9px;color:var(--muted);">' +
-          '<span style="color:var(--green);">◆ '+( t.tranche||1)+'/3</span>' +
+          '<span style="color:var(--green);">◆ ' + label + '</span>' +
           '<span>$'+parseFloat(t.entry_price).toFixed(2)+' · '+(parseFloat(t.shares))+' '+unit+'</span>' +
           '<span>'+d+'</span></div>';
       }).join('');
@@ -11091,23 +11053,35 @@
       }
 
       var maxTr = Math.max.apply(null, trancheNums);
+      var isFull = trancheNums.indexOf(1) >= 0 && trancheNums.indexOf(2) >= 0;
       var signalId = (first.signal_id||'').replace(/'/g,"\\'");
       var assetEsc = first.asset.replace(/'/g,"\\'");
+
+      // Position meter — two segments
+      var seg1Style = 'background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.4);';
+      var seg2Style = isFull ? 'background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.4);' : 'background:rgba(255,255,255,.08);';
+      var posLabel = isFull ? 'FULL POSITION' : 'HALF POSITION';
+      var posColor = isFull ? 'var(--green)' : 'var(--core)';
 
       return '<div class="jTradeCard">' +
         '<div class="jTradeTop">' +
           '<div><span class="jTradeAsset">'+first.asset+'</span><span style="font-family:var(--display);font-size:8px;letter-spacing:1px;color:var(--muted);margin-left:6px;">'+vehicle+' · '+first.direction+'</span></div>' +
-          '<div class="jTradeBadge open">'+maxTr+'/3 OPEN</div>' +
+          '<div class="jTradeBadge open" style="border-color:'+posColor+'33;color:'+posColor+';">'+posLabel+'</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;">' +
+          '<div style="display:flex;gap:3px;">' +
+            '<div style="width:24px;height:6px;border-radius:3px;'+seg1Style+'"></div>' +
+            '<div style="width:24px;height:6px;border-radius:3px;'+seg2Style+'"></div>' +
+          '</div>' +
+          '<span style="font-family:var(--display);font-size:8px;color:'+posColor+';letter-spacing:1px;">' + totalSh + ' ' + unit + ' TOTAL</span>' +
         '</div>' +
         optInfo +
         '<div class="jTradeRow"><span class="jTradeK">AVG ENTRY</span><span class="jTradeV" style="font-size:13px;font-weight:900;color:var(--core);">$'+avgEntry.toFixed(2)+'</span></div>' +
-        '<div class="jTradeRow"><span class="jTradeK">TOTAL SIZE</span><span class="jTradeV">'+totalSh+' '+unit+'</span></div>' +
         '<div class="jTradeRow"><span class="jTradeK">TOTAL RISK</span><span class="jTradeV" style="color:var(--amber);">$'+totalRisk.toFixed(0)+'</span></div>' +
         livePnl +
-        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">'+trancheLines+'</div>' +
-        '<div style="margin-top:6px;">'+dots+'</div>' +
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">'+entryLines+'</div>' +
         '<div style="display:flex;gap:6px;margin-top:8px;">' +
-          (maxTr < 3 ? '<button class="jAddTranche" onclick="openTakeTradeFromJournal(\''+signalId+'\',\''+assetEsc+'\')">+ ADD TRANCHE</button>' : '') +
+          (!isFull ? '<button class="jAddTranche" onclick="openTakeTradeFromJournal(\''+signalId+'\',\''+assetEsc+'\')">+ ADD TO POSITION</button>' : '') +
           '<button class="jCloseBtn" onclick="openClosePosition(\''+signalId+'\',\''+assetEsc+'\')">CLOSE</button>' +
         '</div>' +
       '</div>';
@@ -11121,7 +11095,7 @@
         else{var r=((cached.price-entP)/entP)*100;pct=isBull?r:-r;}
         livePnl='<div class="jTradeRow"><span class="jTradeK">LIVE P&L</span><span class="jTradeV" style="color:'+(pct>=0?'var(--green)':'var(--red)')+';font-size:13px;">'+(pct>=0?'+':'')+pct.toFixed(2)+'%</span></div>';
       }
-      var dots=[1,2,3].map(function(n){return '<span class="jTrancheDot'+(n<=(trade.tranche||1)?' filled':'')+'"></span>';}).join('');
+      var dots=[1,2].map(function(n){return '<span class="jTrancheDot'+(n<=(trade.tranche||1)?' filled':'')+'"></span>';}).join('');
       var closedPnl='';
       if (!isOpen && trade.realized_pnl_pct != null) {
         var pnlColor = trade.realized_pnl_pct >= 0 ? 'var(--green)' : 'var(--red)';
@@ -11626,14 +11600,6 @@
   </div>
   <div style="padding:10px 12px 0;">
 
-<!-- VIEW TOGGLE (MOBILE) -->
-<div class="histViewToggle" style="margin-bottom:10px;">
-  <button class="histViewBtn active" onclick="switchHistView('oracle',this)">◆ ORACLE</button>
-  <button class="histViewBtn" onclick="switchHistView('my',this)">◆ MY TRADES</button>
-</div>
-
-<div class="histViewPane active" id="mHistViewOracle">
-
 <!-- ACTIVE SIGNALS SCOREBOARD (MOBILE) -->
 <div id="mActiveSignalsBoard" style="margin-bottom:10px;"></div>
 
@@ -11758,49 +11724,22 @@
   </div>
 </div>
 
-</div><!-- end mHistViewOracle -->
-
-<!-- MY TRADE HISTORY (MOBILE) -->
-<div class="histViewPane" id="mHistViewMy">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">MY TRADES</div>
-    <div style="display:flex;gap:6px;">
-      <button class="jAddTradeBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
-      <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ SETTINGS</div>
-    </div>
-  </div>
-  <div id="mMyTradeStats" style="margin-bottom:10px;"></div>
-  <div id="mMyRiskMonitor" style="margin-bottom:10px;"></div>
-  <div id="mMyOpenPositions" style="margin-bottom:10px;"></div>
-  <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">CLOSED TRADES</div>
-  <div id="mMyTradeBody" style="font-family:var(--display);font-size:10px;"></div>
-</div>
-
   </div>
 </div>
 
 
 <div class="mobilePane" id="mobilePaneJournal">
-  <div class="mobileHeader"><span class="mobileHeaderLabel">📓 MY TRADE JOURNAL</span></div>
+  <div class="mobileHeader"><span class="mobileHeaderLabel">📋 MY TRADES</span></div>
   <div style="padding:10px 12px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);">YOUR POSITIONS & STATS</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <button class="jAddTradeBtn" onclick="openSignalPicker()">+ ADD TRADE</button>
-        <div class="riskCalcSetup" onclick="openRiskSettings()">⚙ ACCOUNT</div>
-      </div>
-    </div>
-    <div class="journalStats" id="mJournalStats">
-      <div class="jStatCard"><div class="jStatLabel">OPEN</div><div class="jStatVal" id="mjsOpen">0</div></div>
-      <div class="jStatCard"><div class="jStatLabel">WIN RATE</div><div class="jStatVal" id="mjsWinRate">—</div></div>
-      <div class="jStatCard"><div class="jStatLabel">TOTAL P&L</div><div class="jStatVal" id="mjsTotalPnl">—</div></div>
-      <div class="jStatCard"><div class="jStatLabel">AVG R</div><div class="jStatVal" id="mjsAvgR">—</div></div>
-    </div>
-    <div id="riskMonitorMobile"></div>
-    <div class="jSectionLabel">OPEN POSITIONS</div>
-    <div id="mJournalOpenTrades"></div>
-    <div class="jSectionLabel">CLOSED TRADES</div>
-    <div id="mJournalClosedTrades"></div>
+    <!-- STATS -->
+    <div id="mMyTradeStats" style="margin-bottom:10px;"></div>
+    <!-- SIGNAL ATTRIBUTION -->
+    <div id="mSignalAttribution" style="margin-bottom:10px;"></div>
+    <!-- OPEN POSITIONS -->
+    <div id="mMyOpenPositions" style="margin-bottom:10px;"></div>
+    <!-- CLOSED TRADES -->
+    <div style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);">CLOSED TRADES</div>
+    <div id="mMyTradeBody" style="font-family:var(--display);font-size:10px;"></div>
   </div>
 </div>
 
@@ -11810,7 +11749,7 @@
   <button class="mobileTabBtn" data-mtab="Macro"><span class="tabIcon">🌐</span><span class="tabLabel">MACRO</span></button>
   <button class="mobileTabBtn" data-mtab="Flow"><span class="tabIcon">🌊</span><span class="tabLabel">FLOW</span></button>
   <button class="mobileTabBtn" data-mtab="History" id="mobHistTab" style="position:relative;"><span class="tabIcon">📊</span><span class="tabLabel">HISTORY</span><span class="tabNotifBadge" id="histNotifBadgeMob"></span></button>
-  <button class="mobileTabBtn" data-mtab="Journal" id="mobJournalTab" style="display:none;position:relative;"><span class="tabIcon">📓</span><span class="tabLabel">JOURNAL</span><span class="tabNotifBadge" id="journalBadgeMob"></span></button>
+  <button class="mobileTabBtn" data-mtab="Journal" id="mobJournalTab" style="position:relative;"><span class="tabIcon">📋</span><span class="tabLabel">TRADES</span><span class="tabNotifBadge" id="journalBadgeMob"></span></button>
 </div>
 
 <script>
@@ -11836,7 +11775,7 @@
     if (tabName === 'Flow')     renderMFlow();
     if (tabName === 'Signals') { if (typeof clearSignalsBadge === 'function') clearSignalsBadge(); }
     if (tabName === 'History') { renderMHistory(); if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory(); if (typeof clearHistoryBadge === 'function') clearHistoryBadge(); }
-    if (tabName === 'Journal') { if (typeof renderJournal === 'function') renderJournal(); }
+    if (tabName === 'Journal') { if (typeof renderMyTradeHistory === 'function') renderMyTradeHistory(); if (typeof renderJournal === 'function') renderJournal(); }
     window.scrollTo(0, 0);
   }
 
@@ -12457,7 +12396,7 @@
         '</div>'+
         '<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">'+
           '<span style="font-family:Orbitron,monospace;font-size:9px;padding:5px 10px;border-radius:20px;border:1px solid '+dirColor+';color:'+dirColor+';">◆ '+sig.direction+'</span>'+
-          (sig.oracle_tranche ? '<span style="font-family:Orbitron,monospace;font-size:8px;padding:3px 8px;border-radius:20px;border:1px solid '+(sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)')+';color:'+(sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)')+';">'+sig.oracle_tranche+'/3 '+(sig.oracle_tranche>=3?'FULL':sig.oracle_tranche>=2?'TRIGGER':'INITIAL')+'</span>' : '')+
+          (sig.oracle_tranche ? '<span style="font-family:Orbitron,monospace;font-size:8px;padding:3px 8px;border-radius:20px;border:1px solid '+(sig.oracle_tranche>=2?'rgba(0,255,136,.4)':'rgba(0,229,255,.2)')+';color:'+(sig.oracle_tranche>=2?'var(--green)':'var(--core)')+';">'+sig.oracle_tranche+'/2 '+(sig.oracle_tranche>=2?'CONFIRMED':'INITIAL')+'</span>' : '')+
           '<span style="font-family:Orbitron,monospace;font-size:9px;padding:4px 10px;border-radius:20px;border:1px solid '+confColor+'33;color:'+confColor+';">CONF '+(live.conf != null ? live.conf.toFixed(1) : '—')+'%</span>'+
           (sig.bias?'<span style="font-family:Orbitron,monospace;font-size:7px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">'+sig.bias.replace(/_/g,' ')+'</span>':'')+
         '</div>'+
@@ -12566,7 +12505,7 @@
     (function() {
       var calc = (typeof calcPositionSizing === 'function') ? calcPositionSizing(sig) : null;
       if (!calc) return '';
-      var perTr = calc.trancheShares ? calc.trancheShares[0] : Math.floor(calc.shares / 3);
+      var perTr = calc.trancheShares ? calc.trancheShares[0] : Math.floor(calc.shares / 2);
       return '<div style="background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">' +
         '<div style="font-family:Orbitron,monospace;font-size:9px;color:var(--muted);">POSITION: <b style="color:#fff;">'+perTr+' sh</b>/tranche · <b style="color:var(--amber);">$'+calc.riskDollars.toFixed(0)+'</b> risk</div>' +
         '<div style="font-family:Orbitron,monospace;font-size:8px;color:var(--core);cursor:pointer;border-bottom:1px dashed rgba(0,229,255,.3);" onclick="openTakeTradeModal()">TAKE TRADE →</div>' +
