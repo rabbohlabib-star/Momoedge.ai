@@ -4074,14 +4074,6 @@
             <div class="tdmStatLabel">DOLLAR P&L</div>
             <div class="tdmStatValue" id="tdmOptDollarPnl">—</div>
           </div>
-          <div class="tdmStat">
-            <div class="tdmStatLabel">IV AT ENTRY</div>
-            <div class="tdmStatValue" id="tdmOptIV">—</div>
-          </div>
-          <div class="tdmStat">
-            <div class="tdmStatLabel">DELTA AT ENTRY</div>
-            <div class="tdmStatValue" id="tdmOptDelta">—</div>
-          </div>
         </div>
         <!-- Leverage callout -->
         <div id="tdmLeverageCallout" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;text-align:center;"></div>
@@ -4227,6 +4219,12 @@
           <div class="ttGroup"><div class="ttLabel">CONTRACTS</div><input class="ttInput" id="ttOptContracts" type="number" step="1" min="1" placeholder="1"/></div>
         </div>
         <div class="ttGroup"><div class="ttLabel">RISK AMOUNT ($)</div><input class="ttInput" id="ttOptRiskAmt" type="number" step="0.01" readonly style="opacity:.7;"/></div>
+      </div>
+
+      <!-- POSITION SIZING RECOMMENDATION -->
+      <div id="ttPosSizeInfo" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+        <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--core);margin-bottom:6px;">ORACLE POSITION SIZING</div>
+        <div id="ttPosSizeContent" style="font-family:var(--display);font-size:10px;color:var(--text);line-height:1.6;"></div>
       </div>
 
       <div class="ttGroup"><div class="ttLabel">NOTES (OPTIONAL)</div><input class="ttInput" id="ttNotes" type="text" placeholder="e.g. Entered on pullback to trigger"/></div>
@@ -7062,10 +7060,6 @@
             optDollarEl.textContent = '—'; optDollarEl.style.color = '';
           }
 
-          // Greeks
-          document.getElementById('tdmOptIV').textContent = r.opt_iv ? parseFloat(r.opt_iv).toFixed(1) + '%' : '—';
-          document.getElementById('tdmOptDelta').textContent = r.opt_delta ? parseFloat(r.opt_delta).toFixed(2) : '—';
-
           // Leverage callout — show multiplier when both stock and options returns exist
           if (leverageEl && r.result !== null && optPnlPct !== null && r.result !== 0) {
             const stockReturn = Math.abs(r.result);
@@ -7556,6 +7550,46 @@
       'VIX':    'CBOE Volatility Index',
       'VIXY':   'ProShares VIX Short-Term Futures',
     };
+
+    const COMPANY_DESCRIPTIONS = {
+      'AEHR':   'Semiconductor test equipment for silicon carbide and gallium nitride chips.',
+      'GDX':    'ETF tracking major gold mining companies worldwide.',
+      'TLT':    'ETF tracking long-term U.S. Treasury bonds. Rates proxy.',
+      'BJ':     'Membership warehouse club retailer operating across the Eastern U.S.',
+      'MRNA':   'Biotech pioneer in mRNA-based vaccines and therapeutics.',
+      'NVDA':   'Leading GPU designer powering AI, gaming, and data centers.',
+      'META':   'Social media conglomerate: Facebook, Instagram, WhatsApp, Reality Labs.',
+      'TSLA':   'Electric vehicles, energy storage, and autonomous driving technology.',
+      'AMD':    'Semiconductor company competing in CPUs, GPUs, and data center chips.',
+      'AAPL':   'Consumer electronics giant: iPhone, Mac, Services ecosystem.',
+      'MSFT':   'Enterprise software, cloud (Azure), AI (OpenAI partnership).',
+      'AMZN':   'E-commerce and cloud computing (AWS) dominant platform.',
+      'GOOG':   'Search, advertising, cloud, and AI research conglomerate.',
+      'GOOGL':  'Search, advertising, cloud, and AI research conglomerate.',
+      'SMCI':   'Server and storage solutions optimized for AI/ML workloads.',
+      'IONQ':   'Trapped-ion quantum computing hardware and cloud access.',
+      'RGTI':   'Superconducting quantum computing systems and cloud platform.',
+      'QBTS':   'Quantum annealing computing for optimization problems.',
+      'SPY':    'Tracks the S&P 500 — broadest U.S. large-cap benchmark.',
+      'QQQ':    'Tracks the Nasdaq-100 — tech-heavy growth benchmark.',
+      'IWM':    'Tracks the Russell 2000 — U.S. small-cap benchmark.',
+      'XLE':    'Energy sector ETF: oil majors, services, exploration.',
+      'XLF':    'Financial sector ETF: banks, insurance, capital markets.',
+      'XLK':    'Technology sector ETF: software, hardware, semiconductors.',
+      'GLD':    'Physical gold-backed ETF — safe haven and inflation hedge.',
+      'SLV':    'Physical silver-backed ETF — industrial metal and store of value.',
+      'SMH':    'VanEck Semiconductor ETF tracking major chip stocks.',
+      'BTC':    'Decentralized digital currency and store of value.',
+      'BTCUSD': 'Decentralized digital currency and store of value.',
+      'XAUUSD': 'Spot gold price — ultimate safe haven asset.',
+      'VIX':    'Market fear gauge derived from S&P 500 options pricing.',
+      'VIXY':   'ETF tracking short-term VIX futures. Volatility hedge.',
+    };
+
+    function getCompanyDescription(asset) {
+      var key = asset.split(' ')[0].toUpperCase();
+      return COMPANY_DESCRIPTIONS[key] || null;
+    }
 
     function getCompanyName(asset) {
       var key = asset.split(' ')[0].toUpperCase();
@@ -8102,6 +8136,7 @@
           <div>
             <div class="sbAsset">${sig.asset}</div>
             ${getCompanyName(sig.asset) ? `<div style="font-family:Orbitron,monospace;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;margin-top:1px;">${getCompanyName(sig.asset)}</div>` : ''}
+            ${getCompanyDescription(sig.asset) ? `<div style="font-family:var(--mono);font-size:9px;color:rgba(180,210,240,.3);margin-top:1px;line-height:1.3;max-width:280px;">${getCompanyDescription(sig.asset)}</div>` : ''}
             <div class="sbLevel">${sig.level}</div>
           </div>
           <div class="sbBadges">
@@ -9705,7 +9740,15 @@
         const s = JSON.parse(localStorage.getItem('oracle_member_settings'));
         if (s) { MEMBER_SETTINGS.account_size = s.account_size; MEMBER_SETTINGS.risk_per_trade = s.risk_per_trade || 2.0; }
       } catch(e) {}
-      if (MEMBER_SETTINGS.account_size) { const el = document.getElementById('acctSizeInput'); if(el) el.value = MEMBER_SETTINGS.account_size; }
+      if (MEMBER_SETTINGS.account_size) {
+        const el = document.getElementById('acctSizeInput'); if(el) el.value = MEMBER_SETTINGS.account_size;
+        // Sync to risk calculator if not already set
+        if (!_riskSettings.accountSize) {
+          _riskSettings.accountSize = MEMBER_SETTINGS.account_size;
+          _riskSettings.riskPct = MEMBER_SETTINGS.risk_per_trade || 2.0;
+          saveRiskSettings();
+        }
+      }
       const rEl = document.getElementById('acctRiskInput'); if(rEl && MEMBER_SETTINGS.risk_per_trade) rEl.value = MEMBER_SETTINGS.risk_per_trade;
     }
 
@@ -9715,7 +9758,13 @@
         const { data } = await SB_AUTH.from('member_settings').select('*').eq('user_id', CURRENT_USER.id).maybeSingle();
         if (data) { MEMBER_SETTINGS.account_size = parseFloat(data.account_size); MEMBER_SETTINGS.risk_per_trade = parseFloat(data.risk_per_trade); }
       } catch(e) { console.warn('[Journal] Settings load error:', e); }
-      if (MEMBER_SETTINGS.account_size) { const el = document.getElementById('acctSizeInput'); if(el) el.value = MEMBER_SETTINGS.account_size; }
+      if (MEMBER_SETTINGS.account_size) {
+        const el = document.getElementById('acctSizeInput'); if(el) el.value = MEMBER_SETTINGS.account_size;
+        // Sync to risk calculator
+        _riskSettings.accountSize = MEMBER_SETTINGS.account_size;
+        if (MEMBER_SETTINGS.risk_per_trade) _riskSettings.riskPct = MEMBER_SETTINGS.risk_per_trade;
+        saveRiskSettings();
+      }
       const rEl = document.getElementById('acctRiskInput'); if(rEl) rEl.value = MEMBER_SETTINGS.risk_per_trade;
     }
 
@@ -9726,6 +9775,10 @@
       if (!risk || risk < 0.5 || risk > 10) { showToast('Risk must be 0.5–10%'); return; }
       MEMBER_SETTINGS.account_size = size;
       MEMBER_SETTINGS.risk_per_trade = risk;
+      // Sync to risk calculator system
+      _riskSettings.accountSize = size;
+      _riskSettings.riskPct = risk;
+      saveRiskSettings();
       try { localStorage.setItem('oracle_member_settings', JSON.stringify(MEMBER_SETTINGS)); } catch(e) {}
       if (CURRENT_USER) {
         try { await SB_AUTH.from('member_settings').upsert({ user_id: CURRENT_USER.id, account_size: size, risk_per_trade: risk, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }); } catch(e) {}
@@ -9833,7 +9886,7 @@
       var sticky = document.getElementById('mTakeTradeSticky');
       if (!sticky) return;
       if (!sig) { sticky.style.display = 'none'; return; }
-      sticky.style.display = '';
+      sticky.style.display = 'block';
       var myTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
       var btn = sticky.querySelector('button');
       if (myTrades.length > 0) {
@@ -9953,6 +10006,30 @@
       document.getElementById('ttNotes').value = '';
 
       autoFillTradeFields();
+
+      // Show position sizing recommendation
+      var psInfo = document.getElementById('ttPosSizeInfo');
+      var psContent = document.getElementById('ttPosSizeContent');
+      if (psInfo && psContent) {
+        var calc = calcPositionSizing(sig);
+        if (calc) {
+          var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+          html += '<div><span style="color:var(--muted);">Account:</span> <b>$'+calc.accountSize.toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
+          html += '<div><span style="color:var(--muted);">Risk:</span> <b>'+calc.riskPct+'%</b> = <b style="color:var(--amber);">$'+calc.riskDollars.toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
+          html += '<div><span style="color:var(--muted);">Shares:</span> <b style="color:var(--green);">'+calc.shares+'</b></div>';
+          html += '<div><span style="color:var(--muted);">Position:</span> <b>$'+(calc.positionValue||0).toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
+          if (calc.options) {
+            html += '<div><span style="color:var(--muted);">Max Contracts:</span> <b style="color:var(--green);">'+calc.options.contracts+'</b></div>';
+            html += '<div><span style="color:var(--muted);">Options Risk:</span> <b>$'+(calc.options.maxLoss||0).toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
+          }
+          html += '</div>';
+          psContent.innerHTML = html;
+          psInfo.style.display = '';
+        } else {
+          psInfo.style.display = 'none';
+        }
+      }
+
       document.getElementById('ttOverlay').classList.add('open');
     }
 
@@ -11537,6 +11614,7 @@
         '<div>'+
           '<div style="font-family:Orbitron,monospace;font-size:26px;font-weight:900;color:#fff;letter-spacing:1px;">'+sig.asset+'</div>'+
           (getCompanyName(sig.asset) ? '<div style="font-family:Orbitron,monospace;font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.5px;margin-top:2px;">'+getCompanyName(sig.asset)+'</div>' : '')+
+          (getCompanyDescription(sig.asset) ? '<div style="font-family:var(--mono);font-size:9px;color:rgba(180,210,240,.35);margin-top:2px;line-height:1.4;">'+getCompanyDescription(sig.asset)+'</div>' : '')+
           '<div style="font-family:Orbitron,monospace;font-size:8px;color:rgba(74,106,138,1);letter-spacing:1px;margin-top:2px;">'+(sig.level||'')+'</div>'+
           (sig.signal_date ? (function() {
             var d = new Date(sig.signal_date);
