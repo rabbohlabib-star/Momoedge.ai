@@ -1251,6 +1251,37 @@
     .sbT1Fill.hit       { background: var(--green); box-shadow: 0 0 10px rgba(0,255,163,.7); }
     .sbT1Fill.drawdown  { background: linear-gradient(90deg, rgba(255,179,0,.5), var(--amber)); }
 
+    /* ── Analysis Collapsible Toggle ── */
+    .sbAnalysisToggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(0,229,255,.03);
+      border: 1px solid rgba(0,229,255,.1);
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--display);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--core);
+      transition: all .2s;
+    }
+    .sbAnalysisToggle:hover { background: rgba(0,229,255,.06); }
+    .sbAnalysisToggle.expanded { border-radius: 10px 10px 0 0; border-bottom: none; }
+    .sbAnalysisToggle.expanded .sbAnalysisChev { transform: rotate(180deg); }
+    .sbAnalysisChev { transition: transform .2s; font-size: 14px; }
+    .sbAnalysisCollapse {
+      border: 1px solid rgba(0,229,255,.1);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
     /* ── Oracle Assessment Narrative ── */
     .sbAssessment {
       border: 1px solid rgba(0,229,255,.07);
@@ -4209,15 +4240,21 @@
         <div id="ttLivePnl" style="font-family:var(--display);font-size:12px;margin-top:2px;"></div>
       </div>
 
-      <!-- ACCOUNT QUICK EDIT -->
-      <div style="display:flex;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
-        <div style="flex:1;">
-          <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">ACCOUNT SIZE</div>
-          <input class="ttInput" id="ttAcctSize" type="number" step="100" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
-        </div>
-        <div style="flex:1;">
-          <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">RISK %</div>
-          <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+      <!-- ACCOUNT COMPACT -->
+      <div id="ttAcctCompact" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
+        <span id="ttAcctDisplay" style="font-family:var(--display);font-size:11px;color:var(--muted);"></span>
+        <span style="font-family:var(--display);font-size:9px;color:var(--core);cursor:pointer;letter-spacing:1px;" onclick="document.getElementById('ttAcctEdit').style.display=document.getElementById('ttAcctEdit').style.display==='none'?'':'none';">EDIT</span>
+      </div>
+      <div id="ttAcctEdit" style="display:none;gap:8px;margin-bottom:14px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">ACCOUNT SIZE</div>
+            <input class="ttInput" id="ttAcctSize" type="number" step="100" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+          </div>
+          <div style="flex:1;">
+            <div class="ttLabel" style="font-size:8px;margin-bottom:3px;">RISK %</div>
+            <input class="ttInput" id="ttAcctRisk" type="number" step="0.25" min="0.5" max="10" style="font-size:14px;padding:6px 8px;" onchange="syncAcctFromTT()"/>
+          </div>
         </div>
       </div>
 
@@ -7120,6 +7157,12 @@
       var rsR = document.getElementById('rsRiskPct'); if(rsR) rsR.value = risk;
       // Re-run auto-fill
       autoFillTradeFields();
+      // Update compact display
+      var ttAcctDisplay = document.getElementById('ttAcctDisplay');
+      if (ttAcctDisplay) {
+        var maxRisk = size * (risk / 100);
+        ttAcctDisplay.innerHTML = '$' + size.toLocaleString('en-US',{maximumFractionDigits:0}) + ' acct · ' + risk.toFixed(1) + '% risk · <b style="color:var(--amber);">$' + maxRisk.toFixed(0) + ' max risk</b>';
+      }
     }
     window.syncAcctFromTT = syncAcctFromTT;
 
@@ -8545,7 +8588,14 @@
           </div>
         </div>
 
-        <!-- SECTION 5: ORACLE GUIDANCE -->
+        <!-- COLLAPSIBLE: ORACLE ANALYSIS -->
+        ${(assessment || targets.length || timelinePct !== null) ? `
+        <div class="sbAnalysisToggle" onclick="this.classList.toggle('expanded');this.nextElementSibling.style.display=this.classList.contains('expanded')?'':'none';">
+          <span>⬡ ORACLE ANALYSIS</span>
+          <span class="sbAnalysisChev">▾</span>
+        </div>
+        <div class="sbAnalysisCollapse" style="display:none;">` : ''}
+
         ${assessment ? `
         <div class="sbAssessment">
           <div class="sbAssessLabel">⬡ ORACLE ASSESSMENT</div>
@@ -8664,6 +8714,8 @@
             <div class="sbDetailTileVal" style="color:${zoneConf.color}">${zoneConf.label}</div>
           </div>
         </div>
+
+        ${(assessment || targets.length || timelinePct !== null) ? `</div><!-- end sbAnalysisCollapse -->` : ''}
 
       </div>`;
     }
@@ -8854,7 +8906,10 @@
               const pnl2 = isBull ? rawP : -rawP;
               pnlStr = ` · <span style="color:${pnl2>=0?'var(--green)':'var(--red)'}">${pnl2>=0?'+':''}${pnl2.toFixed(1)}%</span>`;
             }
-            positionBadgeHtml = `<div style="font-family:var(--display);font-size:8px;letter-spacing:.5px;padding:4px 8px;margin-top:4px;border-radius:5px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:var(--core);">◆ IN POSITION · ${totalSh} ${vehicle}${pnlStr}</div>`;
+            positionBadgeHtml = `<div style="font-family:var(--display);font-size:8px;letter-spacing:.5px;padding:4px 8px;margin-top:4px;border-radius:5px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:var(--core);display:flex;justify-content:space-between;align-items:center;">
+              <span>◆ IN POSITION · ${totalSh} ${vehicle}${pnlStr}</span>
+              <span onclick="event.stopPropagation();openClosePosition('${(sig.id||'').replace(/'/g,"\\'")}','${sig.asset.replace(/'/g,"\\'")}')" style="color:var(--red);cursor:pointer;padding:2px 6px;margin-left:8px;border-radius:3px;background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.2);font-size:7px;letter-spacing:1px;">CLOSE</span>
+            </div>`;
           }
         }
 
@@ -10336,6 +10391,19 @@
       var riskVal = MEMBER_SETTINGS.risk_per_trade || (_riskSettings.riskPct || 2);
       if (ttAcctEl) ttAcctEl.value = acctVal;
       if (ttRiskEl) ttRiskEl.value = riskVal;
+      // Compact display
+      var ttAcctDisplay = document.getElementById('ttAcctDisplay');
+      if (ttAcctDisplay) {
+        if (acctVal) {
+          var maxRisk = parseFloat(acctVal) * (parseFloat(riskVal) / 100);
+          ttAcctDisplay.innerHTML = '$' + parseFloat(acctVal).toLocaleString('en-US',{maximumFractionDigits:0}) + ' acct · ' + parseFloat(riskVal).toFixed(1) + '% risk · <b style="color:var(--amber);">$' + maxRisk.toFixed(0) + ' max risk</b>';
+        } else {
+          ttAcctDisplay.innerHTML = '<span style="color:var(--amber);">Set account size to enable position sizing</span>';
+        }
+      }
+      // Hide edit panel by default
+      var ttAcctEdit = document.getElementById('ttAcctEdit');
+      if (ttAcctEdit) ttAcctEdit.style.display = 'none';
 
       // Reset vehicle to STOCK
       _ttVehicle = 'STOCK';
