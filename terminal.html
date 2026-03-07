@@ -3392,10 +3392,11 @@
     .ttInput{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text);font-family:var(--display);font-size:12px;padding:8px 10px;outline:none;box-sizing:border-box;}
     .ttInput:focus{border-color:rgba(0,229,255,.4);}
     .ttTrancheSelect{display:flex;gap:6px;}
-    .ttTrancheOpt{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;}
+    .ttTrancheOpt{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
     .ttTrancheOpt.active{border-color:rgba(0,229,255,.5);background:rgba(0,229,255,.08);}
-    .ttTrancheOpt.taken{border-color:rgba(0,255,163,.3);background:rgba(0,255,163,.05);}
-    .ttTrancheOpt.taken::after{content:'\2713';display:block;font-size:8px;color:var(--green);margin-top:2px;}
+    .ttTrancheOpt.active::after{content:'\2713';position:absolute;top:3px;right:5px;font-size:8px;color:var(--core);}
+    .ttTrancheOpt.taken{border-color:rgba(0,255,163,.3);background:rgba(0,255,163,.05);opacity:.5;pointer-events:none;}
+    .ttTrancheOpt.taken::after{content:'HELD';position:absolute;top:3px;right:4px;font-size:6px;color:var(--green);letter-spacing:.5px;}
     .ttTrancheLbl{font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--core);}
     .ttTrancheSub{font-family:var(--display);font-size:7px;color:var(--muted);letter-spacing:.5px;margin-top:2px;}
     .ttVehicleToggle{display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid rgba(0,229,255,.15);}
@@ -4177,12 +4178,15 @@
 
       <!-- STOCK FIELDS -->
       <div id="ttStockFields">
-        <div class="ttGroup"><div class="ttLabel">POSITION SIZE (TRANCHE)</div>
+        <div class="ttGroup"><div class="ttLabel">SELECT TRANCHES TO ENTER</div>
           <div class="ttTrancheSelect" id="ttTrancheSelect">
-            <div class="ttTrancheOpt active" data-tranche="1" onclick="selectTranche(1)"><div class="ttTrancheLbl">1/3</div><div class="ttTrancheSub">INITIAL</div></div>
-            <div class="ttTrancheOpt" data-tranche="2" onclick="selectTranche(2)"><div class="ttTrancheLbl">2/3</div><div class="ttTrancheSub">CONFIRM</div></div>
-            <div class="ttTrancheOpt" data-tranche="3" onclick="selectTranche(3)"><div class="ttTrancheLbl">3/3</div><div class="ttTrancheSub">FULL</div></div>
+            <div class="ttTrancheOpt active" data-tranche="1" onclick="toggleTranche(this)"><div class="ttTrancheLbl">1/3</div><div class="ttTrancheSub">INITIAL</div></div>
+            <div class="ttTrancheOpt" data-tranche="2" onclick="toggleTranche(this)"><div class="ttTrancheLbl">2/3</div><div class="ttTrancheSub">TRIGGER</div></div>
+            <div class="ttTrancheOpt" data-tranche="3" onclick="toggleTranche(this)"><div class="ttTrancheLbl">3/3</div><div class="ttTrancheSub">CONVICTION</div></div>
           </div>
+        </div>
+        <div id="ttCalcSummary" style="display:none;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+          <div id="ttCalcContent" style="font-family:var(--display);font-size:10px;color:var(--text);line-height:1.6;"></div>
         </div>
         <div class="ttRow">
           <div class="ttGroup"><div class="ttLabel">ENTRY PRICE</div><input class="ttInput" id="ttEntryPrice" type="number" step="0.01"/></div>
@@ -6055,6 +6059,18 @@
 
     function handleSignalChange(payload) {
       console.log('[Realtime] Signal change:', payload.eventType, payload.new?.asset || payload.old?.id);
+
+      // Detect oracle_tranche upgrades for notification
+      if (payload.eventType === 'UPDATE' && payload.new && payload.old) {
+        var newTr = payload.new.oracle_tranche || 1;
+        var oldTr = payload.old.oracle_tranche || 1;
+        if (newTr > oldTr && newTr >= 3) {
+          showToast('🔥 ' + (payload.new.asset || 'Signal') + ' → FULL CONVICTION (3/3) — Oracle has entered a full position');
+        } else if (newTr > oldTr && newTr >= 2) {
+          showToast('⚡ ' + (payload.new.asset || 'Signal') + ' → TRIGGER CONFIRMED (2/3) — Oracle adding to position');
+        }
+      }
+
       // Full reload is safest — signals have complex interdependencies
       loadSignals().then(() => {
         syncActiveSignalsToPerf();
@@ -8141,6 +8157,7 @@
           </div>
           <div class="sbBadges">
             <div class="sbDirBadge ${isBull ? 'bull' : 'bear'}">◆ ${sig.direction} SIGNAL</div>
+            ${sig.oracle_tranche ? `<div style="font-family:var(--display);font-size:8px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:5px;border:1px solid ${sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)'};background:${sig.oracle_tranche>=3?'rgba(0,255,163,.08)':sig.oracle_tranche>=2?'rgba(255,179,0,.06)':'rgba(0,229,255,.05)'};color:${sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)'};">${sig.oracle_tranche}/3 ${sig.oracle_tranche>=3?'FULL CONVICTION':sig.oracle_tranche>=2?'TRIGGER CONFIRMED':'INITIAL'}</div>` : ''}
             <div class="sbConfBadge" style="border-color:${zoneConf.color}33;color:${zoneConf.color}">
               CONF ${confDisplay}${confDelta}${livePrice ? ` &nbsp;·&nbsp; <span style="color:var(--core);font-weight:700;">$${livePrice.toFixed(2)}</span>` : ''}
             </div>
@@ -9064,17 +9081,17 @@
             <div class="psTrancheLabel">TRANCHE BREAKDOWN</div>
             <div class="psTrancheGrid">
               <div class="psTranche">
-                <div class="ptLabel">1/3 INITIAL</div>
+                <div class="ptLabel">1/3 INITIAL ENTRY</div>
                 <div class="ptVal">${calc.trancheShares[0]} sh</div>
                 <div class="ptSub">$${calc.trancheValues[0].toLocaleString('en-US',{maximumFractionDigits:0})}</div>
               </div>
               <div class="psTranche">
-                <div class="ptLabel">2/3 CONFIRM</div>
+                <div class="ptLabel">2/3 TRIGGER</div>
                 <div class="ptVal">${calc.tranches[1]} sh</div>
                 <div class="ptSub">$${calc.trancheValues[1].toLocaleString('en-US',{maximumFractionDigits:0})}</div>
               </div>
               <div class="psTranche">
-                <div class="ptLabel">3/3 FULL</div>
+                <div class="ptLabel">3/3 CONVICTION</div>
                 <div class="ptVal">${calc.shares} sh</div>
                 <div class="ptSub">$${calc.trancheValues[2].toLocaleString('en-US',{maximumFractionDigits:0})}</div>
               </div>
@@ -9103,17 +9120,17 @@
             <div class="psTrancheLabel">TRANCHE BREAKDOWN</div>
             <div class="psTrancheGrid">
               <div class="psTranche">
-                <div class="ptLabel">1/3 INITIAL</div>
+                <div class="ptLabel">1/3 INITIAL ENTRY</div>
                 <div class="ptVal">${opt.tranches[0]} ct</div>
                 <div class="ptSub">${opt.tranches[0] === 0 ? '—' : '$'+(opt.tranches[0]*opt.premium*100).toFixed(0)}</div>
               </div>
               <div class="psTranche">
-                <div class="ptLabel">2/3 CONFIRM</div>
+                <div class="ptLabel">2/3 TRIGGER</div>
                 <div class="ptVal">${opt.tranches[0]+opt.tranches[1]} ct</div>
                 <div class="ptSub">$${((opt.tranches[0]+opt.tranches[1])*opt.premium*100).toFixed(0)}</div>
               </div>
               <div class="psTranche">
-                <div class="ptLabel">3/3 FULL</div>
+                <div class="ptLabel">3/3 CONVICTION</div>
                 <div class="ptVal">${opt.contracts} ct</div>
                 <div class="ptSub">$${opt.maxLoss.toFixed(0)}</div>
               </div>
@@ -9957,23 +9974,39 @@
       document.getElementById('ttStockFields').style.display = '';
       document.getElementById('ttOptionFields').style.display = 'none';
 
-      // Stock fields
+      // Stock fields — use live price or entry price
       var asset = sig.asset.split(' ')[0].toUpperCase();
       var cached = PRICE_CACHE[asset];
       var ep = cached && cached.price ? cached.price : (sig.entry_price ? parseFloat(sig.entry_price) : '');
       document.getElementById('ttEntryPrice').value = ep ? parseFloat(ep).toFixed(2) : '';
       document.getElementById('ttShares').value = '';
+      document.getElementById('ttShares').style.color = '';
+      document.getElementById('ttShares').style.fontWeight = '';
       document.getElementById('ttRiskAmt').value = '';
+      document.getElementById('ttRiskAmt').style.color = '';
 
-      // Tranche state
+      // Tranche state — multi-select: auto-select first available
+      _ttSelectedTranches = [];
       document.querySelectorAll('.ttTrancheOpt').forEach(function(el) {
         var tr = parseInt(el.dataset.tranche); el.classList.remove('active','taken');
-        if (taken.indexOf(tr)>=0) el.classList.add('taken');
+        if (taken.indexOf(tr) >= 0) {
+          el.classList.add('taken');
+        }
       });
-      _ttTranche = 1; for (var t=1;t<=3;t++) { if (taken.indexOf(t)<0) { _ttTranche=t; break; } }
-      selectTranche(_ttTranche);
+      // Auto-select first available tranche
+      for (var t = 1; t <= 3; t++) {
+        if (taken.indexOf(t) < 0) { _ttSelectedTranches.push(t); break; }
+      }
+      if (!_ttSelectedTranches.length) _ttSelectedTranches = [1]; // fallback
+      _ttTranche = Math.max.apply(null, _ttSelectedTranches);
+      // Update visual
+      document.querySelectorAll('.ttTrancheOpt').forEach(function(opt) {
+        if (!opt.classList.contains('taken')) {
+          opt.classList.toggle('active', _ttSelectedTranches.indexOf(parseInt(opt.dataset.tranche)) >= 0);
+        }
+      });
 
-      // Option fields — parse Oracle contract cards
+      // Option fields — parse Oracle contract cards AND pre-fill premium
       _ttSelectedContract = null;
       var contracts = parseSignalContracts(sig);
       var cardGrid = document.getElementById('ttContractCardGrid');
@@ -9992,44 +10025,27 @@
             '<div class="ttccTag">ORACLE PICK '+(i+1)+'</div>' +
           '</div>';
         }).join('');
+        // Auto-select first contract and pre-fill premium
+        setTimeout(function() { selectOracleContract(0); }, 50);
       } else {
         cardWrap.style.display = 'none';
         manualWrap.style.display = '';
-        // Pre-fill from old option_price if available
         document.getElementById('ttOptStrike').value = '';
         document.getElementById('ttOptExpiry').value = '';
         document.getElementById('ttOptPremium').value = sig.option_price ? parseFloat(sig.option_price).toFixed(2) : '';
       }
-      document.getElementById('ttOptFillPrice').value = '';
+      // Pre-fill option premium from first contract for auto-calc
+      var firstPrem = contracts.length > 0 && contracts[0].premium ? contracts[0].premium : null;
+      document.getElementById('ttOptFillPrice').value = firstPrem ? firstPrem.toFixed(2) : '';
       document.getElementById('ttOptContracts').value = '';
       document.getElementById('ttOptRiskAmt').value = '';
       document.getElementById('ttNotes').value = '';
 
-      autoFillTradeFields();
-
-      // Show position sizing recommendation
+      // Hide old pos size box (replaced by inline calc summary)
       var psInfo = document.getElementById('ttPosSizeInfo');
-      var psContent = document.getElementById('ttPosSizeContent');
-      if (psInfo && psContent) {
-        var calc = calcPositionSizing(sig);
-        if (calc) {
-          var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
-          html += '<div><span style="color:var(--muted);">Account:</span> <b>$'+calc.accountSize.toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
-          html += '<div><span style="color:var(--muted);">Risk:</span> <b>'+calc.riskPct+'%</b> = <b style="color:var(--amber);">$'+calc.riskDollars.toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
-          html += '<div><span style="color:var(--muted);">Shares:</span> <b style="color:var(--green);">'+calc.shares+'</b></div>';
-          html += '<div><span style="color:var(--muted);">Position:</span> <b>$'+(calc.positionValue||0).toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
-          if (calc.options) {
-            html += '<div><span style="color:var(--muted);">Max Contracts:</span> <b style="color:var(--green);">'+calc.options.contracts+'</b></div>';
-            html += '<div><span style="color:var(--muted);">Options Risk:</span> <b>$'+(calc.options.maxLoss||0).toLocaleString('en-US',{maximumFractionDigits:0})+'</b></div>';
-          }
-          html += '</div>';
-          psContent.innerHTML = html;
-          psInfo.style.display = '';
-        } else {
-          psInfo.style.display = 'none';
-        }
-      }
+      if (psInfo) psInfo.style.display = 'none';
 
+      autoFillTradeFields();
       document.getElementById('ttOverlay').classList.add('open');
     }
 
@@ -10062,18 +10078,46 @@
     }
 
     function closeTakeTradeModal() { document.getElementById('ttOverlay').classList.remove('open'); _ttSignal=null; _ttSelectedContract=null; }
-    function selectTranche(t) {
-      _ttTranche=t;
-      document.querySelectorAll('.ttTrancheOpt').forEach(function(el){ if(!el.classList.contains('taken')) el.classList.toggle('active',parseInt(el.dataset.tranche)===t); });
+    var _ttSelectedTranches = [1]; // array of selected tranche numbers
+
+    function toggleTranche(el) {
+      if (el.classList.contains('taken')) return;
+      var t = parseInt(el.dataset.tranche);
+      var idx = _ttSelectedTranches.indexOf(t);
+      if (idx >= 0) {
+        if (_ttSelectedTranches.length <= 1) return; // must have at least 1
+        _ttSelectedTranches.splice(idx, 1);
+      } else {
+        _ttSelectedTranches.push(t);
+      }
+      _ttSelectedTranches.sort();
+      // Update tranche max for save
+      _ttTranche = Math.max.apply(null, _ttSelectedTranches);
+      // Update visual
+      document.querySelectorAll('.ttTrancheOpt').forEach(function(opt) {
+        if (opt.classList.contains('taken')) return;
+        opt.classList.toggle('active', _ttSelectedTranches.indexOf(parseInt(opt.dataset.tranche)) >= 0);
+      });
       autoFillTradeFields();
     }
+
+    function selectTranche(t) {
+      // Legacy wrapper
+      _ttSelectedTranches = [t]; _ttTranche = t;
+      document.querySelectorAll('.ttTrancheOpt').forEach(function(el) {
+        if (!el.classList.contains('taken')) el.classList.toggle('active', parseInt(el.dataset.tranche) === t);
+      });
+      autoFillTradeFields();
+    }
+
     function selectTtVehicle(v) {
-      _ttVehicle=v;
-      document.querySelectorAll('.ttVehicleBtn').forEach(function(b){b.classList.toggle('active',b.dataset.ttv===v);});
+      _ttVehicle = v;
+      document.querySelectorAll('.ttVehicleBtn').forEach(function(b) { b.classList.toggle('active', b.dataset.ttv === v); });
       document.getElementById('ttStockFields').style.display = v === 'STOCK' ? '' : 'none';
       document.getElementById('ttOptionFields').style.display = v === 'OPTIONS' ? '' : 'none';
       autoFillTradeFields();
     }
+
     function updateOptRiskAmt() {
       var prem = parseFloat(document.getElementById('ttOptFillPrice').value);
       var cts = parseInt(document.getElementById('ttOptContracts').value);
@@ -10084,25 +10128,95 @@
         el.value = '';
       }
     }
+
     function autoFillTradeFields() {
-      if (!_ttSignal||!MEMBER_SETTINGS.account_size) return;
-      var sig=_ttSignal, acct=MEMBER_SETTINGS.account_size, riskPct=MEMBER_SETTINGS.risk_per_trade, riskD=acct*(riskPct/100);
-      if (_ttVehicle==='STOCK') {
-        var ep=parseFloat(document.getElementById('ttEntryPrice').value);
-        var inv=null; if(sig.invalidation){var m=sig.invalidation.replace(/,/g,'').match(/([\d.]+)/);if(m)inv=parseFloat(m[1]);}
-        if (ep&&inv) {
-          var rps=Math.abs(ep-inv), tot=Math.floor(riskD/rps), trSh=Math.floor(tot/3);
-          if(_ttTranche===2) trSh=Math.floor(tot*2/3)-Math.floor(tot/3);
-          else if(_ttTranche===3) trSh=tot-Math.floor(tot*2/3);
-          document.getElementById('ttShares').value = trSh;
-          document.getElementById('ttRiskAmt').value = (trSh*rps).toFixed(2);
+      if (!_ttSignal) return;
+      var sig = _ttSignal;
+      var acct = MEMBER_SETTINGS.account_size || (_riskSettings.accountSize || 0);
+      var riskPct = MEMBER_SETTINGS.risk_per_trade || (_riskSettings.riskPct || 2);
+      if (!acct) return;
+      var totalRiskD = acct * (riskPct / 100); // max risk for FULL position (3/3)
+
+      // How many tranches selected
+      var trancheCount = _ttSelectedTranches.length;
+      var trancheFraction = trancheCount / 3; // e.g. 2 selected = 0.667
+
+      // Parse invalidation / stop loss
+      var inv = null;
+      if (sig.invalidation) { var m = sig.invalidation.replace(/,/g, '').match(/([\d.]+)/); if (m) inv = parseFloat(m[1]); }
+
+      var summaryEl = document.getElementById('ttCalcSummary');
+      var contentEl = document.getElementById('ttCalcContent');
+
+      if (_ttVehicle === 'STOCK') {
+        var ep = parseFloat(document.getElementById('ttEntryPrice').value);
+        var sharesEl = document.getElementById('ttShares');
+        var riskEl = document.getElementById('ttRiskAmt');
+
+        if (ep && inv) {
+          var rps = Math.abs(ep - inv); // risk per share
+          if (rps > 0) {
+            var maxShares = Math.floor(totalRiskD / rps); // full 3/3 position
+            var trancheShares = Math.max(1, Math.round(maxShares * trancheFraction));
+            var trancheRisk = trancheShares * rps;
+
+            sharesEl.value = trancheShares;
+            sharesEl.style.color = 'var(--green)';
+            sharesEl.style.fontWeight = '900';
+            riskEl.value = trancheRisk.toFixed(2);
+            riskEl.style.color = 'var(--amber)';
+
+            // Summary
+            if (summaryEl && contentEl) {
+              contentEl.innerHTML =
+                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Stop Loss</span><b>$' + inv.toFixed(2) + '</b></div>' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Risk/Share</span><b>$' + rps.toFixed(2) + '</b></div>' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Max Position (3/3)</span><b>' + maxShares + ' sh</b></div>' +
+                '<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:var(--core);font-weight:700;">THIS ENTRY (' + trancheCount + '/3)</span><b style="color:var(--green);font-size:14px;">' + trancheShares + ' shares</b></div>' +
+                '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Risk on this entry</span><b style="color:var(--amber);">$' + trancheRisk.toFixed(0) + ' (' + (trancheRisk / acct * 100).toFixed(1) + '% of acct)</b></div>';
+              summaryEl.style.display = '';
+            }
+          }
+        } else if (ep && !inv) {
+          // No stop loss — use 5% default risk distance
+          var fallbackRps = ep * 0.05;
+          var maxSh = Math.floor(totalRiskD / fallbackRps);
+          var trSh = Math.max(1, Math.round(maxSh * trancheFraction));
+          sharesEl.value = trSh;
+          sharesEl.style.color = 'var(--amber)';
+          sharesEl.style.fontWeight = '900';
+          riskEl.value = (trSh * fallbackRps).toFixed(2);
+          riskEl.style.color = 'var(--amber)';
+          if (summaryEl && contentEl) {
+            contentEl.innerHTML = '<div style="color:var(--amber);">⚠ No stop loss defined — using 5% default. Set invalidation in admin for precise sizing.</div>' +
+              '<div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="color:var(--core);">THIS ENTRY (' + trancheCount + '/3)</span><b style="color:var(--green);">' + trSh + ' shares</b></div>';
+            summaryEl.style.display = '';
+          }
+        } else {
+          if (summaryEl) summaryEl.style.display = 'none';
         }
       } else {
-        var prem=parseFloat(document.getElementById('ttOptFillPrice').value);
-        if(prem>0){
-          var cpc=prem*100,tc=Math.max(1,Math.floor(riskD/cpc));
-          document.getElementById('ttOptContracts').value=tc;
+        // OPTIONS auto-calc
+        var prem = parseFloat(document.getElementById('ttOptFillPrice').value);
+        if (prem > 0) {
+          var costPerContract = prem * 100;
+          // Options risk: typically deploy 5% of account per full position, 50% expected loss
+          var maxDeploy = acct * 0.05;
+          var maxContracts = Math.max(1, Math.floor(maxDeploy / costPerContract));
+          var trancheContracts = Math.max(1, Math.round(maxContracts * trancheFraction));
+          document.getElementById('ttOptContracts').value = trancheContracts;
           updateOptRiskAmt();
+
+          if (summaryEl && contentEl) {
+            contentEl.innerHTML =
+              '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Premium</span><b>$' + prem.toFixed(2) + ' ($' + costPerContract.toFixed(0) + '/ct)</b></div>' +
+              '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Max Contracts (3/3)</span><b>' + maxContracts + ' ct</b></div>' +
+              '<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:var(--core);font-weight:700;">THIS ENTRY (' + trancheCount + '/3)</span><b style="color:var(--green);font-size:14px;">' + trancheContracts + ' contracts</b></div>' +
+              '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Capital deployed</span><b style="color:var(--amber);">$' + (trancheContracts * costPerContract).toFixed(0) + '</b></div>';
+            summaryEl.style.display = '';
+          }
+        } else {
+          if (summaryEl) summaryEl.style.display = 'none';
         }
       }
     }
@@ -11625,6 +11739,7 @@
         '</div>'+
         '<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">'+
           '<span style="font-family:Orbitron,monospace;font-size:9px;padding:5px 10px;border-radius:20px;border:1px solid '+dirColor+';color:'+dirColor+';">◆ '+sig.direction+'</span>'+
+          (sig.oracle_tranche ? '<span style="font-family:Orbitron,monospace;font-size:8px;padding:3px 8px;border-radius:20px;border:1px solid '+(sig.oracle_tranche>=3?'rgba(0,255,163,.4)':sig.oracle_tranche>=2?'rgba(255,179,0,.3)':'rgba(0,229,255,.2)')+';color:'+(sig.oracle_tranche>=3?'var(--green)':sig.oracle_tranche>=2?'var(--amber)':'var(--core)')+';">'+sig.oracle_tranche+'/3 '+(sig.oracle_tranche>=3?'FULL':sig.oracle_tranche>=2?'TRIGGER':'INITIAL')+'</span>' : '')+
           '<span style="font-family:Orbitron,monospace;font-size:9px;padding:4px 10px;border-radius:20px;border:1px solid '+confColor+'33;color:'+confColor+';">CONF '+(live.conf != null ? live.conf.toFixed(1) : '—')+'%</span>'+
           (sig.bias?'<span style="font-family:Orbitron,monospace;font-size:7px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">'+sig.bias.replace(/_/g,' ')+'</span>':'')+
         '</div>'+
