@@ -54,6 +54,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:h
 .stat{background:rgba(0,10,20,.5);border:1px solid rgba(0,229,255,.08);border-radius:12px;padding:22px;text-align:center;transition:all .4s}.stat:hover{border-color:rgba(0,229,255,.2)}
 .stat .sLabel{font-family:var(--display);font-size:7px;letter-spacing:2px;color:var(--text2);margin-bottom:10px}.stat .sValue{font-family:var(--display);font-size:clamp(24px,3.5vw,36px);font-weight:900;line-height:1;margin-bottom:6px}
 .stat .sValue.cyan{color:var(--core)}.stat .sValue.green{color:var(--green)}.stat .sValue.red{color:var(--red)}.stat .sValue.gold{color:var(--gold)}.stat .sSub{font-family:var(--mono);font-size:9px;color:var(--text2)}
+.notGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:800px;margin:0 auto}
 /* PIPELINE */
 .pipeline{display:flex;flex-direction:column;align-items:center;gap:0;margin:36px auto;max-width:340px;position:relative}
 .pipeStep{width:100%;background:rgba(0,10,20,.6);border:1px solid rgba(0,229,255,.1);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;transition:all .4s;position:relative;z-index:2}
@@ -174,7 +175,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:h
 /* FOOTER */
 .pbFooter{text-align:center;padding:60px 28px 40px;border-top:1px solid rgba(0,229,255,.04)}.pbFooter .fLogo{font-family:var(--display);font-size:11px;font-weight:800;letter-spacing:4px;color:#fff;margin-bottom:10px}.pbFooter .fSub{font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:20px}.pbFooter .fCopy{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.2)}
 /* RESPONSIVE */
-@media(max-width:768px){.nav{padding:0 16px}.pbSection{padding:48px 18px}.cardGrid{grid-template-columns:1fr}.statRow{grid-template-columns:1fr 1fr}.transGrid{grid-template-columns:1fr}.principlesBar{grid-template-columns:1fr;gap:20px}.toc{justify-content:flex-start}.tocItem{padding:12px 12px;font-size:7px}.flowDemo{padding:16px}.histDemo{overflow-x:auto}.statusGrid{grid-template-columns:1fr 1fr}.dfArrows{gap:40px}.streamAnalysisWrap{flex-direction:column}.streamDemo{max-width:100%;min-width:0}.analysisPanel{width:100%}.layoutDiagram{grid-template-columns:70px 1fr 70px;grid-template-rows:20px 130px 14px}.macroDemo{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.nav{padding:0 16px}.pbSection{padding:48px 18px}.cardGrid{grid-template-columns:1fr}.statRow{grid-template-columns:1fr 1fr}.transGrid{grid-template-columns:1fr}.principlesBar{grid-template-columns:1fr;gap:20px}.toc{justify-content:flex-start}.tocItem{padding:12px 12px;font-size:7px}.flowDemo{padding:16px}.histDemo{overflow-x:auto}.statusGrid{grid-template-columns:1fr 1fr}.dfArrows{gap:40px}.streamAnalysisWrap{flex-direction:column}.streamDemo{max-width:100%;min-width:0}.analysisPanel{width:100%}.layoutDiagram{grid-template-columns:70px 1fr 70px;grid-template-rows:20px 130px 14px}.macroDemo{grid-template-columns:1fr 1fr}.notGrid{grid-template-columns:1fr!important}}
 @media(max-width:480px){.statRow{grid-template-columns:1fr}.statusGrid{grid-template-columns:1fr}.macroDemo{grid-template-columns:1fr}}
 </style>
 </head>
@@ -193,7 +194,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:h
 <section class="pbSection" id="s1"><div class="reveal"><div class="secLabel">01</div><h2 class="secTitle">What <span class="ac">Oracle</span> Is</h2><p class="secDesc">A decision-support terminal that combines structured technical analysis with AI-assisted probability assessment to produce fully defined trade setups.</p></div>
 <div class="cardGrid"><div class="card reveal d1"><div class="icon">🔍</div><div class="cTitle">IDENTIFIES OPPORTUNITIES</div><div class="cText">Structured trading opportunities through systematic market analysis.</div></div><div class="card reveal d2"><div class="icon">📐</div><div class="cTitle">PREDEFINED FRAMEWORKS</div><div class="cText">Every signal includes entry, invalidation, targets, and execution parameters.</div></div><div class="card reveal d3"><div class="icon">📡</div><div class="cTitle">REAL-TIME TRACKING</div><div class="cText">Trades tracked live from issuance through resolution. Nothing disappears.</div></div></div>
 <div class="reveal d2" style="max-width:460px;margin:0 auto;"><div class="subHead" style="margin-top:24px;">THE ORACLE PIPELINE</div><div class="pipeline" id="pipeline"><div class="pipeOrb" id="pipeOrb"></div><div class="pipeStep"><span class="stepNum">01</span><span class="stepText">MARKET STRUCTURE</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">02</span><span class="stepText">SIGNAL DETECTION</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">03</span><span class="stepText">AI PROBABILITY ASSESSMENT</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">04</span><span class="stepText">EXECUTION PLAN + INVALIDATION</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">05</span><span class="stepText">LIVE TRADE TRACKING</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">06</span><span class="stepText">TARGET HIT OR INVALIDATION</span></div><div class="pipeArrow"></div><div class="pipeStep"><span class="stepNum">07</span><span class="stepText">PERFORMANCE ARCHIVE</span></div></div></div>
-<div class="reveal d3" style="margin-top:36px;"><div class="cardGrid" style="max-width:660px;margin:0 auto;"><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="cTitle" style="color:var(--red);">✕ DOES NOT EXECUTE TRADES</div><div class="cText">You execute and manage positions yourself.</div></div><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="cTitle" style="color:var(--red);">✕ DOES NOT GUARANTEE OUTCOMES</div><div class="cText">Markets involve uncertainty. No setup is guaranteed.</div></div><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="cTitle" style="color:var(--red);">✕ DOES NOT REPLACE JUDGMENT</div><div class="cText">Oracle supports decisions. It doesn't make them for you.</div></div></div></div></section>
+<div class="reveal d3" style="margin-top:36px;"><div class="notGrid"><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="cTitle" style="color:var(--red);">✕ DOES NOT EXECUTE TRADES</div><div class="cText">You execute and manage positions yourself.</div></div><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="cTitle" style="color:var(--red);">✕ DOES NOT GUARANTEE OUTCOMES</div><div class="cText">Markets involve uncertainty. No setup is guaranteed.</div></div><div class="card" style="border-color:rgba(255,59,59,.08);text-align:center;"><div class="cTitle" style="color:var(--red);">✕ DOES NOT REPLACE JUDGMENT</div><div class="cText">Oracle supports decisions. It doesn't make them for you.</div></div></div></div></section>
 
 <!-- ═══════════════════════ S2 — THE TERMINAL ═══════════════════════ -->
 <section class="pbSection" id="s2"><div class="reveal"><div class="secLabel">02</div><h2 class="secTitle">The <span class="ac">Terminal</span></h2><p class="secDesc">Everything you see and how to navigate it. Select your device, then explore each tab.</p></div>
@@ -248,20 +249,61 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:h
 <div class="subHead reveal">SIGNAL LIFECYCLE</div>
 <div class="lcTimeline reveal"><div class="lcNode"><div class="lcTitle">SIGNAL ISSUED</div><div class="lcDesc">Setup published. Initial 33% entry.</div></div><div class="lcNode"><div class="lcTitle">TRIGGER CONFIRMED</div><div class="lcDesc">Price confirms thesis. Second 33%.</div></div><div class="lcNode"><div class="lcTitle">POSITION BUILT</div><div class="lcDesc">Full position on pullback to trigger.</div></div><div class="lcNode"><div class="lcTitle">MINIMUM HOLD</div><div class="lcDesc">No early exits until hold time elapses. Only invalidation overrides.</div></div><div class="lcNode"><div class="lcTitle">TRADE DEVELOPS</div><div class="lcDesc">Moving toward targets. Confidence updates live.</div></div><div class="lcNode"><div class="lcTitle">RESOLUTION</div><div class="lcDesc">Target hit, invalidation, or closed early. Recorded permanently.</div></div></div>
 
-<div class="subHead reveal">RISK RULES</div>
-<div class="statRow reveal"><div class="stat"><div class="sLabel">OPTIONS POSITION</div><div class="sValue cyan">3–5%</div><div class="sSub">of account</div></div><div class="stat"><div class="sLabel">STOCK POSITION</div><div class="sValue green" data-count="10">10%</div><div class="sSub">of account</div></div><div class="stat"><div class="sLabel">OPTIONS LOSS</div><div class="sValue red">50–75%</div><div class="sSub">of position</div></div><div class="stat"><div class="sLabel">MAX RISK</div><div class="sValue gold">~3%</div><div class="sSub">per trade</div></div><div class="stat"><div class="sLabel">MIN CAPITAL</div><div class="sValue cyan" data-count="10000">$10K</div><div class="sSub">recommended</div></div></div>
+<div class="subHead reveal">RISK FRAMEWORK</div>
 
-<div class="reveal" style="max-width:520px;margin:0 auto;">
-<div style="background:rgba(0,10,20,.6);border:1px solid rgba(0,229,255,.1);border-radius:14px;padding:24px;">
-<div style="font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:16px;">THE MATH — WHY 3–5%</div>
-<div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;"><div style="text-align:center;padding:12px 16px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:6px;color:var(--text2);margin-bottom:4px;">ACCOUNT</div><div style="font-family:var(--display);font-size:18px;font-weight:900;color:var(--core);">$25K</div></div><div style="font-family:var(--display);font-size:12px;color:rgba(0,229,255,.3);">×</div><div style="text-align:center;padding:12px 16px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:6px;color:var(--text2);margin-bottom:4px;">POSITION</div><div style="font-family:var(--display);font-size:18px;font-weight:900;color:var(--core);">5%</div></div><div style="font-family:var(--display);font-size:12px;color:rgba(0,229,255,.3);">=</div><div style="text-align:center;padding:12px 16px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:6px;color:var(--text2);margin-bottom:4px;">TRADE</div><div style="font-family:var(--display);font-size:18px;font-weight:900;color:#fff;">$1,250</div></div></div>
-<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.1),transparent);margin:16px 0;"></div>
-<div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;"><div style="text-align:center;padding:12px 16px;background:rgba(255,59,59,.04);border:1px solid rgba(255,59,59,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:6px;color:var(--text2);margin-bottom:4px;">LOSES</div><div style="font-family:var(--display);font-size:18px;font-weight:900;color:var(--red);">50–75%</div></div><div style="font-family:var(--display);font-size:12px;color:rgba(0,229,255,.3);">→</div><div style="text-align:center;padding:12px 16px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;"><div style="font-family:var(--display);font-size:6px;color:var(--text2);margin-bottom:4px;">ACCOUNT HIT</div><div style="font-family:var(--display);font-size:18px;font-weight:900;color:var(--gold);">~2.5–3.7%</div></div></div>
-<div style="font-family:var(--mono);font-size:10px;color:var(--text2);text-align:center;margin-top:16px;line-height:1.6;">3–5% position size caps account damage to roughly 3%.</div></div></div>
+<!-- TRADE STREAM + EQUITY CURVE -->
+<div class="reveal" style="max-width:560px;margin:0 auto 36px;">
+<div id="edgeBox" style="background:rgba(0,10,20,.7);border:1px solid rgba(0,229,255,.12);border-radius:14px;padding:24px 20px;position:relative;overflow:hidden;">
+<div style="font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:4px;">PROBABILISTIC EDGE</div>
+<div style="font-family:var(--mono);font-size:10px;color:var(--text2);text-align:center;margin-bottom:18px;line-height:1.5;">Edge emerges from asymmetric risk applied repeatedly.</div>
 
-<div class="reveal" style="margin-top:28px;"><div class="decisionFlow"><div class="dfQuestion">Does the stop exceed your risk limits?</div><div class="dfArrows"><div class="dfArrowBranch"><div class="aLabel yes">YES</div><div style="width:2px;height:20px;background:linear-gradient(var(--red),transparent);"></div><div class="dfResult block">PASS</div></div><div class="dfArrowBranch"><div class="aLabel no">NO</div><div style="width:2px;height:20px;background:linear-gradient(var(--green),transparent);"></div><div class="dfResult pass">TRADE</div></div></div></div></div>
+<!-- TRADE FEED -->
+<div style="font-family:var(--display);font-size:6px;letter-spacing:2px;color:rgba(74,106,138,1);margin-bottom:6px;">TRADE FEED</div>
+<div id="tradeFeed" style="height:28px;overflow:hidden;position:relative;margin-bottom:16px;border:1px solid rgba(0,229,255,.06);border-radius:6px;background:rgba(0,5,12,.5);display:flex;align-items:center;padding:0 10px;gap:8px;"></div>
 
-<div class="reveal" style="max-width:540px;margin:0 auto;"><table class="ruleTable"><thead><tr><th>RULE</th><th>LIMIT</th></tr></thead><tbody><tr><td>Options position</td><td class="rVal">3–5%</td></tr><tr><td>Stock position</td><td class="rVal">10%</td></tr><tr><td>Options loss potential</td><td class="rVal" style="color:var(--red);">50–75%</td></tr><tr><td>Max account risk</td><td class="rVal">~3%</td></tr><tr><td>Minimum capital</td><td class="rVal">$10,000</td></tr><tr><td>Stop exceeds limits</td><td class="rVal" style="color:var(--red);">Pass trade</td></tr></tbody></table></div>
+<!-- EQUITY CURVE -->
+<div style="font-family:var(--display);font-size:6px;letter-spacing:2px;color:rgba(74,106,138,1);margin-bottom:6px;">EQUITY CURVE</div>
+<canvas id="equityCurve" width="520" height="160" style="width:100%;height:auto;display:block;border:1px solid rgba(0,229,255,.06);border-radius:6px;background:rgba(0,5,12,.3);"></canvas>
+
+<!-- STATS (hidden until done) -->
+<div id="edgeStats" style="opacity:0;transition:opacity .8s ease;margin-top:16px;">
+<div style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;">
+<div style="text-align:center;"><div style="font-family:var(--display);font-size:6px;letter-spacing:1.5px;color:var(--text2);margin-bottom:3px;">WIN RATE</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--green);">48%</div></div>
+<div style="text-align:center;"><div style="font-family:var(--display);font-size:6px;letter-spacing:1.5px;color:var(--text2);margin-bottom:3px;">RISK / TRADE</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--red);">2.5%</div></div>
+<div style="text-align:center;"><div style="font-family:var(--display);font-size:6px;letter-spacing:1.5px;color:var(--text2);margin-bottom:3px;">REWARD RATIO</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--core);">2:1</div></div>
+</div>
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.1),transparent);margin-bottom:12px;"></div>
+<div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--core);text-align:center;opacity:.7;">Positive expectancy emerges over many trades.</div>
+</div>
+</div></div>
+
+<!-- STAT BLOCKS WITH ICONS -->
+<div class="statRow reveal"><div class="stat"><div style="font-size:18px;margin-bottom:6px;">🎯</div><div class="sLabel">OPTIONS POSITION</div><div class="sValue cyan">3–5%</div><div class="sSub">of account</div></div><div class="stat"><div style="font-size:18px;margin-bottom:6px;">📈</div><div class="sLabel">STOCK POSITION</div><div class="sValue green" data-count="10">10%</div><div class="sSub">of account</div></div><div class="stat"><div style="font-size:18px;margin-bottom:6px;">⚠️</div><div class="sLabel">EXPECTED LOSS</div><div class="sValue red">50–75%</div><div class="sSub">if wrong (options)</div></div><div class="stat"><div style="font-size:18px;margin-bottom:6px;">🛡</div><div class="sLabel">MAX RISK</div><div class="sValue gold">~3%</div><div class="sSub">per trade</div></div><div class="stat"><div style="font-size:18px;margin-bottom:6px;">💼</div><div class="sLabel">MIN CAPITAL</div><div class="sValue cyan" data-count="10000">$10K</div><div class="sSub">recommended</div></div></div>
+
+<!-- COMPRESSED MATH -->
+<div class="reveal" style="max-width:500px;margin:0 auto;">
+<div style="background:rgba(0,10,20,.6);border:1px solid rgba(0,229,255,.1);border-radius:12px;padding:20px;">
+<div style="font-family:var(--display);font-size:7px;letter-spacing:3px;color:var(--text2);text-align:center;margin-bottom:14px;">HOW RISK IS CALCULATED</div>
+<div style="font-family:var(--mono);font-size:9px;color:var(--text2);text-align:center;margin-bottom:14px;line-height:1.6;">Account × Position Size = Trade Size<br>Trade Size × Expected Loss = Account Risk</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
+<div style="text-align:center;padding:10px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:5px;color:var(--text2);margin-bottom:3px;">ACCOUNT</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--core);">$25K</div></div>
+<div style="font-family:var(--display);font-size:11px;color:rgba(0,229,255,.3);">×</div>
+<div style="text-align:center;padding:10px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:5px;color:var(--text2);margin-bottom:3px;">POSITION</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--core);">5%</div></div>
+<div style="font-family:var(--display);font-size:11px;color:rgba(0,229,255,.3);">=</div>
+<div style="text-align:center;padding:10px 14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:5px;color:var(--text2);margin-bottom:3px;">TRADE</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:#fff;">$1,250</div></div>
+<div style="font-family:var(--display);font-size:11px;color:rgba(0,229,255,.3);">→</div>
+<div style="text-align:center;padding:10px 14px;background:rgba(255,59,59,.04);border:1px solid rgba(255,59,59,.1);border-radius:8px;"><div style="font-family:var(--display);font-size:5px;color:var(--text2);margin-bottom:3px;">LOSES 50–75%</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--red);">$625–937</div></div>
+<div style="font-family:var(--display);font-size:11px;color:rgba(0,229,255,.3);">=</div>
+<div style="text-align:center;padding:10px 14px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;"><div style="font-family:var(--display);font-size:5px;color:var(--text2);margin-bottom:3px;">ACCOUNT HIT</div><div style="font-family:var(--display);font-size:16px;font-weight:900;color:var(--gold);">~3%</div></div>
+</div></div></div>
+
+<!-- DECISION FLOW -->
+<div class="reveal" style="margin-top:28px;"><div class="decisionFlow"><div class="dfQuestion">Does the stop exceed your max risk?</div><div class="dfArrows"><div class="dfArrowBranch"><div class="aLabel yes">YES</div><div style="width:2px;height:20px;background:linear-gradient(var(--red),transparent);"></div><div class="dfResult block">PASS</div></div><div class="dfArrowBranch"><div class="aLabel no">NO</div><div style="width:2px;height:20px;background:linear-gradient(var(--green),transparent);"></div><div class="dfResult pass">TRADE</div></div></div></div></div>
+
+<!-- CLOSING LINE -->
+<div class="reveal" style="margin-top:32px;text-align:center;">
+<div style="font-family:var(--display);font-size:11px;letter-spacing:3px;color:var(--core);opacity:.7;">Capital preservation precedes profit.</div>
+</div>
 </section>
 
 <!-- ═══════════════════════ S4 — TRANSPARENCY ═══════════════════════ -->
@@ -296,6 +338,116 @@ function switchDevice(d){document.querySelectorAll('.deviceToggleBtn').forEach(b
 const mndTabs=['Signals','Analysis','Macro','Flow','History'];let mndIdx=0;function switchMndTab(n){mndIdx=mndTabs.indexOf(n);document.querySelectorAll('.mndPane').forEach(p=>p.classList.toggle('active',p.dataset.pane===n));document.querySelectorAll('.mndTab').forEach(t=>t.classList.toggle('active',t.dataset.tab===n));}document.querySelectorAll('.mndTab').forEach(t=>{t.addEventListener('click',()=>switchMndTab(t.dataset.tab));});let mndTX=0;const mndS=document.getElementById('mndScreen');if(mndS){mndS.addEventListener('touchstart',e=>{mndTX=e.touches[0].clientX;},{passive:true});mndS.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-mndTX;if(Math.abs(dx)>40){if(dx<0&&mndIdx<4)switchMndTab(mndTabs[mndIdx+1]);else if(dx>0&&mndIdx>0)switchMndTab(mndTabs[mndIdx-1]);}},{passive:true});}
 /* FLOW FILTER */
 document.querySelectorAll('.fdFilter').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.fdFilter').forEach(x=>x.classList.remove('active'));b.classList.add('active');});});
+/* TRADE STREAM + EQUITY CURVE */
+const edgeObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){runTradeStream();edgeObs.unobserve(x.target);}});},{threshold:.4});
+const edgeBox=document.getElementById('edgeBox');if(edgeBox)edgeObs.observe(edgeBox);
+
+function runTradeStream(){
+const cv=document.getElementById('equityCurve');if(!cv)return;
+const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;
+const feed=document.getElementById('tradeFeed');
+
+const trades=[];const totalTrades=24;const winRate=0.48;const winPct=5;const lossPct=2.5;
+let equity=100;const curve=[equity];
+let tradeIdx=0;
+
+/* Pre-generate trade sequence — ensure realistic feel */
+const sequence=[];
+for(let i=0;i<totalTrades;i++){sequence.push(Math.random()<winRate);}
+/* Ensure a losing streak early and recovery */
+sequence[0]=false;sequence[1]=false;sequence[2]=false;
+sequence[4]=true;sequence[5]=true;sequence[7]=true;
+
+function drawCurve(){
+ctx.clearRect(0,0,W,H);
+if(curve.length<2)return;
+
+const minE=Math.min(...curve)*0.97;
+const maxE=Math.max(...curve)*1.03;
+const range=maxE-minE||1;
+const padT=20,padB=20,padL=10,padR=10;
+const chartW=W-padL-padR,chartH=H-padT-padB;
+
+/* Grid lines */
+ctx.strokeStyle='rgba(0,229,255,.04)';ctx.lineWidth=1;
+for(let i=0;i<5;i++){
+  const y=padT+chartH*(i/4);
+  ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+}
+
+/* Starting level line */
+const startY=padT+chartH*(1-(100-minE)/range);
+ctx.strokeStyle='rgba(255,255,255,.06)';ctx.setLineDash([4,4]);
+ctx.beginPath();ctx.moveTo(padL,startY);ctx.lineTo(W-padR,startY);ctx.stroke();
+ctx.setLineDash([]);
+
+/* Curve */
+const step=chartW/(totalTrades);
+ctx.beginPath();
+curve.forEach((v,i)=>{
+  const x=padL+i*step;
+  const y=padT+chartH*(1-(v-minE)/range);
+  if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+});
+ctx.strokeStyle='rgba(0,229,255,.8)';ctx.lineWidth=2;
+ctx.shadowColor='rgba(0,229,255,.4)';ctx.shadowBlur=8;ctx.stroke();
+ctx.shadowBlur=0;
+
+/* Fill under curve */
+const lastX=padL+(curve.length-1)*step;
+const lastY=padT+chartH*(1-(curve[curve.length-1]-minE)/range);
+ctx.lineTo(lastX,H-padB);ctx.lineTo(padL,H-padB);ctx.closePath();
+ctx.fillStyle='rgba(0,229,255,.03)';ctx.fill();
+
+/* Current dot */
+ctx.beginPath();ctx.arc(lastX,lastY,3,0,Math.PI*2);
+ctx.fillStyle='#00e5ff';ctx.shadowColor='rgba(0,229,255,.6)';ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;
+
+/* Equity label */
+ctx.font='900 11px Orbitron,monospace';ctx.fillStyle=curve[curve.length-1]>=100?'#00ffa3':'#ff3b3b';
+ctx.textAlign='right';
+ctx.fillText((curve[curve.length-1]>=100?'+':'')+((curve[curve.length-1]-100).toFixed(1))+'%',W-padR,padT-6);
+}
+
+function addTradeChip(isWin){
+const chip=document.createElement('div');
+chip.style.cssText='font-family:Orbitron,monospace;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap;opacity:0;transition:opacity .3s ease;flex-shrink:0;';
+if(isWin){
+  chip.textContent='WIN +'+winPct+'%';chip.style.color='#00ffa3';
+}else{
+  chip.textContent='LOSS -'+lossPct+'%';chip.style.color='#ff3b3b';
+}
+feed.appendChild(chip);
+requestAnimationFrame(()=>{chip.style.opacity='1';});
+
+/* Scroll feed left */
+const chips=feed.children;
+if(chips.length>12){chips[0].remove();}
+feed.scrollLeft=feed.scrollWidth;
+}
+
+function nextTrade(){
+if(tradeIdx>=totalTrades){
+  /* Done — show stats */
+  setTimeout(()=>{document.getElementById('edgeStats').style.opacity='1';},400);
+  return;
+}
+const isWin=sequence[tradeIdx];
+if(isWin){equity*=(1+winPct/100);}else{equity*=(1-lossPct/100);}
+curve.push(equity);
+addTradeChip(isWin);
+drawCurve();
+tradeIdx++;
+
+/* Variable speed — faster in the middle */
+const delay=tradeIdx<4?500:tradeIdx<8?350:tradeIdx<16?250:300;
+setTimeout(nextTrade,delay);
+}
+
+/* Start */
+drawCurve();
+setTimeout(nextTrade,600);
+}
 </script>
 </body>
 </html>
