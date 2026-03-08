@@ -714,8 +714,8 @@
     .item {
       border: 1px solid rgba(0,229,255,.1);
       background: rgba(0,5,15,.6);
-      border-radius: 14px;
-      padding: 0 0 10px;
+      border-radius: 12px;
+      padding: 0 0 0;
       cursor: pointer;
       transition: all .18s ease;
       position: relative;
@@ -919,14 +919,14 @@
       justify-content: space-between;
       gap: 6px;
       min-width: 0;
-      padding: 10px 12px 0;
+      padding: 10px 13px 0;
     }
     .sym {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 800;
       color: #fff;
-      letter-spacing: 1.5px;
+      letter-spacing: 1px;
       flex-shrink: 0;
     }
     .lvl {
@@ -944,23 +944,71 @@
       min-width: 0;
       max-width: 140px;
     }
-    .row2 {
-      margin-top: 6px;
-      padding: 0 12px;
+    .cardRow2 {
       display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 13px 0;
     }
-    .tag {
-      padding: 3px 7px;
-      border-radius: 5px;
-      border: 1px solid var(--border2);
-      background: rgba(0,0,0,.3);
-      font-size: 10px;
+    .cardConfHero {
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+    .cardMetric {
+      font-family: var(--display);
+      font-size: 14px;
+      font-weight: 900;
+      text-align: right;
+    }
+    .cardStateRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 13px 8px;
+    }
+    .stateChip {
+      font-family: var(--display);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .stateChip.confirmed { background: rgba(0,255,136,.1); border: 1px solid rgba(0,255,136,.25); color: #00ff88; }
+    .stateChip.approaching { background: rgba(0,255,170,.1); border: 1px solid rgba(0,255,170,.3); color: #00ffaa; animation: stateChipPulse 2s ease-in-out infinite; }
+    .stateChip.hit { background: rgba(0,255,200,.12); border: 1px solid rgba(0,255,200,.35); color: #00ffcc; }
+    .stateChip.winning { background: rgba(0,255,136,.06); border: 1px solid rgba(0,255,136,.15); color: var(--green); }
+    .stateChip.base { background: rgba(0,229,255,.06); border: 1px solid rgba(0,229,255,.15); color: var(--core); }
+    .stateChip.drawdown { background: rgba(255,179,0,.08); border: 1px solid rgba(255,179,0,.2); color: var(--amber); }
+    .stateChip.danger { background: rgba(255,59,59,.1); border: 1px solid rgba(255,59,59,.25); color: var(--red); animation: stateChipUrgent 1.2s ease-in-out infinite; }
+    .stateChip.invalidated { background: rgba(255,34,68,.12); border: 1px solid rgba(255,34,68,.3); color: #ff2244; }
+    .cardContext {
+      font-family: var(--display);
+      font-size: 8px;
       color: var(--muted);
+      letter-spacing: .5px;
     }
-    .bull { color: var(--green); font-weight: 700; }
-    .bear { color: var(--red); font-weight: 700; }
+    .cardHoldBadge {
+      font-family: var(--display);
+      font-size: 7px;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: rgba(0,229,255,.06);
+      border: 1px solid rgba(0,229,255,.12);
+      color: var(--core);
+    }
+    @keyframes stateChipPulse {
+      0%,100% { box-shadow: none; }
+      50% { box-shadow: 0 0 8px rgba(0,255,170,.3); }
+    }
+    @keyframes stateChipUrgent {
+      0%,100% { opacity: 1; }
+      50% { opacity: .6; }
+    }
 
     /* Signal strength bars */
     .confBar {
@@ -9273,38 +9321,66 @@
             <div class="sbT1Track"><div class="sbT1Fill ${t1ClsSidebar}" style="width:${t1PctSidebar}%"></div></div>
           </div>` : '';
 
+        // ── STATE CHIP — single status indicator ──
+        const stateMap = {
+          'invalidated':    { label: 'INVALIDATED', cls: 'invalidated' },
+          'danger':         { label: 'AT RISK', cls: 'danger' },
+          'drawdown':       { label: 'IN DRAWDOWN', cls: 'drawdown' },
+          'base':           { label: triggerResult.hit ? 'CONFIRMED' : (sig.trigger ? 'AWAITING TRIGGER' : 'MONITORING'), cls: triggerResult.hit ? 'confirmed' : 'base' },
+          'winning':        { label: 'IN PROFIT', cls: 'winning' },
+          'approaching_t1': { label: 'APPROACHING T1', cls: 'approaching' },
+          't1_hit':         { label: 'T1 HIT', cls: 'hit' },
+          't2_hit':         { label: 'T2 HIT', cls: 'hit' },
+          't3_hit':         { label: 'ALL TARGETS HIT', cls: 'hit' },
+        };
+        const stateInfo = stateMap[live.zone] || stateMap['base'];
+
+        // ── ONE METRIC — pick the most relevant ──
+        let metricHtml = '';
+        if (t1PctSidebar > 0 && t1ClsSidebar === 'progress') {
+          metricHtml = `<span class="cardMetric" style="color:var(--green);">${t1PctSidebar.toFixed(0)}% → T1</span>`;
+        } else if (t1ClsSidebar === 'hit') {
+          metricHtml = `<span class="cardMetric" style="color:var(--green);">🎯 T1 HIT</span>`;
+        } else if (t1ClsSidebar === 'drawdown') {
+          metricHtml = `<span class="cardMetric" style="color:var(--amber);">${t1TxtSidebar}</span>`;
+        } else if (entryPriceVal && cachedPrice) {
+          const rawPnl2 = ((cachedPrice - entryPriceVal) / entryPriceVal) * 100;
+          const pnl2 = isBull ? rawPnl2 : -rawPnl2;
+          const pnlCol = pnl2 >= 0 ? 'var(--green)' : 'var(--red)';
+          metricHtml = `<span class="cardMetric" style="color:${pnlCol};">${pnl2 >= 0 ? '+' : ''}${pnl2.toFixed(1)}%</span>`;
+        }
+
+        // ── HOLD BADGE — minimal, only if user holds ──
+        let holdBadge = '';
+        if (typeof MEMBER_TRADES !== 'undefined') {
+          const myPos2 = MEMBER_TRADES.filter(t => (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN');
+          if (myPos2.length > 0) holdBadge = `<span class="cardHoldBadge">◆ YOU HOLD</span>`;
+        }
+
+        // ── CONTEXT LINE ──
+        let contextParts = [];
+        if (sig.horizon) contextParts.push(sig.horizon);
+        if (elapsed !== null) contextParts.push(elapsedD + 'd');
+        const contextStr = contextParts.join(' · ');
+
         div.innerHTML = `
           <div class="row1">
             <div class="sym">${sig.asset}</div>
-            ${getSparkSvg(assetKey2, isBull)}
-            <div class="lvl">${sig.level}</div>
+            <span class="tag ${isBull ? "bull" : "bear"}" style="font-size:9px;padding:3px 8px;border-radius:4px;border:1px solid ${isBull ? 'rgba(0,255,136,.25)' : 'rgba(255,68,102,.25)'};background:${isBull ? 'rgba(0,255,136,.08)' : 'rgba(255,68,102,.08)'};">${sig.direction}</span>
           </div>
-          <div class="row2">
-            <span class="tag ${isBull ? "bull" : "bear"}">${sig.direction}</span>
-            <span class="tag" style="color:${cfg.color}">CONF ${(live.conf != null ? live.conf.toFixed(1) : '—')}% ${arrow}<span style="font-size:8px;opacity:.75;">${deltaStr}</span></span>
-            <span class="tag">${sig.horizon || "—"}</span>
+          <div class="cardRow2">
+            <span class="cardConfHero" style="color:${cfg.color};">${(live.conf != null ? live.conf.toFixed(1) : '—')}%</span>
+            ${metricHtml}
           </div>
-          ${sidebarT1Html}
-          ${buildSparkSvg(assetKey2, isBull)}
-          ${durationRowHtml}
-          ${triggerBadgeHtml}
-          ${positionBadgeHtml}
-          ${thesisHtml}
+          <div class="cardStateRow">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="stateChip ${stateInfo.cls}">${stateInfo.label}</span>
+              ${holdBadge}
+            </div>
+            <span class="cardContext">${contextStr}</span>
+          </div>
         `;
 
-        // Thesis toggle handler — separate from card click
-        const thesisBtn = div.querySelector('.thesisToggle');
-        if (thesisBtn) {
-          thesisBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            const panel = thesisBtn.nextElementSibling;
-            if (!panel) return;
-            const isOpen = panel.classList.toggle('open');
-            thesisBtn.classList.toggle('open', isOpen);
-            const arrowEl = thesisBtn.querySelector('.thesisArrow');
-            if (arrowEl) arrowEl.textContent = isOpen ? '▲' : '▼';
-          });
-        }
         div.dataset.sigId = sig.id;
         div.addEventListener("click", () => {
           autoRotate = false;
@@ -10774,7 +10850,33 @@
 
       // Show existing position if adding to it
       if (totalHeldShares > 0) {
-        var unit = myTrades[0].vehicle === 'OPTIONS' ? 'ct' : 'sh';
+        var isOpt = myTrades[0].vehicle === 'OPTIONS';
+        var unit = isOpt ? 'contracts' : 'shares';
+        var unitShort = isOpt ? 'ct' : 'sh';
+
+        // Auto-switch vehicle toggle to match existing position
+        if (isOpt && _ttVehicle !== 'OPTIONS') {
+          _ttVehicle = 'OPTIONS';
+          document.querySelectorAll('.ttVehicleBtn').forEach(function(b){b.classList.toggle('active',b.dataset.ttv==='OPTIONS');});
+          document.getElementById('ttStockFields').style.display = 'none';
+          document.getElementById('ttOptionFields').style.display = '';
+        }
+
+        // Option contract detail line
+        var optDetailLine = '';
+        if (isOpt) {
+          var optParts = [];
+          if (myTrades[0].option_strike) optParts.push('$' + myTrades[0].option_strike);
+          if (myTrades[0].option_type) optParts.push(myTrades[0].option_type);
+          else optParts.push(sig.direction === 'BULL' ? 'CALL' : 'PUT');
+          if (myTrades[0].option_expiry) {
+            try { optParts.push(new Date(myTrades[0].option_expiry + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})); } catch(e) {}
+          }
+          if (optParts.length) {
+            optDetailLine = '<div style="display:flex;justify-content:space-between;"><span>CONTRACT</span><span style="color:var(--core);font-weight:700;">' + sig.asset.split(' ')[0] + ' ' + optParts.join(' ') + '</span></div>';
+          }
+        }
+
         var livePnlHtml = '';
         if (lp && avgEntry > 0) {
           var isBull2 = sig.direction === 'BULL';
@@ -10788,9 +10890,10 @@
         posSummary.style.display = '';
         posSummaryContent.innerHTML =
           '<div style="font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:6px;font-weight:700;">ADDING TO EXISTING POSITION</div>' +
-          '<div style="display:flex;justify-content:space-between;"><span>CURRENT SIZE</span><span style="font-weight:900;color:#fff;">' + totalHeldShares + ' ' + unit + '</span></div>' +
-          '<div style="display:flex;justify-content:space-between;"><span>AVG ENTRY</span><span style="color:var(--core);">$' + avgEntry.toFixed(2) + '</span></div>' +
-          '<div style="display:flex;justify-content:space-between;"><span>TOTAL RISK</span><span style="color:var(--amber);">$' + totalHeldRisk.toFixed(0) + '</span></div>' +
+          optDetailLine +
+          '<div style="display:flex;justify-content:space-between;"><span>CURRENT SIZE</span><span style="font-weight:900;color:#fff;">' + totalHeldShares + ' ' + unitShort + '</span></div>' +
+          '<div style="display:flex;justify-content:space-between;"><span>AVG ENTRY</span><span style="color:var(--core);">$' + fmtN(avgEntry, 2) + '</span></div>' +
+          '<div style="display:flex;justify-content:space-between;"><span>TOTAL RISK</span><span style="color:var(--amber);">$' + fmtN(totalHeldRisk) + '</span></div>' +
           livePnlHtml;
       } else {
         posSummary.style.display = 'none';
@@ -10995,6 +11098,13 @@
       var summaryEl = document.getElementById('ttCalcSummary');
       var contentEl = document.getElementById('ttCalcContent');
 
+      // Direction-aware language
+      var isBullTrade = sig.direction === 'BULL';
+      var actionLabel = _ttVehicle === 'OPTIONS'
+        ? (isBullTrade ? 'BUY CALLS' : 'BUY PUTS')
+        : (isBullTrade ? 'BUY NOW' : 'SHORT NOW');
+      var unitLabel = _ttVehicle === 'OPTIONS' ? 'contracts' : 'shares';
+
       // Determine if user already holds a position
       var myTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
       var isAdding = myTrades.length > 0;
@@ -11033,15 +11143,15 @@
 
             if (summaryEl && contentEl) {
               var guidanceText = isAdding
-                ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfShares + ' shares</b> to reach full position of <b>' + maxShares + ' shares</b>.</div>'
-                : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">Buy <b style="color:#fff;">' + halfShares + ' shares</b> now. After trigger confirms, add remaining <b style="color:#fff;">' + halfShares + '</b> to reach full position of <b style="color:#fff;">' + maxShares + '</b>.</div>';
+                ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfShares + ' ' + unitLabel + '</b> to reach full position of <b>' + maxShares + ' ' + unitLabel + '</b>.</div>'
+                : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">' + (isBullTrade ? 'Buy' : 'Short') + ' <b style="color:#fff;">' + halfShares + ' ' + unitLabel + '</b> now. After trigger confirms, add remaining <b style="color:#fff;">' + halfShares + '</b> to reach full position of <b style="color:#fff;">' + maxShares + '</b>.</div>';
 
               var totalCost = halfShares * ep;
               contentEl.innerHTML = positionMeter +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Stop Loss</span><b>$' + fmtN(inv, 2) + '</b></div>' +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Risk / Share</span><b>$' + fmtN(rps, 2) + '</b></div>' +
-                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + fmtN(maxShares, 0) + ' shares</b></div>' +
-                '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">BUY NOW</span><b style="color:var(--green);font-size:16px;">' + fmtN(halfShares, 0) + ' shares</b></div>' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + fmtN(maxShares, 0) + ' ' + unitLabel + '</b></div>' +
+                '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">' + actionLabel + '</span><b style="color:var(--green);font-size:16px;">' + fmtN(halfShares, 0) + ' ' + unitLabel + '</b></div>' +
                 '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="color:var(--muted);">Total Cost</span><b style="color:#fff;">$' + fmtN(totalCost) + '</b></div>' +
                 '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Dollar at Risk</span><b style="color:var(--amber);">$' + fmtN(entryRisk) + ' (' + (entryRisk / acct * 100).toFixed(1) + '%)</b></div>' +
                 guidanceText;
@@ -11062,7 +11172,7 @@
             var fallbackRisk = halfSh * fallbackRps;
             contentEl.innerHTML = positionMeter +
               '<div style="color:var(--amber);margin-bottom:6px;">⚠ No stop loss set — using 5% default.</div>' +
-              '<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-weight:700;">BUY NOW</span><b style="color:var(--green);font-size:14px;">' + halfSh + ' shares</b></div>' +
+              '<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-weight:700;">' + actionLabel + '</span><b style="color:var(--green);font-size:14px;">' + halfSh + ' ' + unitLabel + '</b></div>' +
               '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="color:var(--muted);">Total Cost</span><b style="color:#fff;">$' + fallbackCost.toLocaleString('en-US',{maximumFractionDigits:0}) + '</b></div>' +
               '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Dollar at Risk</span><b style="color:var(--amber);">$' + fallbackRisk.toFixed(0) + '</b></div>';
             summaryEl.style.display = '';
@@ -11083,17 +11193,36 @@
           document.getElementById('ttOptContracts').value = halfContracts;
           updateOptRiskAmt();
 
+          // Build contract detail line from selected contract or signal data
+          var optContractLine = '';
+          try {
+            var _sc = _ttSelectedContract;
+            if (!_sc) {
+              var _ocs2 = typeof sig.option_contracts === 'string' ? JSON.parse(sig.option_contracts || '[]') : (sig.option_contracts || []);
+              if (Array.isArray(_ocs2) && _ocs2.length) _sc = _ocs2[0];
+            }
+            if (_sc) {
+              var cParts = [sig.asset.split(' ')[0]];
+              if (_sc.strike) cParts.push('$' + _sc.strike);
+              cParts.push(_sc.type || (isBullTrade ? 'CALL' : 'PUT'));
+              if (_sc.expiry) { try { cParts.push(new Date(_sc.expiry + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})); } catch(e){} }
+              optContractLine = '<div style="display:flex;justify-content:space-between;margin-bottom:6px;padding:6px 0;border-bottom:1px solid rgba(0,229,255,.08);"><span style="color:var(--core);font-weight:700;">CONTRACT</span><b style="color:#fff;">' + cParts.join(' ') + '</b></div>';
+            }
+          } catch(e) {}
+
+          var optActionLabel = isBullTrade ? 'BUY CALLS' : 'BUY PUTS';
           var guidanceOpt = isAdding
-            ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfContracts + ' contracts</b> to reach full position.</div>'
-            : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">Buy <b style="color:#fff;">' + halfContracts + ' contracts</b> now. Add remaining <b style="color:#fff;">' + halfContracts + '</b> after trigger confirms.</div>';
+            ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfContracts + ' contracts</b> to reach full position of <b>' + maxContracts + ' contracts</b>.</div>'
+            : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">' + optActionLabel + ': <b style="color:#fff;">' + halfContracts + ' contracts</b> now. Add remaining <b style="color:#fff;">' + halfContracts + '</b> after trigger confirms.</div>';
 
           if (summaryEl && contentEl) {
             var optTotalCost = halfContracts * costPerContract;
             var optMaxLoss = optTotalCost; // options risk capped at premium
             contentEl.innerHTML = positionMeter +
+              optContractLine +
               '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Premium</span><b>' + premLabel + '</b></div>' +
               '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--muted);">Full Position</span><b>' + maxContracts + ' contracts</b></div>' +
-              '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">BUY NOW</span><b style="color:var(--green);font-size:16px;">' + halfContracts + ' contracts</b></div>' +
+              '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(0,229,255,.1);"><span style="color:#fff;font-weight:700;font-size:12px;">' + optActionLabel + '</span><b style="color:var(--green);font-size:16px;">' + halfContracts + ' contracts</b></div>' +
               '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="color:var(--muted);">Total Cost</span><b style="color:#fff;">$' + fmtN(optTotalCost) + '</b></div>' +
               '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Max Loss (at risk)</span><b style="color:var(--amber);">$' + fmtN(optMaxLoss) + ' (' + (optMaxLoss / acct * 100).toFixed(1) + '%)</b></div>' +
               guidanceOpt;
