@@ -714,8 +714,8 @@
     .item {
       border: 1px solid rgba(0,229,255,.1);
       background: rgba(0,5,15,.6);
-      border-radius: 12px;
-      padding: 0 0 0;
+      border-radius: 14px;
+      padding: 0 0 10px;
       cursor: pointer;
       transition: all .18s ease;
       position: relative;
@@ -725,10 +725,12 @@
     .item.bull-item {
       border-color: rgba(0,255,136,.25);
       box-shadow: 0 0 18px rgba(0,255,136,.08), inset 0 0 30px rgba(0,255,136,.03);
+      border-left: 3px solid rgba(0,255,136,.4);
     }
     .item.bear-item {
-      border-color: rgba(255,68,102,.25);
-      box-shadow: 0 0 18px rgba(255,68,102,.08), inset 0 0 30px rgba(255,68,102,.03);
+      border-color: rgba(255,68,102,.3);
+      box-shadow: 0 0 18px rgba(255,68,102,.1), inset 0 0 30px rgba(255,68,102,.05);
+      border-left: 3px solid rgba(255,68,102,.6);
     }
     .item::before { display: none; }
     .item-header {
@@ -919,11 +921,11 @@
       justify-content: space-between;
       gap: 6px;
       min-width: 0;
-      padding: 10px 13px 0;
+      padding: 10px 12px 0;
     }
     .sym {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
       color: #fff;
       letter-spacing: 1px;
@@ -944,71 +946,35 @@
       min-width: 0;
       max-width: 140px;
     }
-    .cardRow2 {
+    .row2 {
+      margin-top: 6px;
+      padding: 0 12px;
       display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
-      padding: 8px 13px 0;
     }
-    .cardConfHero {
-      font-family: var(--display);
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing: 1px;
-    }
-    .cardMetric {
-      font-family: var(--display);
-      font-size: 14px;
-      font-weight: 900;
-      text-align: right;
-    }
-    .cardStateRow {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 13px 8px;
-    }
-    .stateChip {
-      font-family: var(--display);
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-    .stateChip.confirmed { background: rgba(0,255,136,.1); border: 1px solid rgba(0,255,136,.25); color: #00ff88; }
-    .stateChip.approaching { background: rgba(0,255,170,.1); border: 1px solid rgba(0,255,170,.3); color: #00ffaa; animation: stateChipPulse 2s ease-in-out infinite; }
-    .stateChip.hit { background: rgba(0,255,200,.12); border: 1px solid rgba(0,255,200,.35); color: #00ffcc; }
-    .stateChip.winning { background: rgba(0,255,136,.06); border: 1px solid rgba(0,255,136,.15); color: var(--green); }
-    .stateChip.base { background: rgba(0,229,255,.06); border: 1px solid rgba(0,229,255,.15); color: var(--core); }
-    .stateChip.drawdown { background: rgba(255,179,0,.08); border: 1px solid rgba(255,179,0,.2); color: var(--amber); }
-    .stateChip.danger { background: rgba(255,59,59,.1); border: 1px solid rgba(255,59,59,.25); color: var(--red); animation: stateChipUrgent 1.2s ease-in-out infinite; }
-    .stateChip.invalidated { background: rgba(255,34,68,.12); border: 1px solid rgba(255,34,68,.3); color: #ff2244; }
-    .cardContext {
-      font-family: var(--display);
-      font-size: 8px;
+    .tag {
+      padding: 3px 7px;
+      border-radius: 5px;
+      border: 1px solid var(--border2);
+      background: rgba(0,0,0,.3);
+      font-size: 10px;
       color: var(--muted);
-      letter-spacing: .5px;
     }
-    .cardHoldBadge {
+    .tag.bull { color: var(--green); font-weight: 700; background: rgba(0,255,136,.06); border-color: rgba(0,255,136,.2); }
+    .tag.bear { color: var(--red); font-weight: 700; background: rgba(255,68,102,.08); border-color: rgba(255,68,102,.25); }
+    /* Tier indicator */
+    .tierBadge {
       font-family: var(--display);
       font-size: 7px;
       letter-spacing: 1px;
-      padding: 2px 7px;
+      padding: 2px 6px;
       border-radius: 3px;
-      background: rgba(0,229,255,.06);
-      border: 1px solid rgba(0,229,255,.12);
-      color: var(--core);
+      white-space: nowrap;
     }
-    @keyframes stateChipPulse {
-      0%,100% { box-shadow: none; }
-      50% { box-shadow: 0 0 8px rgba(0,255,170,.3); }
-    }
-    @keyframes stateChipUrgent {
-      0%,100% { opacity: 1; }
-      50% { opacity: .6; }
-    }
+    .tierBadge.half { background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.2); color: var(--core); }
+    .tierBadge.full { background: rgba(0,255,136,.08); border: 1px solid rgba(0,255,136,.2); color: var(--green); }
 
     /* Signal strength bars */
     .confBar {
@@ -9321,65 +9287,52 @@
             <div class="sbT1Track"><div class="sbT1Fill ${t1ClsSidebar}" style="width:${t1PctSidebar}%"></div></div>
           </div>` : '';
 
-        // ── STATE CHIP — single status indicator ──
-        const stateMap = {
-          'invalidated':    { label: 'INVALIDATED', cls: 'invalidated' },
-          'danger':         { label: 'AT RISK', cls: 'danger' },
-          'drawdown':       { label: 'IN DRAWDOWN', cls: 'drawdown' },
-          'base':           { label: triggerResult.hit ? 'CONFIRMED' : (sig.trigger ? 'AWAITING TRIGGER' : 'MONITORING'), cls: triggerResult.hit ? 'confirmed' : 'base' },
-          'winning':        { label: 'IN PROFIT', cls: 'winning' },
-          'approaching_t1': { label: 'APPROACHING T1', cls: 'approaching' },
-          't1_hit':         { label: 'T1 HIT', cls: 'hit' },
-          't2_hit':         { label: 'T2 HIT', cls: 'hit' },
-          't3_hit':         { label: 'ALL TARGETS HIT', cls: 'hit' },
-        };
-        const stateInfo = stateMap[live.zone] || stateMap['base'];
-
-        // ── ONE METRIC — pick the most relevant ──
-        let metricHtml = '';
-        if (t1PctSidebar > 0 && t1ClsSidebar === 'progress') {
-          metricHtml = `<span class="cardMetric" style="color:var(--green);">${t1PctSidebar.toFixed(0)}% → T1</span>`;
-        } else if (t1ClsSidebar === 'hit') {
-          metricHtml = `<span class="cardMetric" style="color:var(--green);">🎯 T1 HIT</span>`;
-        } else if (t1ClsSidebar === 'drawdown') {
-          metricHtml = `<span class="cardMetric" style="color:var(--amber);">${t1TxtSidebar}</span>`;
-        } else if (entryPriceVal && cachedPrice) {
-          const rawPnl2 = ((cachedPrice - entryPriceVal) / entryPriceVal) * 100;
-          const pnl2 = isBull ? rawPnl2 : -rawPnl2;
-          const pnlCol = pnl2 >= 0 ? 'var(--green)' : 'var(--red)';
-          metricHtml = `<span class="cardMetric" style="color:${pnlCol};">${pnl2 >= 0 ? '+' : ''}${pnl2.toFixed(1)}%</span>`;
-        }
-
-        // ── HOLD BADGE — minimal, only if user holds ──
-        let holdBadge = '';
+        // ── Tier fill badge ──
+        let tierBadgeHtml = '';
         if (typeof MEMBER_TRADES !== 'undefined') {
-          const myPos2 = MEMBER_TRADES.filter(t => (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN');
-          if (myPos2.length > 0) holdBadge = `<span class="cardHoldBadge">◆ YOU HOLD</span>`;
+          const myPos3 = MEMBER_TRADES.filter(t => (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN');
+          if (myPos3.length > 0) {
+            const takenTiers = myPos3.map(t => t.tranche || 1);
+            const isFull = takenTiers.indexOf(1) >= 0 && takenTiers.indexOf(2) >= 0;
+            tierBadgeHtml = isFull
+              ? `<span class="tierBadge full">◆ 2/2 FULL</span>`
+              : `<span class="tierBadge half">◆ 1/2 ENTERED</span>`;
+          }
         }
-
-        // ── CONTEXT LINE ──
-        let contextParts = [];
-        if (sig.horizon) contextParts.push(sig.horizon);
-        if (elapsed !== null) contextParts.push(elapsedD + 'd');
-        const contextStr = contextParts.join(' · ');
 
         div.innerHTML = `
           <div class="row1">
-            <div class="sym">${sig.asset}</div>
-            <span class="tag ${isBull ? "bull" : "bear"}" style="font-size:9px;padding:3px 8px;border-radius:4px;border:1px solid ${isBull ? 'rgba(0,255,136,.25)' : 'rgba(255,68,102,.25)'};background:${isBull ? 'rgba(0,255,136,.08)' : 'rgba(255,68,102,.08)'};">${sig.direction}</span>
-          </div>
-          <div class="cardRow2">
-            <span class="cardConfHero" style="color:${cfg.color};">${(live.conf != null ? live.conf.toFixed(1) : '—')}%</span>
-            ${metricHtml}
-          </div>
-          <div class="cardStateRow">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="stateChip ${stateInfo.cls}">${stateInfo.label}</span>
-              ${holdBadge}
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="sym">${sig.asset}</div>
+              <span class="tag ${isBull ? "bull" : "bear"}" style="font-size:10px;padding:3px 10px;font-weight:900;">${sig.direction === 'BEAR' ? '▼ BEAR' : '▲ BULL'}</span>
             </div>
-            <span class="cardContext">${contextStr}</span>
+            <div class="lvl">${sig.level}</div>
           </div>
+          <div class="row2">
+            <span class="tag" style="color:${cfg.color}">CONF ${(live.conf != null ? live.conf.toFixed(1) : '—')}% ${arrow}<span style="font-size:8px;opacity:.75;">${deltaStr}</span></span>
+            <span class="tag">${sig.horizon || "—"}</span>
+            ${tierBadgeHtml}
+          </div>
+          ${sidebarT1Html}
+          ${durationRowHtml}
+          ${triggerBadgeHtml}
+          ${positionBadgeHtml}
+          ${thesisHtml}
         `;
+
+        // Thesis toggle handler
+        const thesisBtn = div.querySelector('.thesisToggle');
+        if (thesisBtn) {
+          thesisBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const panel = thesisBtn.nextElementSibling;
+            if (!panel) return;
+            const isOpen = panel.classList.toggle('open');
+            thesisBtn.classList.toggle('open', isOpen);
+            const arrowEl = thesisBtn.querySelector('.thesisArrow');
+            if (arrowEl) arrowEl.textContent = isOpen ? '▲' : '▼';
+          });
+        }
 
         div.dataset.sigId = sig.id;
         div.addEventListener("click", () => {
