@@ -486,6 +486,95 @@
     letter-spacing: 1px;
     margin-left: 6px;
   }
+
+  /* ═══ MOBILE FIXES ═══ */
+  @media (max-width: 768px) {
+    .adminHeader {
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+    .adminWrap {
+      padding: 10px !important;
+    }
+    .formGrid {
+      grid-template-columns: 1fr !important;
+      gap: 10px;
+    }
+    .formGroup.wide { grid-column: auto; }
+    .fInput, .fSelect {
+      font-size: 16px !important; /* Prevents iOS auto-zoom */
+      padding: 12px 14px;
+    }
+    .fLabel {
+      font-size: 9px;
+    }
+    .formPanel {
+      padding: 14px !important;
+    }
+    .aSectionHeader {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start !important;
+    }
+    .signalCard, .scCard {
+      padding: 10px !important;
+    }
+    .signalCardGrid {
+      grid-template-columns: 1fr !important;
+    }
+    .statChips {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+      gap: 6px !important;
+    }
+    /* Performance edit modal — full screen on mobile */
+    #perfEditOverlay > div {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 100vh !important;
+      height: 100vh;
+      border-radius: 0 !important;
+      padding: 16px !important;
+      padding-bottom: 40px !important;
+    }
+    #perfEditOverlay .formGrid {
+      grid-template-columns: 1fr 1fr !important;
+      gap: 10px;
+    }
+    /* Close signal modal — full screen on mobile */
+    #closeSignalOverlay > div {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      padding: 16px !important;
+    }
+    /* Option contracts grid */
+    #optionContractsGrid {
+      grid-template-columns: 1fr !important;
+    }
+    #optionContractsGrid .fInput,
+    #optionContractsGrid .fSelect {
+      font-size: 16px !important;
+      padding: 10px 12px !important;
+    }
+    /* Options section in perf forms */
+    #pfOptionsSection .fInput,
+    #pfOptionsSection .fSelect,
+    #peOptionsSection .fInput,
+    #peOptionsSection .fSelect {
+      font-size: 16px !important;
+    }
+    /* Macro editor grid */
+    .macroEditorGrid {
+      grid-template-columns: 1fr !important;
+    }
+    /* Performance table scrollable */
+    .perfTbl {
+      display: block;
+      overflow-x: auto;
+    }
+  }
   </style>
 
 </head>
@@ -537,7 +626,6 @@
 
   <div class="adminWrap">
 
-```
 <!-- STATS ROW -->
 <div class="statChips" id="adminStats"></div>
 
@@ -609,6 +697,37 @@
         <input class="fInput" id="fEntryPrice" type="number" step="0.01" placeholder="e.g. 43.21"/>
       </div>
       <div class="formGroup">
+        <div class="fLabel">◆ ORACLE TRANCHE STATUS</div>
+        <select class="fSelect" id="fOracleTranche" style="font-weight:700;" onchange="this.style.borderColor=this.value>=2?'rgba(0,255,136,.5)':'rgba(0,229,255,.3)'; this.style.color=this.value>=2?'var(--green)':'var(--core)';">
+          <option value="1">1/2 — INITIAL ENTRY</option>
+          <option value="2">2/2 — TRIGGER CONFIRMED</option>
+        </select>
+      </div>
+      <div class="formGroup wide" id="optionContractsSection">
+        <div class="fLabel">OPTION PLAYS <span style="opacity:.5;font-weight:400;">(up to 2 — leave blank if no options play)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;" id="optionContractsGrid">
+          <div style="border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:10px;background:rgba(0,229,255,.02);">
+            <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--core);margin-bottom:8px;font-weight:700;">CONTRACT 1</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">STRIKE</div><input class="fInput" id="fOcStrike1" type="number" step="0.5" placeholder="150" style="padding:6px 8px;font-size:11px;"/></div>
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">TYPE</div><select class="fSelect" id="fOcType1" style="padding:6px 8px;font-size:11px;"><option value="CALL">CALL</option><option value="PUT">PUT</option></select></div>
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">EXPIRY</div><input class="fInput" id="fOcExpiry1" type="date" style="padding:6px 8px;font-size:11px;"/></div>
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">PREMIUM $</div><input class="fInput" id="fOcPremium1" type="number" step="0.01" placeholder="3.20" style="padding:6px 8px;font-size:11px;"/></div>
+            </div>
+          </div>
+          <div style="border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:10px;background:rgba(0,229,255,.02);">
+            <div style="font-family:var(--display);font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;font-weight:700;">CONTRACT 2 <span style="opacity:.5;">(optional)</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">STRIKE</div><input class="fInput" id="fOcStrike2" type="number" step="0.5" placeholder="155" style="padding:6px 8px;font-size:11px;"/></div>
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">TYPE</div><select class="fSelect" id="fOcType2" style="padding:6px 8px;font-size:11px;"><option value="CALL">CALL</option><option value="PUT">PUT</option></select></div>
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">EXPIRY</div><input class="fInput" id="fOcExpiry2" type="date" style="padding:6px 8px;font-size:11px;"/></div>
+              <div><div class="fLabel" style="font-size:7px;margin-bottom:3px;">PREMIUM $</div><input class="fInput" id="fOcPremium2" type="number" step="0.01" placeholder="2.10" style="padding:6px 8px;font-size:11px;"/></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:var(--display);font-size:8px;color:var(--muted);margin-top:6px;letter-spacing:.5px;">💡 Members pick from these contracts when logging option trades. Premium is used by the risk calculator.</div>
+      </div>
+      <div class="formGroup">
         <div class="fLabel">MIN HOLD DURATION</div>
         <input class="fInput" id="fMinDuration" placeholder="e.g. 30 DAYS, 3 MONTHS"/>
       </div>
@@ -669,6 +788,13 @@
         <input class="fInput" id="pfAsset" placeholder="e.g. NVDA"/>
       </div>
       <div class="formGroup">
+        <div class="fLabel">VEHICLE</div>
+        <select class="fSelect" id="pfVehicle" onchange="document.getElementById('pfOptionsSection').style.display=this.value==='OPTIONS'?'':'none';">
+          <option value="STOCK">STOCK</option>
+          <option value="OPTIONS">OPTIONS</option>
+        </select>
+      </div>
+      <div class="formGroup">
         <div class="fLabel">SIGNAL TYPE</div>
         <input class="fInput" id="pfType" placeholder="e.g. PHOENIX BREAKOUT"/>
       </div>
@@ -702,8 +828,16 @@
         </select>
       </div>
       <div class="formGroup">
+        <div class="fLabel">ENTRY PRICE</div>
+        <input class="fInput" id="pfEntryPrice" type="number" step="0.01" placeholder="e.g. 185.20"/>
+      </div>
+      <div class="formGroup">
+        <div class="fLabel">EXIT PRICE</div>
+        <input class="fInput" id="pfExitPrice" type="number" step="0.01" placeholder="e.g. 212.50"/>
+      </div>
+      <div class="formGroup">
         <div class="fLabel">RESULT %</div>
-        <input class="fInput" id="pfResult" type="number" step="0.1" placeholder="e.g. 31.2"/>
+        <input class="fInput" id="pfResult" type="number" step="0.1" placeholder="Auto-calc from prices"/>
       </div>
       <div class="formGroup">
         <div class="fLabel">DAYS TO TARGET</div>
@@ -712,6 +846,39 @@
       <div class="formGroup">
         <div class="fLabel">CONFIDENCE %</div>
         <input class="fInput" id="pfConf" type="number" step="0.01" placeholder="e.g. 87.40"/>
+      </div>
+    </div>
+    <!-- OPTIONS SECTION (hidden unless VEHICLE=OPTIONS) -->
+    <div id="pfOptionsSection" style="display:none;border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;margin-top:10px;background:rgba(0,229,255,.02);">
+      <div style="font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--core);margin-bottom:10px;">OPTIONS CONTRACT</div>
+      <div class="formGrid" style="gap:10px;">
+        <div class="formGroup">
+          <div class="fLabel">STRIKE PRICE</div>
+          <input class="fInput" id="pfOptStrike" type="number" step="0.5" placeholder="e.g. 150"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">CALL / PUT</div>
+          <select class="fSelect" id="pfOptType">
+            <option value="CALL">CALL</option>
+            <option value="PUT">PUT</option>
+          </select>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">EXPIRATION DATE</div>
+          <input class="fInput" id="pfOptExpiry" type="date"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">CONTRACTS</div>
+          <input class="fInput" id="pfOptContracts" type="number" step="1" min="1" placeholder="e.g. 5"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">PREMIUM PAID</div>
+          <input class="fInput" id="pfOptPremEntry" type="number" step="0.01" placeholder="e.g. 3.20"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">PREMIUM AT EXIT</div>
+          <input class="fInput" id="pfOptPremExit" type="number" step="0.01" placeholder="e.g. 5.80"/>
+        </div>
       </div>
     </div>
     <div class="formGroup" style="margin-top:10px;">
@@ -829,7 +996,6 @@
     </div>
   </div>
 </div>
-```
 
   </div>
 </div>
@@ -917,6 +1083,48 @@
         <div class="fLabel">SPY RETURN % (benchmark)</div>
         <input class="fInput" id="peSpyReturn" type="number" step="0.01" placeholder="SPY % over same period"/>
       </div>
+      <div class="formGroup">
+        <div class="fLabel">VEHICLE</div>
+        <select class="fSelect" id="peVehicle" onchange="document.getElementById('peOptionsSection').style.display=this.value==='OPTIONS'?'':'none';">
+          <option value="STOCK">STOCK</option>
+          <option value="OPTIONS">OPTIONS</option>
+        </select>
+      </div>
+    </div>
+    <!-- OPTIONS SECTION IN EDIT MODAL -->
+    <div id="peOptionsSection" style="display:none;border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;margin-top:10px;background:rgba(0,229,255,.02);">
+      <div style="font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--core);margin-bottom:10px;">OPTIONS CONTRACT</div>
+      <div class="formGrid" style="gap:10px;">
+        <div class="formGroup">
+          <div class="fLabel">STRIKE PRICE</div>
+          <input class="fInput" id="peOptStrike" type="number" step="0.5" placeholder="e.g. 150"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">CALL / PUT</div>
+          <select class="fSelect" id="peOptType">
+            <option value="CALL">CALL</option>
+            <option value="PUT">PUT</option>
+          </select>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">EXPIRATION DATE</div>
+          <input class="fInput" id="peOptExpiry" type="date"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">CONTRACTS</div>
+          <input class="fInput" id="peOptContracts" type="number" step="1" min="1" placeholder="e.g. 5"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">PREMIUM PAID</div>
+          <input class="fInput" id="peOptPremEntry" type="number" step="0.01" placeholder="e.g. 3.20"/>
+        </div>
+        <div class="formGroup">
+          <div class="fLabel">PREMIUM AT EXIT</div>
+          <input class="fInput" id="peOptPremExit" type="number" step="0.01" placeholder="e.g. 5.80"/>
+        </div>
+      </div>
+    </div>
+    <div class="formGrid" style="gap:14px;margin-top:10px;">
       <div class="formGroup" style="grid-column:1/-1;">
         <div class="fLabel">NOTES</div>
         <input class="fInput" id="peNotes" placeholder="Context, thesis, why it worked/didn't…"/>
@@ -1486,9 +1694,10 @@
 
 
   function clearSignalForm() {
-    ["fAsset","fCompanyName","fLevel","fBias","fHorizon","fTriggerVal","fTargets","fInval","fVol","fDir2","fStream","fSort","fConf","fEntryPrice","fMinDuration","fThesis","fActionPlan","editId"]
+    ["fAsset","fCompanyName","fLevel","fBias","fHorizon","fTriggerVal","fTargets","fInval","fVol","fDir2","fStream","fSort","fConf","fEntryPrice","fOcStrike1","fOcPremium1","fOcExpiry1","fOcStrike2","fOcPremium2","fOcExpiry2","fMinDuration","fThesis","fActionPlan","editId"]
       .forEach(id => document.getElementById(id).value = "");
     document.getElementById("fDir").value = "BULL";
+    document.getElementById("fOracleTranche").value = "1";
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     document.getElementById("fSignalDate").value = local;
@@ -1514,6 +1723,26 @@
     document.getElementById("fStream").value = s.stream_label || "";
     document.getElementById("fSort").value = s.sort_order || "";
     document.getElementById("fEntryPrice").value = s.entry_price || "";
+    document.getElementById("fOracleTranche").value = s.oracle_tranche || "1";
+    // Load option contracts
+    try {
+      const ocs = typeof s.option_contracts === 'string' ? JSON.parse(s.option_contracts) : (s.option_contracts || []);
+      if (ocs[0]) {
+        document.getElementById("fOcStrike1").value = ocs[0].strike || "";
+        document.getElementById("fOcType1").value = ocs[0].type || "CALL";
+        document.getElementById("fOcExpiry1").value = ocs[0].expiry || "";
+        document.getElementById("fOcPremium1").value = ocs[0].premium || "";
+      }
+      if (ocs[1]) {
+        document.getElementById("fOcStrike2").value = ocs[1].strike || "";
+        document.getElementById("fOcType2").value = ocs[1].type || "CALL";
+        document.getElementById("fOcExpiry2").value = ocs[1].expiry || "";
+        document.getElementById("fOcPremium2").value = ocs[1].premium || "";
+      }
+    } catch(e) {
+      // Backward compat: if old option_price exists, put it in contract 1 premium
+      if (s.option_price) document.getElementById("fOcPremium1").value = s.option_price;
+    }
     document.getElementById("fMinDuration").value = s.min_duration || "";
     document.getElementById("fThesis").value = s.thesis || "";
     document.getElementById("fActionPlan").value = s.action_plan || "";
@@ -1550,6 +1779,32 @@
       stream_label: document.getElementById("fStream").value.trim(),
       sort_order: parseInt(document.getElementById("fSort").value) || 99,
       entry_price: parseFloat(document.getElementById("fEntryPrice").value) || null,
+      oracle_tranche: parseInt(document.getElementById("fOracleTranche").value) || 1,
+      option_contracts: (() => {
+        const contracts = [];
+        const s1 = parseFloat(document.getElementById("fOcStrike1").value);
+        const p1 = parseFloat(document.getElementById("fOcPremium1").value);
+        if (s1 || p1) {
+          contracts.push({
+            strike: s1 || null,
+            type: document.getElementById("fOcType1").value,
+            expiry: document.getElementById("fOcExpiry1").value || null,
+            premium: p1 || null
+          });
+        }
+        const s2 = parseFloat(document.getElementById("fOcStrike2").value);
+        const p2 = parseFloat(document.getElementById("fOcPremium2").value);
+        if (s2 || p2) {
+          contracts.push({
+            strike: s2 || null,
+            type: document.getElementById("fOcType2").value,
+            expiry: document.getElementById("fOcExpiry2").value || null,
+            premium: p2 || null
+          });
+        }
+        return contracts.length ? JSON.stringify(contracts) : null;
+      })(),
+      option_price: parseFloat(document.getElementById("fOcPremium1").value) || null,
       min_duration: document.getElementById("fMinDuration").value.trim() || null,
       thesis: document.getElementById("fThesis").value.trim() || null,
       action_plan: document.getElementById("fActionPlan").value.trim() || null,
@@ -1568,6 +1823,32 @@
     if (!editId) {
       payload.signal_date = signalDateVal ? new Date(signalDateVal).toISOString() : new Date().toISOString();
     }
+    // ── Tranche date auto-stamping ──
+    if (editId) {
+      var existingSig = SIGNALS.find(function(x) { return x.id === editId; });
+      var prevTranche = existingSig ? (existingSig.oracle_tranche || 1) : 0;
+      var newTranche = payload.oracle_tranche;
+      var now = new Date().toISOString();
+      if (newTranche >= 2 && prevTranche < 2 && !payload.tranche_2_date) payload.tranche_2_date = now;
+      if (newTranche >= 3 && prevTranche < 3 && !payload.tranche_3_date) payload.tranche_3_date = now;
+    } else {
+      // New signal — tranche 1 date = signal date
+      payload.tranche_1_date = payload.signal_date || new Date().toISOString();
+      if (payload.oracle_tranche >= 2) payload.tranche_2_date = payload.tranche_1_date;
+    }
+
+    // 2/2 TRIGGER CONFIRMED notification
+    if (payload.oracle_tranche === 2) {
+      var prevTranche2 = 1;
+      if (editId) {
+        var existingSig2 = SIGNALS.find(function(x) { return x.id === editId; });
+        if (existingSig2) prevTranche2 = existingSig2.oracle_tranche || 1;
+      }
+      if (prevTranche2 < 2) {
+        if (!confirm('⚡ TRIGGER CONFIRMED (2/2)\n\nSetting ' + asset + ' to 2/2 will alert all members that trigger has been confirmed.\n\nConfirm?')) return;
+      }
+    }
+
     let ok;
     if (editId) {
       ok = await sbPatch('signals', editId, payload);
@@ -1600,7 +1881,7 @@
       }
     }
     if (!ok) return; // sbPost/sbPatch already showed error toast
-    toast(editId ? "Signal updated ✓" : "Signal added ✓");
+    toast(editId ? `${asset} signal updated ✓` : `${asset} ${payload.direction} signal added ✓`);
     document.getElementById("signalForm").style.display = "none";
     clearSignalForm();
     await loadAll(); // reload from Supabase to get real IDs and state
@@ -1657,6 +1938,25 @@
       }
     }
   }
+
+  // Auto-recalculate result when exit price is manually edited in close modal
+  function recalcCloseResult() {
+    const id = document.getElementById("closeSignalId").value;
+    const s = SIGNALS.find(x => x.id === id);
+    if (!s) return;
+    const entry = s.entry_price ? parseFloat(s.entry_price) : null;
+    const exit = parseFloat(document.getElementById("closeExitPrice").value);
+    if (!entry || !exit || entry <= 0) return;
+    const isBull = (s.direction || "").toUpperCase() === "BULL";
+    const rawPct = ((exit - entry) / entry) * 100;
+    const pnl = isBull ? rawPct : -rawPct;
+    document.getElementById("closeResult").value = pnl.toFixed(2);
+    document.getElementById("closePnlDisplay").textContent = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
+    document.getElementById("closePnlDisplay").style.color = pnl >= 0 ? "var(--green)" : "var(--red)";
+  }
+  document.getElementById("closeExitPrice").addEventListener("input", recalcCloseResult);
+  document.getElementById("closeExitPrice").addEventListener("change", recalcCloseResult);
+  document.getElementById("closeExitPrice").addEventListener("blur", recalcCloseResult);
 
   document.getElementById("cancelCloseBtn").addEventListener("click", () => {
     document.getElementById("closeSignalOverlay").style.display = "none";
@@ -1794,7 +2094,7 @@
       const resColor = r.result === null ? '' : r.result >= 0 ? 'color:var(--green)' : 'color:var(--red)';
       const statusClass = r.status === 'T2_HIT' ? 'sT2' : r.status === 'T1_HIT' ? 'sT1' : r.status === 'ACTIVE' ? 'sActive' : 'sInv';
       return `<tr>
-        <td style="font-family:var(--display);font-weight:900">${r.asset}</td>
+        <td style="font-family:var(--display);font-weight:900">${r.asset}${r.vehicle === 'OPTIONS' ? ' <span style="font-size:7px;font-weight:700;letter-spacing:1px;padding:1px 4px;border-radius:3px;background:rgba(0,229,255,.1);color:var(--core);border:1px solid rgba(0,229,255,.2);vertical-align:middle;">OPT</span>' : ''}</td>
         <td style="color:var(--muted)">${r.type || '—'}</td>
         <td class="${r.direction === 'BULL' ? 'dBull' : 'dBear'}">${r.direction}</td>
         <td style="color:var(--muted)">${r.date}</td>
@@ -1950,9 +2250,60 @@
   document.getElementById("cancelPerfBtn").addEventListener("click", () => {
     document.getElementById("perfForm").style.display = "none";
   });
+  // Auto-calc result % from entry/exit in ADD form
+  function pfAutoCalcResult() {
+    var entry = parseFloat(document.getElementById('pfEntryPrice').value);
+    var exit = parseFloat(document.getElementById('pfExitPrice').value);
+    var dir = document.getElementById('pfDir').value;
+    var vehicle = document.getElementById('pfVehicle').value;
+    if (vehicle === 'OPTIONS') {
+      // For options: use premium entry/exit if available
+      var premEntry = parseFloat(document.getElementById('pfOptPremEntry').value);
+      var premExit = parseFloat(document.getElementById('pfOptPremExit').value);
+      if (premEntry > 0 && premExit > 0) {
+        var result = ((premExit - premEntry) / premEntry) * 100;
+        document.getElementById('pfResult').value = result.toFixed(2);
+        return;
+      }
+    }
+    if (!entry || !exit || entry <= 0) return;
+    var result = dir === 'BULL' ? ((exit - entry) / entry) * 100 : ((entry - exit) / entry) * 100;
+    document.getElementById('pfResult').value = result.toFixed(2);
+  }
+  ['pfEntryPrice','pfExitPrice'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener('input', pfAutoCalcResult); el.addEventListener('change', pfAutoCalcResult); el.addEventListener('blur', pfAutoCalcResult); }
+  });
+  ['pfOptPremEntry','pfOptPremExit'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener('input', pfAutoCalcResult); el.addEventListener('change', pfAutoCalcResult); el.addEventListener('blur', pfAutoCalcResult); }
+  });
+  document.getElementById('pfDir').addEventListener('change', pfAutoCalcResult);
+  document.getElementById('pfVehicle').addEventListener('change', pfAutoCalcResult);
+
+  // Auto-calc days held from issued + closed dates
+  function pfAutoCalcDays() {
+    var issued = document.getElementById('pfDate').value.trim();
+    var closed = document.getElementById('pfClosedDate').value.trim();
+    if (!issued || !closed) return;
+    // Parse MM-DD-YYYY
+    var pi = issued.split('-'), pc = closed.split('-');
+    if (pi.length === 3 && pc.length === 3) {
+      var di = new Date(+pi[2], +pi[0]-1, +pi[1]);
+      var dc = new Date(+pc[2], +pc[0]-1, +pc[1]);
+      var days = Math.round((dc - di) / 86400000);
+      if (days >= 0) document.getElementById('pfDays').value = days;
+    }
+  }
+  document.getElementById('pfDate').addEventListener('input', pfAutoCalcDays);
+  document.getElementById('pfDate').addEventListener('change', pfAutoCalcDays);
+  document.getElementById('pfClosedDate').addEventListener('input', pfAutoCalcDays);
+  document.getElementById('pfClosedDate').addEventListener('change', pfAutoCalcDays);
+
   document.getElementById("savePerfBtn").addEventListener("click", async () => {
     const asset = document.getElementById("pfAsset").value.trim();
     if (!asset) { toast("Enter an asset", false); return; }
+    const vehicle = document.getElementById("pfVehicle").value;
     const payload = {
       id: `p${Date.now()}`,
       asset,
@@ -1963,12 +2314,21 @@
       signal: document.getElementById("pfSignal").value.trim(),
       status: document.getElementById("pfStatus").value,
       result: parseFloat(document.getElementById("pfResult").value) || null,
+      entry_price: document.getElementById("pfEntryPrice").value !== '' ? parseFloat(document.getElementById("pfEntryPrice").value) : null,
+      exit_price: document.getElementById("pfExitPrice").value !== '' ? parseFloat(document.getElementById("pfExitPrice").value) : null,
       days: parseInt(document.getElementById("pfDays").value) || null,
       conf: parseFloat(document.getElementById("pfConf").value) || null,
-      thesis: document.getElementById("pfThesis").value.trim() || null
+      thesis: document.getElementById("pfThesis").value.trim() || null,
+      vehicle: vehicle,
+      opt_strike: vehicle === 'OPTIONS' && document.getElementById("pfOptStrike").value !== '' ? parseFloat(document.getElementById("pfOptStrike").value) : null,
+      opt_type: vehicle === 'OPTIONS' ? document.getElementById("pfOptType").value : null,
+      opt_expiry: vehicle === 'OPTIONS' ? (document.getElementById("pfOptExpiry").value || null) : null,
+      opt_contracts: vehicle === 'OPTIONS' && document.getElementById("pfOptContracts").value !== '' ? parseInt(document.getElementById("pfOptContracts").value) : null,
+      opt_prem_entry: vehicle === 'OPTIONS' && document.getElementById("pfOptPremEntry").value !== '' ? parseFloat(document.getElementById("pfOptPremEntry").value) : null,
+      opt_prem_exit: vehicle === 'OPTIONS' && document.getElementById("pfOptPremExit").value !== '' ? parseFloat(document.getElementById("pfOptPremExit").value) : null,
     };
     const ok = await sbPost('performance', payload);
-    PERF.push(payload); // always update local cache
+    PERF.push(payload);
     toast("Trade added ✓");
     document.getElementById("perfForm").style.display = "none";
     await loadAll();
@@ -2251,6 +2611,16 @@
       document.getElementById('peConf').value        = row.conf !== null && row.conf !== undefined ? row.conf : '';
       document.getElementById('peSpyReturn').value   = row.spy_return !== null && row.spy_return !== undefined ? row.spy_return : '';
       document.getElementById('peNotes').value       = row.notes || '';
+      // Options fields
+      var vehicle = row.vehicle || 'STOCK';
+      document.getElementById('peVehicle').value = vehicle;
+      document.getElementById('peOptionsSection').style.display = vehicle === 'OPTIONS' ? '' : 'none';
+      document.getElementById('peOptStrike').value = row.opt_strike || '';
+      document.getElementById('peOptType').value = row.opt_type || 'CALL';
+      document.getElementById('peOptExpiry').value = row.opt_expiry || '';
+      document.getElementById('peOptContracts').value = row.opt_contracts || '';
+      document.getElementById('peOptPremEntry').value = row.opt_prem_entry || '';
+      document.getElementById('peOptPremExit').value = row.opt_prem_exit || '';
       const el = document.getElementById('perfEditOverlay');
       el.style.display = 'flex';
     }
@@ -2260,6 +2630,17 @@
 
     // Auto-calc result% when entry + exit prices both filled
     function autoCalcResult() {
+      const vehicle = document.getElementById('peVehicle').value;
+      if (vehicle === 'OPTIONS') {
+        // For options: use premium entry/exit if available
+        const premEntry = parseFloat(document.getElementById('peOptPremEntry').value);
+        const premExit = parseFloat(document.getElementById('peOptPremExit').value);
+        if (premEntry > 0 && premExit > 0) {
+          const result = ((premExit - premEntry) / premEntry) * 100;
+          document.getElementById('peResult').value = result.toFixed(2);
+          return;
+        }
+      }
       const entry = parseFloat(document.getElementById('peEntryPrice').value);
       const exit = parseFloat(document.getElementById('peExitPrice').value);
       const dir = document.getElementById('peDir').value;
@@ -2272,6 +2653,16 @@
     document.getElementById('peEntryPrice').addEventListener('input', autoCalcResult);
     document.getElementById('peExitPrice').addEventListener('input', autoCalcResult);
     document.getElementById('peDir').addEventListener('change', autoCalcResult);
+    document.getElementById('peEntryPrice').addEventListener('change', autoCalcResult);
+    document.getElementById('peExitPrice').addEventListener('change', autoCalcResult);
+    document.getElementById('peEntryPrice').addEventListener('blur', autoCalcResult);
+    document.getElementById('peExitPrice').addEventListener('blur', autoCalcResult);
+    // Options premium auto-calc
+    document.getElementById('peOptPremEntry').addEventListener('input', autoCalcResult);
+    document.getElementById('peOptPremExit').addEventListener('input', autoCalcResult);
+    document.getElementById('peOptPremEntry').addEventListener('change', autoCalcResult);
+    document.getElementById('peOptPremExit').addEventListener('change', autoCalcResult);
+    document.getElementById('peVehicle').addEventListener('change', autoCalcResult);
 
     document.getElementById('savePerfEditBtn').addEventListener('click', async () => {
       const id = document.getElementById('perfEditId').value;
@@ -2291,6 +2682,13 @@
         conf:        document.getElementById('peConf').value !== '' ? parseFloat(document.getElementById('peConf').value) : null,
         spy_return:  document.getElementById('peSpyReturn').value !== '' ? parseFloat(document.getElementById('peSpyReturn').value) : null,
         notes:       document.getElementById('peNotes').value.trim() || null,
+        vehicle:     document.getElementById('peVehicle').value || 'STOCK',
+        opt_strike:  document.getElementById('peOptStrike').value !== '' ? parseFloat(document.getElementById('peOptStrike').value) : null,
+        opt_type:    document.getElementById('peVehicle').value === 'OPTIONS' ? document.getElementById('peOptType').value : null,
+        opt_expiry:  document.getElementById('peOptExpiry').value || null,
+        opt_contracts: document.getElementById('peOptContracts').value !== '' ? parseInt(document.getElementById('peOptContracts').value) : null,
+        opt_prem_entry: document.getElementById('peOptPremEntry').value !== '' ? parseFloat(document.getElementById('peOptPremEntry').value) : null,
+        opt_prem_exit: document.getElementById('peOptPremExit').value !== '' ? parseFloat(document.getElementById('peOptPremExit').value) : null,
       };
       // Strip undefined keys
       Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
@@ -2331,6 +2729,16 @@
     });
 
     loadMacro();
+
+    // ESC to close overlays
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var pe = document.getElementById('perfEditOverlay');
+        if (pe && pe.style.display === 'flex') { closePerfEdit(); return; }
+        var cs = document.getElementById('closeSignalOverlay');
+        if (cs && cs.style.display === 'flex') { cs.style.display = 'none'; return; }
+      }
+    });
   })();
 </script>
 
