@@ -530,6 +530,191 @@
       50% { opacity: 1; }
     }
 
+    /* ── BELL ICON + NOTIFICATION CENTER ── */
+    .alertBellWrap {
+      position: relative;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .alertBellIcon {
+      font-size: 18px;
+      display: inline-block;
+      transform-origin: top center;
+      transition: filter .3s;
+    }
+    .alertBellIcon.swing {
+      animation: bellSwing .6s ease-in-out;
+    }
+    .alertBellWrap.urgent .alertBellIcon {
+      filter: drop-shadow(0 0 6px rgba(255,59,59,.6));
+      animation: bellUrgentGlow 2.5s ease-in-out infinite;
+    }
+    .alertBellBadge {
+      position: absolute;
+      top: 0; right: 2px;
+      min-width: 16px; height: 16px;
+      border-radius: 8px;
+      background: var(--red);
+      color: #fff;
+      font-family: var(--display);
+      font-size: 8px;
+      font-weight: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      box-shadow: 0 0 8px rgba(255,59,59,.4);
+    }
+    .alertBellBadge.visible { display: flex; }
+    .alertBellBadge.pop { animation: badgePop .3s ease-out; }
+    @keyframes bellSwing {
+      0%   { transform: rotate(0); }
+      15%  { transform: rotate(14deg); }
+      30%  { transform: rotate(-10deg); }
+      45%  { transform: rotate(6deg); }
+      60%  { transform: rotate(-3deg); }
+      100% { transform: rotate(0); }
+    }
+    @keyframes bellUrgentGlow {
+      0%,100% { filter: drop-shadow(0 0 4px rgba(255,59,59,.3)); }
+      50%     { filter: drop-shadow(0 0 12px rgba(255,59,59,.7)); }
+    }
+    @keyframes badgePop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.35); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── SIGNAL CARD REACTIONS ── */
+    /* T1 hit — green border flash */
+    @keyframes cardT1Flash {
+      0%   { border-color: rgba(0,255,136,.8); box-shadow: 0 0 25px rgba(0,255,136,.4), inset 0 0 15px rgba(0,255,136,.06); }
+      100% { border-color: rgba(0,255,136,.25); box-shadow: 0 0 18px rgba(0,255,136,.08), inset 0 0 30px rgba(0,255,136,.03); }
+    }
+    .item.t1-flash {
+      animation: cardT1Flash 2s ease-out forwards !important;
+    }
+
+    /* Trigger confirmed — cyan electrical pulse on left border */
+    @keyframes triggerElectric {
+      0%   { background-position: 0 -100%; }
+      100% { background-position: 0 100%; }
+    }
+    .item.trigger-electric::before {
+      content: '';
+      display: block !important;
+      position: absolute;
+      left: 0; top: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,229,255,.9) 40%, rgba(0,255,200,1) 50%, rgba(0,229,255,.9) 60%, transparent 100%);
+      background-size: 3px 200%;
+      animation: triggerElectric .4s ease-out forwards;
+      z-index: 5;
+      border-radius: 3px 0 0 3px;
+    }
+
+    /* Danger zone — red breathing hold */
+    @keyframes dangerBreath {
+      0%,100% { border-color: rgba(255,59,59,.4); box-shadow: 0 0 12px rgba(255,59,59,.15); }
+      50%     { border-color: rgba(255,59,59,.7); box-shadow: 0 0 22px rgba(255,59,59,.3); }
+    }
+    .item.danger-glow {
+      animation: dangerBreath 2s ease-in-out 2, dangerHold 0s 4s forwards !important;
+    }
+    @keyframes dangerHold {
+      to { border-color: rgba(255,59,59,.35); box-shadow: 0 0 10px rgba(255,59,59,.1); }
+    }
+
+    /* New signal — glow halo contracts inward */
+    @keyframes newGlowIn {
+      0%   { box-shadow: 0 0 40px rgba(255,200,0,.5), 0 0 80px rgba(255,200,0,.2); border-color: rgba(255,200,0,.8); }
+      100% { box-shadow: 0 0 12px rgba(255,200,0,.2), inset 0 0 20px rgba(255,200,0,.04); border-color: rgba(255,200,0,.6); }
+    }
+    .item.newSignalPulse {
+      animation: newGlowIn .8s ease-out, signalPulse 1.5s ease-in-out .8s infinite !important;
+      border-color: rgba(255,200,0,.6) !important;
+      position: relative;
+    }
+
+    /* ── NOTIFICATION CENTER PANEL ── */
+    .notifPanel {
+      display: none;
+      position: fixed;
+      top: 0; right: 0;
+      width: min(380px, 100vw);
+      height: 100vh;
+      background: rgba(4,10,20,.97);
+      border-left: 1px solid rgba(0,229,255,.12);
+      backdrop-filter: blur(16px);
+      z-index: 10003;
+      flex-direction: column;
+      animation: notifSlideIn .2s ease-out;
+      box-shadow: -10px 0 40px rgba(0,0,0,.5);
+    }
+    .notifPanel.open { display: flex; }
+    @keyframes notifSlideIn {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+    .notifPanelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(0,229,255,.1);
+    }
+    .notifPanelTitle {
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--core);
+    }
+    .notifPanelBody {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .notifCard {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.04);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background .15s;
+      border-left: 3px solid transparent;
+    }
+    .notifCard:hover { background: rgba(255,255,255,.03); }
+    .notifCard.unread { border-left-color: var(--core); background: rgba(0,229,255,.02); }
+    .notifCard.urgent { border-left-color: var(--red); }
+    .notifCard.action { border-left-color: var(--green); }
+    .notifCardIcon { font-size: 16px; flex-shrink: 0; padding-top: 2px; }
+    .notifCardBody { flex: 1; min-width: 0; }
+    .notifCardMsg {
+      font-family: var(--display);
+      font-size: 11px;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+    .notifCardTime {
+      font-family: var(--display);
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: .5px;
+    }
+    .notifEmpty {
+      text-align: center;
+      padding: 40px 20px;
+      font-family: var(--display);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
 
     #viewerCountDisplay { color: var(--muted); font-size: 9px; letter-spacing: .8px; }
     #viewerCountDisplay b { color: #00ff88; }
@@ -4094,6 +4279,19 @@
 
 <body>
 <div class="ws-ambient" id="wsAmbient"></div>
+<div id="notifBackdrop" onclick="toggleNotifPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10002;"></div>
+<div class="notifPanel" id="notifPanel">
+  <div class="notifPanelHeader">
+    <span class="notifPanelTitle">ALERTS</span>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button onclick="markAllRead()" style="font-family:var(--display);font-size:8px;letter-spacing:1px;background:none;border:1px solid rgba(0,229,255,.2);color:var(--core);padding:4px 10px;border-radius:4px;cursor:pointer;">MARK ALL READ</button>
+      <button onclick="toggleNotifPanel()" style="font-size:18px;background:none;border:none;color:var(--muted);cursor:pointer;">✕</button>
+    </div>
+  </div>
+  <div class="notifPanelBody" id="notifPanelBody">
+    <div class="notifEmpty">No alerts yet. Alerts will appear here as signals evolve.</div>
+  </div>
+</div>
   <canvas id="bgCanvas"></canvas>
   <div class="hexGrid"></div>
   <div class="field"></div>
@@ -4642,6 +4840,10 @@
       <button class="deskTab" data-dtab="journal" id="deskJournalTab">📋 MY TRADES<span class="tabNotifBadge" id="journalBadgeDk"></span></button>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
+      <div class="alertBellWrap" id="alertBellWrap" onclick="toggleNotifPanel()">
+        <span class="alertBellIcon" id="alertBellIcon">🔔</span>
+        <span class="alertBellBadge" id="alertBellBadge">0</span>
+      </div>
       <button type="button" class="notifBtn" id="notifBtn">🔔 ALERTS OFF</button>
       <button type="button" class="soundBtn" id="soundBtn">🔊 SOUND OFF</button>
       <button type="button" class="chartBtn" id="chartBtn">📊 CHART</button>
@@ -5110,6 +5312,16 @@
           sendNewSignalNotification(sig);
           _knownSignalIds.add(key);
           _newSignalIds.add(key);
+          // Fire alert
+          fireAlert('action', '⚡', 'New signal: ' + sig.asset + ' ' + sig.direction + ' · ' + (sig.level || '') + (sig.confidence ? ' · Conf ' + parseFloat(sig.confidence).toFixed(0) + '%' : ''), key);
+          // Auto-clear new signal pulse after 10s
+          setTimeout(function() {
+            if (_newSignalIds.has(key)) {
+              _newSignalIds.delete(key);
+              document.querySelectorAll('[data-sig-id="' + (sig.id || sig.asset) + '"]').forEach(function(el) { el.classList.remove('newSignalPulse'); });
+              if (!_newSignalIds.size) clearSignalsBadge();
+            }
+          }, 10000);
         });
         // Show badge on mobile Signals tab (if not currently on it)
         showSignalsBadge();
@@ -5201,14 +5413,14 @@
 
     function sendTargetNotification(sig, target, price) {
       showToast(`🎯 ${sig.asset} hit ${target}! Price: $${price.toFixed(2)}`);
+      fireAlert('action', '🎯', sig.asset + ' hit ' + target + ' at $' + price.toFixed(2) + '!', sig.id || sig.asset);
 
       // ── CELEBRATION ANIMATION ──
-      // Flash the T1 progress bar if visible
       try {
+        // T1 progress bar burst
         var t1Wrap = document.querySelector('.sbT1ProgressWrap');
         if (t1Wrap && target === 'T1') {
           t1Wrap.classList.add('t1-celebrate');
-          // Add ripple
           var ripple = document.createElement('div');
           ripple.className = 't1-ripple';
           t1Wrap.style.position = 'relative';
@@ -5218,13 +5430,8 @@
             if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
           }, 1500);
         }
-        // Flash the signal card in the stream
-        var sigCard = document.querySelector('[data-sig-id="' + (sig.id || sig.asset) + '"]');
-        if (sigCard) {
-          sigCard.style.transition = 'box-shadow .3s ease';
-          sigCard.style.boxShadow = '0 0 30px rgba(0,255,136,.5), inset 0 0 20px rgba(0,255,136,.1)';
-          setTimeout(function() { sigCard.style.boxShadow = ''; }, 2000);
-        }
+        // Card border green flash
+        flashSignalCard(sig.id || sig.asset, 't1-flash', 2000);
       } catch(e) {}
 
       if (!notificationsEnabled || Notification.permission !== "granted") return;
@@ -5239,6 +5446,9 @@
 
     function sendInvalidationNotification(sig, price) {
       showToast(`🚨 ${sig.asset} INVALIDATED! Price: $${price.toFixed(2)}`);
+      fireAlert('urgent', '🚨', sig.asset + ' INVALIDATED at $' + price.toFixed(2) + '. Exit recommended.', sig.id || sig.asset);
+      // Card reaction — danger glow (invalidation uses same visual)
+      flashSignalCard(sig.id || sig.asset, 'danger-glow');
       if (!notificationsEnabled || Notification.permission !== "granted") return;
       new Notification(`🚨 ${sig.asset} — INVALIDATED`, {
         body: `${sig.direction} signal has been invalidated.\nLive: $${price.toFixed(2)} · Exit recommended.`,
@@ -5249,6 +5459,175 @@
       playAlertSound();
       playAlertSound(); // double beep for urgency
     }
+
+    // ── UNIFIED ALERT SYSTEM ──
+    let _alertLog = [];
+    let _alertUnreadCount = 0;
+    let _alertHasUrgent = false;
+    let _lastZones = {}; // track zone changes for danger detection
+    try { _alertLog = JSON.parse(localStorage.getItem('oracle_alert_log') || '[]'); } catch(e) { _alertLog = []; }
+    _alertUnreadCount = _alertLog.filter(a => !a.read).length;
+    _alertHasUrgent = _alertLog.some(a => !a.read && a.severity === 'urgent');
+
+    function fireAlert(severity, icon, message, signalId) {
+      var alert = {
+        id: Date.now() + '_' + Math.random().toString(36).substr(2,5),
+        severity: severity,
+        icon: icon,
+        message: message,
+        signalId: signalId || null,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      _alertLog.unshift(alert);
+      if (_alertLog.length > 200) _alertLog = _alertLog.slice(0, 200);
+      _alertUnreadCount = _alertLog.filter(function(a) { return !a.read; }).length;
+      _alertHasUrgent = _alertLog.some(function(a) { return !a.read && a.severity === 'urgent'; });
+      try { localStorage.setItem('oracle_alert_log', JSON.stringify(_alertLog)); } catch(e) {}
+      updateBellState();
+      ringBell();
+      // Update panel if open
+      if (document.getElementById('notifPanel').classList.contains('open')) renderNotifPanel();
+    }
+
+    function ringBell() {
+      var icon = document.getElementById('alertBellIcon');
+      if (!icon) return;
+      icon.classList.remove('swing');
+      void icon.offsetWidth;
+      icon.classList.add('swing');
+      setTimeout(function() { icon.classList.remove('swing'); }, 650);
+    }
+
+    function updateBellState() {
+      var badge = document.getElementById('alertBellBadge');
+      var wrap = document.getElementById('alertBellWrap');
+      if (!badge || !wrap) return;
+      if (_alertUnreadCount > 0) {
+        badge.textContent = _alertUnreadCount > 99 ? '99+' : _alertUnreadCount;
+        badge.classList.add('visible');
+        badge.classList.remove('pop');
+        void badge.offsetWidth;
+        badge.classList.add('pop');
+      } else {
+        badge.classList.remove('visible');
+      }
+      // Urgent breathing glow
+      if (_alertHasUrgent) {
+        wrap.classList.add('urgent');
+      } else {
+        wrap.classList.remove('urgent');
+      }
+    }
+
+    function toggleNotifPanel() {
+      var panel = document.getElementById('notifPanel');
+      var backdrop = document.getElementById('notifBackdrop');
+      var isOpen = panel.classList.toggle('open');
+      backdrop.style.display = isOpen ? 'block' : 'none';
+      if (isOpen) renderNotifPanel();
+    }
+
+    function markAllRead() {
+      _alertLog.forEach(function(a) { a.read = true; });
+      _alertUnreadCount = 0;
+      _alertHasUrgent = false;
+      try { localStorage.setItem('oracle_alert_log', JSON.stringify(_alertLog)); } catch(e) {}
+      updateBellState();
+      renderNotifPanel();
+    }
+
+    function renderNotifPanel() {
+      var body = document.getElementById('notifPanelBody');
+      if (!body) return;
+      if (!_alertLog.length) {
+        body.innerHTML = '<div class="notifEmpty">No alerts yet. Alerts will appear here as signals evolve.</div>';
+        return;
+      }
+      body.innerHTML = _alertLog.slice(0, 50).map(function(a) {
+        var cls = 'notifCard';
+        if (!a.read) cls += ' unread';
+        if (a.severity === 'urgent') cls += ' urgent';
+        else if (a.severity === 'action') cls += ' action';
+        var ago = timeAgo(a.timestamp);
+        return '<div class="' + cls + '" data-alert-id="' + a.id + '" onclick="readAlert(\'' + a.id + '\',' + (a.signalId ? '\'' + a.signalId.replace(/'/g,"\\'") + '\'' : 'null') + ')">' +
+          '<div class="notifCardIcon">' + (a.icon || '•') + '</div>' +
+          '<div class="notifCardBody"><div class="notifCardMsg">' + a.message + '</div><div class="notifCardTime">' + ago + '</div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function readAlert(alertId, signalId) {
+      var a = _alertLog.find(function(x) { return x.id === alertId; });
+      if (a) a.read = true;
+      _alertUnreadCount = _alertLog.filter(function(x) { return !x.read; }).length;
+      _alertHasUrgent = _alertLog.some(function(x) { return !x.read && x.severity === 'urgent'; });
+      try { localStorage.setItem('oracle_alert_log', JSON.stringify(_alertLog)); } catch(e) {}
+      updateBellState();
+      renderNotifPanel();
+      // Navigate to signal if possible
+      if (signalId && typeof SIGNALS !== 'undefined') {
+        var idx = SIGNALS.findIndex(function(s) { return s.id === signalId; });
+        if (idx >= 0) { setActive(idx); toggleNotifPanel(); }
+      }
+    }
+
+    function timeAgo(ts) {
+      var d = Date.now() - new Date(ts).getTime();
+      if (d < 60000) return 'just now';
+      if (d < 3600000) return Math.floor(d/60000) + 'm ago';
+      if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+      return Math.floor(d/86400000) + 'd ago';
+    }
+
+    // ── SIGNAL CARD REACTIONS ──
+    function flashSignalCard(sigId, animClass, duration) {
+      duration = duration || 2500;
+      try {
+        var card = document.querySelector('[data-sig-id="' + sigId + '"]');
+        if (!card) return;
+        card.classList.add(animClass);
+        setTimeout(function() { card.classList.remove(animClass); }, duration);
+      } catch(e) {}
+    }
+
+    // ── DANGER ZONE DETECTION ──
+    function checkDangerZones() {
+      if (!SIGNALS.length) return;
+      SIGNALS.forEach(function(sig) {
+        var key = sig.id || sig.streamLabel || sig.asset;
+        var live = calculateLiveConfidence(sig);
+        if (!live) return;
+        var prevZone = _lastZones[key] || 'base';
+        var curZone = live.zone || 'base';
+
+        // Danger zone entered
+        if (curZone === 'danger' && prevZone !== 'danger' && prevZone !== 'invalidated') {
+          showToast('⚠ ' + sig.asset + ' entering DANGER ZONE — approaching invalidation');
+          fireAlert('urgent', '⚠️', sig.asset + ' is approaching invalidation. Consider tightening stop or reducing exposure.', key);
+          flashSignalCard(key, 'danger-glow', 4500);
+        }
+
+        // Trigger confirmed (zone change from base with trigger hit)
+        if (sig.trigger && curZone !== 'base' && prevZone === 'base') {
+          var asset3 = sig.asset.split(' ')[0].toUpperCase();
+          var lp3 = PRICE_CACHE[asset3] && PRICE_CACHE[asset3].price;
+          var tr3 = parseTriggerHit(sig, lp3);
+          if (tr3 && tr3.hit && !_notifiedHits[key]?._triggerNotified) {
+            if (!_notifiedHits[key]) _notifiedHits[key] = {};
+            _notifiedHits[key]._triggerNotified = true;
+            saveNotifiedHits();
+            fireAlert('action', '⚡', sig.asset + ' trigger CONFIRMED at $' + (lp3 ? lp3.toFixed(2) : '—') + '. Consider adding to position.', key);
+            flashSignalCard(key, 'trigger-electric', 600);
+          }
+        }
+
+        _lastZones[key] = curZone;
+      });
+    }
+
+    // Initialize bell state on load
+    setTimeout(function() { updateBellState(); }, 500);
 
     // Stamp all currently-hit targets as "seen" so first load doesn't spam
     function seedExistingTargetHits() {
@@ -5261,6 +5640,18 @@
         if (live.t2Hit) _notifiedHits[key].t2 = true;
         if (live.t3Hit) _notifiedHits[key].t3 = true;
         if (live.zone === 'invalidated') _notifiedHits[key].invalidated = true;
+        // Seed zones so danger detection doesn't fire on first load
+        _lastZones[key] = live.zone || 'base';
+        // Seed trigger as notified if already triggered
+        if (sig.trigger) {
+          var asset4 = sig.asset.split(' ')[0].toUpperCase();
+          var lp4 = PRICE_CACHE[asset4] && PRICE_CACHE[asset4].price;
+          var tr4 = typeof parseTriggerHit === 'function' ? parseTriggerHit(sig, lp4) : null;
+          if (tr4 && tr4.hit) {
+            if (!_notifiedHits[key]) _notifiedHits[key] = {};
+            _notifiedHits[key]._triggerNotified = true;
+          }
+        }
       });
       saveNotifiedHits();
     }
@@ -6185,6 +6576,7 @@
         renderList();
         applyTriggerStates();
         checkTargetHitAlerts();
+        checkDangerZones();
 
         // ── AMBIENT WS PULSE — scale with tick volume ──
         var ambientEl = document.getElementById('wsAmbient');
