@@ -13571,8 +13571,16 @@
     var bullPct = Math.round((greens/MACRO_DATA.length)*100);
     var bearPct = Math.round((reds/MACRO_DATA.length)*100);
 
+    // Sort into 2x3 grid: left=[equities, dollar, crypto], right=[bonds, risk, metals]
+    var gridOrder = ['equities','bonds','dollar','risk','crypto','metals'];
+    var macroMap = {};
+    MACRO_DATA.forEach(function(ind) { macroMap[ind.id] = ind; });
+    var sortedData = gridOrder.map(function(id) { return macroMap[id]; }).filter(Boolean);
+    // Append any extras not in gridOrder
+    MACRO_DATA.forEach(function(ind) { if (gridOrder.indexOf(ind.id) < 0) sortedData.push(ind); });
+
     // Build tiles
-    var tilesHtml = MACRO_DATA.map(function(ind) {
+    var tilesHtml = sortedData.map(function(ind, i) {
       var status = ind.status || 'yellow';
       var lastShift = ind.last_changed
         ? new Date(ind.last_changed).toLocaleDateString('en-US', { month:'short', day:'numeric' })
@@ -13580,14 +13588,20 @@
       var stanceColor = status === 'green' ? '#00ffa3' : status === 'red' ? '#ff4466' : '#ffb300';
       var borderColor = status === 'green' ? 'rgba(0,255,163,.25)' : status === 'red' ? 'rgba(255,59,59,.25)' : 'rgba(255,179,0,.25)';
       var bgColor = status === 'green' ? 'rgba(0,255,163,.04)' : status === 'red' ? 'rgba(255,59,59,.04)' : 'rgba(255,179,0,.03)';
+      var orbAnim = status === 'green' ? 'orbPulseGreen' : status === 'red' ? 'orbPulseRed' : 'orbPulseYellow';
+      var orbSpeed = status === 'red' ? '2.5s' : status === 'green' ? '3s' : '3.5s';
+      var orbColor = stanceColor;
 
-      return '<div class="mMacroTile" data-macro-id="' + ind.id + '" style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;">' +
-        '<div style="font-family:Orbitron,monospace;font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.6);">' + ind.label + '</div>' +
-        '<div style="font-family:Orbitron,monospace;font-size:13px;font-weight:900;letter-spacing:1px;color:' + stanceColor + ';">' + statusLabel[status] + '</div>' +
-        '<div id="mMacroPerfLine_' + ind.id + '" style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.45);">' +
-          (ind.benchmark && ind.benchmark_price ? '' : (ind.benchmark ? '' : 'QUALITATIVE')) +
+      return '<div class="mMacroTile" data-macro-id="' + ind.id + '" style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:10px;padding:11px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px;animation:macroCardIn .3s ease ' + (i*60) + 'ms both;">' +
+        '<div style="display:flex;align-items:center;gap:7px;">' +
+          '<div style="width:10px;height:10px;border-radius:50%;background:' + orbColor + ';box-shadow:0 0 8px ' + orbColor + '40;animation:' + orbAnim + ' ' + orbSpeed + ' ease-in-out infinite;flex-shrink:0;position:relative;"></div>' +
+          '<span style="font-family:Orbitron,monospace;font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.55);">' + ind.label + '</span>' +
         '</div>' +
-        (lastShift ? '<div style="font-family:monospace;font-size:9px;color:rgba(74,106,138,.7);">' + lastShift + '</div>' : '') +
+        '<div style="font-family:Orbitron,monospace;font-size:14px;font-weight:900;letter-spacing:1px;color:' + stanceColor + ';line-height:1.2;">' + statusLabel[status] + '</div>' +
+        '<div id="mMacroPerfLine_' + ind.id + '" style="font-family:monospace;font-size:9px;color:rgba(255,255,255,.4);min-height:14px;">' +
+          (ind.benchmark && ind.benchmark_price ? '' : (ind.benchmark ? '' : '<span style="opacity:.5;">QUALITATIVE</span>')) +
+        '</div>' +
+        (lastShift ? '<div style="font-family:monospace;font-size:8px;color:rgba(74,106,138,.6);">' + lastShift + '</div>' : '') +
       '</div>';
     }).join('');
 
@@ -13597,7 +13611,7 @@
         '<span style="font-family:Orbitron,monospace;font-size:8px;letter-spacing:2px;color:#00e5ff;">ORACLE MACRO REGIME</span>' +
         '<span style="font-family:Orbitron,monospace;font-size:7px;color:rgba(74,106,138,1);">' + bullPct + '% BULL · ' + bearPct + '% BEAR</span>' +
       '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:8px;">' + tilesHtml + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + tilesHtml + '</div>' +
       '<div id="mMacroPanelEl" style="display:none;margin-top:12px;border-radius:12px;border:1px solid rgba(0,229,255,.15);background:rgba(0,5,18,.95);padding:18px;"></div>';
 
     // Fetch benchmark performance
