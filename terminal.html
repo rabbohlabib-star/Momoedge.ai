@@ -9234,25 +9234,12 @@
         // ── Position badge + T1 progress setup ──
         const assetKey2 = sig.asset.split(' ')[0].toUpperCase();
 
-        // Position badge — show if member holds this signal
+        // Position badge — simple indicator only, no stats or close
         let positionBadgeHtml = '';
         if (typeof MEMBER_TRADES !== 'undefined') {
           const myPos = MEMBER_TRADES.filter(t => (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN');
           if (myPos.length > 0) {
-            const totalSh = myPos.reduce((s,t) => s + (parseFloat(t.shares)||0), 0);
-            const vehicle = myPos[0].vehicle === 'OPTIONS' ? 'CT' : 'SH';
-            const avgEnt = myPos.reduce((s,t) => s + parseFloat(t.entry_price) * parseFloat(t.shares), 0) / totalSh;
-            const cached2 = PRICE_CACHE[assetKey2];
-            let pnlStr = '';
-            if (cached2 && cached2.price) {
-              const rawP = ((cached2.price - avgEnt) / avgEnt) * 100;
-              const pnl2 = isBull ? rawP : -rawP;
-              pnlStr = ` · <span style="color:${pnl2>=0?'var(--green)':'var(--red)'}">${pnl2>=0?'+':''}${pnl2.toFixed(1)}%</span>`;
-            }
-            positionBadgeHtml = `<div style="font-family:var(--display);font-size:8px;letter-spacing:.5px;padding:4px 8px;margin-top:4px;border-radius:5px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:var(--core);display:flex;justify-content:space-between;align-items:center;">
-              <span>◆ IN POSITION · ${totalSh} ${vehicle}${pnlStr}</span>
-              <span onclick="event.stopPropagation();openClosePosition('${(sig.id||'').replace(/'/g,"\\'")}','${sig.asset.replace(/'/g,"\\'")}')" style="color:var(--red);cursor:pointer;padding:2px 6px;margin-left:8px;border-radius:3px;background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.2);font-size:7px;letter-spacing:1px;">CLOSE</span>
-            </div>`;
+            positionBadgeHtml = `<div style="font-family:var(--display);font-size:8px;letter-spacing:1px;padding:4px 10px;margin:4px 12px 0;border-radius:5px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:var(--core);text-align:center;">◆ IN POSITION</div>`;
           }
         }
 
@@ -9300,6 +9287,15 @@
           }
         }
 
+        // ── P&L from entry — the key metric ──
+        let pnlFromEntryHtml = '';
+        if (entryPriceVal && cachedPrice) {
+          const rawPnl3 = ((cachedPrice - entryPriceVal) / entryPriceVal) * 100;
+          const pnl3 = isBull ? rawPnl3 : -rawPnl3;
+          const pnlCol3 = pnl3 >= 0 ? 'var(--green)' : 'var(--red)';
+          pnlFromEntryHtml = `<span class="tag" style="color:${pnlCol3};font-weight:900;font-size:11px;padding:3px 9px;border-color:${pnl3>=0?'rgba(0,255,136,.2)':'rgba(255,68,102,.2)'};background:${pnl3>=0?'rgba(0,255,136,.06)':'rgba(255,68,102,.06)'};">${pnl3 >= 0 ? '+' : ''}${pnl3.toFixed(1)}%</span>`;
+        }
+
         div.innerHTML = `
           <div class="row1">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -9309,7 +9305,7 @@
             <div class="lvl">${sig.level}</div>
           </div>
           <div class="row2">
-            <span class="tag" style="color:${cfg.color}">CONF ${(live.conf != null ? live.conf.toFixed(1) : '—')}% ${arrow}<span style="font-size:8px;opacity:.75;">${deltaStr}</span></span>
+            ${pnlFromEntryHtml}
             <span class="tag">${sig.horizon || "—"}</span>
             ${tierBadgeHtml}
           </div>
