@@ -1187,7 +1187,7 @@
     }
     .durationTrack {
       flex: 1;
-      height: 3px;
+      height: 5px;
       background: rgba(255,255,255,.07);
       border-radius: 3px;
       overflow: hidden;
@@ -1198,9 +1198,9 @@
       border-radius: 3px;
       transition: width .8s ease;
     }
-    .durationFill.hold    { background: linear-gradient(90deg, var(--core), rgba(0,229,255,.4)); }
-    .durationFill.watch   { background: linear-gradient(90deg, var(--amber), rgba(255,179,0,.4)); }
-    .durationFill.eligible { background: linear-gradient(90deg, var(--green), rgba(0,255,163,.5)); box-shadow: 0 0 6px rgba(0,255,163,.4); }
+    .durationFill.hold    { background: linear-gradient(90deg, var(--core), rgba(0,229,255,.4)); box-shadow: 0 0 4px rgba(0,229,255,.3); }
+    .durationFill.watch   { background: linear-gradient(90deg, var(--amber), rgba(255,179,0,.4)); box-shadow: 0 0 6px rgba(255,179,0,.3); }
+    .durationFill.eligible { background: linear-gradient(90deg, var(--green), rgba(0,255,163,.5)); box-shadow: 0 0 8px rgba(0,255,163,.5); }
     .durationLabel {
       font-family: var(--display);
       font-size: 8.5px;
@@ -1285,6 +1285,10 @@
     .dwFill.hold     { background: linear-gradient(90deg, var(--core), rgba(0,229,255,.4)); }
     .dwFill.watch    { background: linear-gradient(90deg, var(--amber), rgba(255,179,0,.4)); }
     .dwFill.eligible { background: linear-gradient(90deg, var(--green), rgba(0,255,163,.5)); box-shadow: 0 0 8px rgba(0,255,163,.4); }
+    /* T1 progress bar — distinct green/amber palette */
+    .dwFill.t1-prog    { background: linear-gradient(90deg, rgba(0,255,136,.4), #00ff88); box-shadow: 0 0 6px rgba(0,255,136,.4); }
+    .dwFill.t1-close   { background: linear-gradient(90deg, #00ff88, #00ffcc); box-shadow: 0 0 10px rgba(0,255,200,.5); }
+    .dwFill.t1-reached { background: linear-gradient(90deg, #00ffcc, #ffd700); box-shadow: 0 0 12px rgba(255,215,0,.5); }
 
     .leftFooter { padding-top: 8px; border-top: 1px solid var(--border2); display: flex; flex-direction: column; gap: 8px; }
     .mini {
@@ -1551,7 +1555,7 @@
       justify-content: space-between;
     }
     .sbT1Track {
-      height: 5px;
+      height: 7px;
       background: rgba(255,255,255,.06);
       border-radius: 999px;
       overflow: hidden;
@@ -1562,9 +1566,9 @@
       border-radius: 999px;
       transition: width .8s cubic-bezier(.4,0,.2,1);
     }
-    .sbT1Fill.progress  { background: linear-gradient(90deg, rgba(0,255,163,.5), var(--green)); box-shadow: 0 0 6px rgba(0,255,163,.4); }
-    .sbT1Fill.hit       { background: var(--green); box-shadow: 0 0 10px rgba(0,255,163,.7); }
-    .sbT1Fill.drawdown  { background: linear-gradient(90deg, rgba(255,179,0,.5), var(--amber)); }
+    .sbT1Fill.progress  { background: linear-gradient(90deg, rgba(0,255,163,.5), var(--green)); box-shadow: 0 0 8px rgba(0,255,163,.5); }
+    .sbT1Fill.hit       { background: var(--green); box-shadow: 0 0 12px rgba(0,255,163,.8); }
+    .sbT1Fill.drawdown  { background: linear-gradient(90deg, rgba(255,179,0,.5), var(--amber)); box-shadow: 0 0 6px rgba(255,179,0,.3); }
 
     /* ── Analysis Collapsible Toggle ── */
     .sbAnalysisToggle {
@@ -4857,7 +4861,7 @@
       <div class="leftHeader">
         <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
           <span class="sectionLabel">ALERT_STREAM</span>
-          <button class="btn" id="toggleAuto">AUTO: ON</button>
+          <button class="btn" id="toggleAuto">AUTO: OFF</button>
         </div>
         <div style="display:flex;gap:5px;width:100%;margin-top:7px;">
           <button class="btn streamSortBtn active" data-ssort="newest" style="flex:1;font-size:8px;letter-spacing:1px;padding:5px 0;">NEWEST</button>
@@ -9263,11 +9267,11 @@
 
         <!-- COLLAPSIBLE: ORACLE ANALYSIS -->
         ${(assessment || targets.length || timelinePct !== null) ? `
-        <div class="sbAnalysisToggle" onclick="this.classList.toggle('expanded');this.nextElementSibling.style.display=this.classList.contains('expanded')?'':'none';">
+        <div class="sbAnalysisToggle expanded" onclick="this.classList.toggle('expanded');this.nextElementSibling.style.display=this.classList.contains('expanded')?'':'none';">
           <span>⬡ ORACLE ANALYSIS</span>
           <span class="sbAnalysisChev">▾</span>
         </div>
-        <div class="sbAnalysisCollapse" style="display:none;">` : ''}
+        <div class="sbAnalysisCollapse">` : ''}
 
         ${assessment ? `
         <div class="sbAssessment">
@@ -9456,7 +9460,7 @@
     const confArcText = document.getElementById("confArcText");
 
     let activeIndex = 0;
-    let autoRotate = true;
+    let autoRotate = false;
 
     /* ─────────────── CONFIDENCE ARC ─────────────── */
     const ARC_LEN = 141.4; // half-circle perimeter ≈ π*45
@@ -9688,6 +9692,25 @@
           pnlFromEntryHtml = `<span class="tag" style="color:${pnlCol3};font-weight:900;font-size:11px;padding:3px 9px;border-color:${pnl3>=0?'rgba(0,255,136,.2)':'rgba(255,68,102,.2)'};background:${pnl3>=0?'rgba(0,255,136,.06)':'rgba(255,68,102,.06)'};">${pnl3 >= 0 ? '+' : ''}${pnl3.toFixed(1)}%</span>`;
         }
 
+        // ── Option trade badge for signal card ──
+        let optBadgeHtml = '';
+        try {
+          const _ocs3 = typeof sig.option_contracts === 'string' ? JSON.parse(sig.option_contracts || '[]') : (sig.option_contracts || []);
+          if (Array.isArray(_ocs3) && _ocs3.length > 0) {
+            const oc = _ocs3[0];
+            const oType = oc.type || (isBull ? 'CALL' : 'PUT');
+            const oStrike = oc.strike ? '$' + oc.strike : '';
+            const oExp = oc.expiry ? new Date(oc.expiry + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+            const oPrem = oc.premium ? '$' + parseFloat(oc.premium).toFixed(2) : '';
+            optBadgeHtml = `<div style="font-family:var(--display);font-size:8px;letter-spacing:.5px;padding:6px 12px;margin:5px 12px 0;border-radius:6px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:var(--core);font-weight:700;">◆ ${oType}</span>
+              <span style="color:#fff;">${sig.asset.split(' ')[0]} ${oStrike} ${oType}${oExp ? ' · ' + oExp : ''}${oPrem ? ' · ' + oPrem : ''}</span>
+            </div>`;
+          } else if (sig.option_price) {
+            optBadgeHtml = `<div style="font-family:var(--display);font-size:8px;letter-spacing:.5px;padding:5px 12px;margin:5px 12px 0;border-radius:6px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);color:var(--core);text-align:center;">◆ OPTION AVAILABLE · $${parseFloat(sig.option_price).toFixed(2)} premium</div>`;
+          }
+        } catch(e) {}
+
         div.innerHTML = `
           <div class="row1">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -9703,6 +9726,7 @@
           </div>
           ${sidebarT1Html}
           ${durationRowHtml}
+          ${optBadgeHtml}
           ${triggerBadgeHtml}
           ${positionBadgeHtml}
           ${thesisHtml}
@@ -9810,8 +9834,8 @@
             ${t1FillPct > 0 || live.t1Hit ? `
               <div style="font-family:var(--display);font-size:7.5px;letter-spacing:1px;color:var(--muted);margin-top:6px;">T1 PROGRESS</div>
               <div class="dwTrack">
-                <div class="dwFill ${live.t1Hit ? 'eligible' : t1FillPct >= 65 ? 'watch' : 'hold'}"
-                  style="width:${live.t1Hit ? 100 : t1FillPct}%;${live.t1Hit ? 'box-shadow:0 0 8px var(--green);' : ''}"></div>
+                <div class="dwFill ${live.t1Hit ? 't1-reached' : t1FillPct >= 65 ? 't1-close' : 't1-prog'}"
+                  style="width:${live.t1Hit ? 100 : t1FillPct}%"></div>
               </div>
               <div style="font-family:var(--display);font-size:8px;color:${live.t1Hit ? 'var(--green)' : 'var(--muted)'};margin-top:2px;">
                 ${live.t1Hit ? '🎯 TARGET REACHED' : `${t1FillPct.toFixed(0)}% OF THE WAY TO T1`}
@@ -11450,18 +11474,25 @@
       var myTrades = MEMBER_TRADES.filter(function(t) { return (t.signal_id === sig.id || t.asset === sig.asset) && t.status === 'OPEN'; });
       var isAdding = myTrades.length > 0;
       var heldShares = myTrades.reduce(function(s,t) { return s + (parseFloat(t.shares) || 0); }, 0);
+      var heldRisk = myTrades.reduce(function(s,t) { return s + (parseFloat(t.risk_amount) || 0); }, 0);
+
+      // Check if already at max risk — if so, treat as FULL and don't encourage adding
+      var atMaxRiskCalc = totalRiskD > 0 && heldRisk >= totalRiskD * 0.9;
+      var hasBothTranches = myTrades.some(function(t){return (t.tranche||1)===1;}) && myTrades.some(function(t){return (t.tranche||1)===2;});
+      var isFullPosition = atMaxRiskCalc || hasBothTranches;
 
       // Position meter: two segments
       var seg1 = isAdding ? 'background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.4);' : 'background:rgba(0,229,255,.3);';
-      var seg2 = 'background:rgba(255,255,255,.08);';
-      var meterLabel = isAdding ? 'COMPLETING POSITION' : 'INITIAL ENTRY';
+      var seg2 = isFullPosition ? seg1 : 'background:rgba(255,255,255,.08);';
+      var meterLabel = isFullPosition ? 'FULL POSITION' : (isAdding ? 'COMPLETING POSITION' : 'INITIAL ENTRY');
+      var meterColor = isFullPosition ? 'var(--green)' : (isAdding ? 'var(--green)' : 'var(--core)');
       var positionMeter =
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
           '<div style="display:flex;gap:4px;">' +
             '<div style="width:28px;height:8px;border-radius:4px;' + seg1 + '"></div>' +
             '<div style="width:28px;height:8px;border-radius:4px;' + seg2 + '"></div>' +
           '</div>' +
-          '<span style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:' + (isAdding ? 'var(--green)' : 'var(--core)') + ';font-weight:700;">' + meterLabel + '</span>' +
+          '<span style="font-family:var(--display);font-size:9px;letter-spacing:1.5px;color:' + meterColor + ';font-weight:700;">' + meterLabel + '</span>' +
         '</div>';
 
       if (_ttVehicle === 'STOCK') {
@@ -11483,7 +11514,9 @@
             riskEl.style.color = 'var(--amber)';
 
             if (summaryEl && contentEl) {
-              var guidanceText = isAdding
+              var guidanceText = isFullPosition
+                ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">✓ <b>Full position reached.</b> Max risk of <b>$' + fmtN(totalRiskD) + '</b> is allocated. No further entries needed.</div>'
+                : isAdding
                 ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfShares + ' ' + unitLabel + '</b> to reach full position of <b>' + maxShares + ' ' + unitLabel + '</b>.</div>'
                 : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">' + (isBullTrade ? 'Buy' : 'Short') + ' <b style="color:#fff;">' + halfShares + ' ' + unitLabel + '</b> now. After trigger confirms, add remaining <b style="color:#fff;">' + halfShares + '</b> to reach full position of <b style="color:#fff;">' + maxShares + '</b>.</div>';
 
@@ -11552,7 +11585,9 @@
           } catch(e) {}
 
           var optActionLabel = isBullTrade ? 'BUY CALLS' : 'BUY PUTS';
-          var guidanceOpt = isAdding
+          var guidanceOpt = isFullPosition
+            ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">✓ <b>Full position reached.</b> Max risk of <b>$' + fmtN(totalRiskD) + '</b> is allocated. No further entries needed.</div>'
+            : isAdding
             ? '<div style="font-family:var(--display);font-size:10px;color:var(--green);margin-top:8px;padding:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:6px;">Trigger confirmed — add <b>' + halfContracts + ' contracts</b> to reach full position of <b>' + maxContracts + ' contracts</b>.</div>'
             : '<div style="font-family:var(--display);font-size:10px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">' + optActionLabel + ': <b style="color:#fff;">' + halfContracts + ' contracts</b> now. Add remaining <b style="color:#fff;">' + halfContracts + '</b> after trigger confirms.</div>';
 
@@ -11942,20 +11977,34 @@
           '<span>'+d+'</span></div>';
       }).join('');
 
-      // Contract info for options
+      // Contract info for options — PROMINENT display
       var optInfo = '';
-      if (vehicle === 'OPTIONS' && first.option_strike) {
+      var optHeroLine = '';
+      if (vehicle === 'OPTIONS') {
         var parts = [];
         if (first.option_strike) parts.push('$'+first.option_strike);
         if (first.option_type) parts.push(first.option_type);
+        else parts.push(isBull ? 'CALL' : 'PUT');
         if (first.option_expiry) {
           try { parts.push(new Date(first.option_expiry+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})); } catch(e) {}
         }
-        if (parts.length) optInfo = '<div class="jTradeRow"><span class="jTradeK">CONTRACT</span><span class="jTradeV" style="font-size:10px;color:var(--core);">'+asset+' '+parts.join(' ')+'</span></div>';
+        if (parts.length) {
+          optHeroLine = '<div style="font-family:var(--display);font-size:10px;color:var(--core);margin-top:2px;letter-spacing:.5px;">'+asset+' '+parts.join(' ')+'</div>';
+          optInfo = '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin:8px 0;border-radius:8px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);">' +
+            '<span style="font-family:var(--display);font-size:9px;letter-spacing:1px;color:var(--core);font-weight:700;">◆ '+(first.option_type || (isBull?'CALL':'PUT'))+' CONTRACT</span>' +
+            '<span style="font-family:var(--display);font-size:11px;font-weight:900;color:#fff;">'+asset+' '+parts.join(' ')+'</span>' +
+          '</div>';
+        }
       }
 
+      // Determine if position is at max risk — treat as FULL regardless of tranche count
+      var acctSize = MEMBER_SETTINGS.account_size || 0;
+      var riskPctSetting = MEMBER_SETTINGS.risk_per_trade || 2;
+      var maxRiskDollars = acctSize ? acctSize * (riskPctSetting / 100) : 0;
+      var atMaxRisk = maxRiskDollars > 0 && totalRisk >= maxRiskDollars * 0.9; // within 90% of max
+
       var maxTr = Math.max.apply(null, trancheNums);
-      var isFull = trancheNums.indexOf(1) >= 0 && trancheNums.indexOf(2) >= 0;
+      var isFull = (trancheNums.indexOf(1) >= 0 && trancheNums.indexOf(2) >= 0) || atMaxRisk;
       var signalId = (first.signal_id||'').replace(/'/g,"\\'");
       var assetEsc = first.asset.replace(/'/g,"\\'");
 
@@ -11978,7 +12027,7 @@
           '</div>' +
           '<div style="flex:1;">' +
             '<div style="font-family:var(--display);font-size:28px;font-weight:900;color:#fff;line-height:1;">' + totalSh + ' <span style="font-size:14px;color:var(--muted);">' + unit.toUpperCase() + '</span></div>' +
-            '<div style="font-family:var(--display);font-size:10px;color:'+posColor+';margin-top:2px;">' + posLabel + '</div>' +
+            (optHeroLine || '<div style="font-family:var(--display);font-size:10px;color:'+posColor+';margin-top:2px;">' + posLabel + '</div>') +
           '</div>' +
           (livePnl ? '<div style="text-align:right;">' +
             '<div style="font-family:var(--display);font-size:20px;font-weight:900;color:'+(livePnlPct>=0?'var(--green)':'var(--red)')+';line-height:1;">'+(livePnlPct>=0?'+':'')+livePnlPct.toFixed(2)+'%</div>' +
@@ -11987,7 +12036,7 @@
         '</div>' +
         optInfo +
         '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-family:var(--display);font-size:9px;color:var(--muted);">AVG ENTRY</span><span style="font-family:var(--display);font-size:13px;font-weight:900;color:var(--core);">$'+avgEntry.toFixed(2)+'</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-family:var(--display);font-size:9px;color:var(--muted);">TOTAL RISK</span><span style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--amber);">$'+totalRisk.toFixed(0)+'</span></div>' +
+        '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-family:var(--display);font-size:9px;color:var(--muted);">TOTAL RISK</span><span style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--amber);">$'+fmtN(totalRisk)+(atMaxRisk ? ' <span style="color:var(--red);font-size:8px;">MAX</span>' : '')+'</span></div>' +
         '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);">'+entryLines+'</div>' +
         '<div style="display:flex;gap:6px;margin-top:10px;">' +
           (!isFull ? '<button class="jAddTranche" onclick="openTakeTradeFromJournal(\''+signalId+'\',\''+assetEsc+'\')">+ ADD TO POSITION</button>' : '') +
@@ -12814,7 +12863,7 @@
     mAutoBtn.addEventListener('click', function() {
       autoRotate = !autoRotate;
       updateMAutoBtn();
-      var desktopAutoBtn = document.getElementById('autoBtn');
+      var desktopAutoBtn = document.getElementById('toggleAuto');
       if (desktopAutoBtn) desktopAutoBtn.textContent = 'AUTO: ' + (autoRotate ? 'ON' : 'OFF');
     });
   }
